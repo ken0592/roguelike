@@ -2,8 +2,15 @@
 <html lang="ja">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#101816" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="星屑救助隊" />
     <title>星屑救助隊</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -210,23 +217,19 @@
         </aside>
       </main>
 
-      <section id="touchControls" class="touch-controls touch-controls-single" aria-label="タッチ操作" hidden>
-        <div class="touch-pad touch-pad-solo" aria-label="主人公操作">
-          <button type="button" data-action="move" data-dx="-1" data-dy="-1" aria-label="左上">↖</button>
-          <button type="button" data-action="move" data-dx="0" data-dy="-1" aria-label="上">↑</button>
-          <button type="button" data-action="move" data-dx="1" data-dy="-1" aria-label="右上">↗</button>
-          <button type="button" data-action="move" data-dx="-1" data-dy="0" aria-label="左">←</button>
-          <button type="button" data-action="wait" aria-label="待機">待</button>
-          <button type="button" data-action="move" data-dx="1" data-dy="0" aria-label="右">→</button>
-          <button type="button" data-action="move" data-dx="-1" data-dy="1" aria-label="左下">↙</button>
-          <button type="button" data-action="move" data-dx="0" data-dy="1" aria-label="下">↓</button>
-          <button type="button" data-action="move" data-dx="1" data-dy="1" aria-label="右下">↘</button>
+      <section id="touchControls" class="touch-controls touch-controls-single" aria-label="ゲームコントローラー" hidden>
+        <div class="touch-dpad" data-dpad aria-label="十字キー。指を斜めへ滑らせると斜め移動">
+          <button class="dpad-up" type="button" data-action="move" data-dx="0" data-dy="-1" aria-label="上">▲</button>
+          <button class="dpad-left" type="button" data-action="move" data-dx="-1" data-dy="0" aria-label="左">◀</button>
+          <button class="dpad-center" type="button" data-action="wait" aria-label="待機">•</button>
+          <button class="dpad-right" type="button" data-action="move" data-dx="1" data-dy="0" aria-label="右">▶</button>
+          <button class="dpad-down" type="button" data-action="move" data-dx="0" data-dy="1" aria-label="下">▼</button>
         </div>
-        <div class="touch-actions" aria-label="冒険操作">
-          <button type="button" data-action="basicAttack" aria-label="通常攻撃">攻</button>
-          <button type="button" data-action="useMove" aria-label="技を使う">技</button>
-          <button type="button" data-action="eatApple" aria-label="月蜜の実を食べる">食</button>
-          <button type="button" data-action="openMenu" aria-label="メニューを開く">欄</button>
+        <div class="touch-actions touch-abxy" aria-label="ABXYボタン">
+          <button id="touchDashButton" class="button-b" type="button" aria-label="B ダッシュ"><b>B</b><small>DASH</small></button>
+          <button class="button-y" type="button" data-action="useMove" aria-label="Y 選択中の技"><b>Y</b><small>わざ</small></button>
+          <button class="button-x" type="button" data-action="openMenu" aria-label="X メニュー"><b>X</b><small>MENU</small></button>
+          <button class="button-a" type="button" data-action="basicAttack" aria-label="A 通常攻撃"><b>A</b><small>こうげき</small></button>
         </div>
       </section>
     </div>

@@ -27,6 +27,7 @@
 html,
 body {
   min-height: 100%;
+  overscroll-behavior: none;
 }
 
 body {
@@ -40,6 +41,7 @@ body {
     Inter, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", Meiryo,
     sans-serif;
   letter-spacing: 0;
+  -webkit-tap-highlight-color: transparent;
 }
 
 button {
@@ -83,9 +85,7 @@ button {
   display: grid;
   place-items: center;
   border: 1px solid rgba(255, 245, 223, 0.42);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 46%),
-    conic-gradient(from 45deg, #f0b34d, #5ec9cf, #ef6b64, #8aa26d, #f0b34d);
+  background: #102228 url("assets/pwa/icon-192.png") center / cover no-repeat;
   box-shadow:
     0 0 0 4px rgba(0, 0, 0, 0.22),
     0 0 28px var(--teal-glow);
@@ -98,6 +98,12 @@ button {
   content: "";
   position: absolute;
   background: rgba(20, 17, 13, 0.82);
+}
+
+.brand-mark::before,
+.brand-mark::after,
+.brand-mark span {
+  display: none;
 }
 
 .brand-mark::before {
@@ -220,13 +226,15 @@ button {
 
 .icon-button:hover,
 .primary-button:hover,
-.touch-pad button:hover {
+.touch-dpad button:hover,
+.touch-abxy button:hover {
   filter: brightness(1.1);
 }
 
 .icon-button:active,
 .primary-button:active,
-.touch-pad button:active {
+.touch-dpad button:active,
+.touch-abxy button:active {
   transform: translateY(1px);
 }
 
@@ -2115,77 +2123,144 @@ button {
 }
 
 .touch-controls-single {
-  grid-template-columns: minmax(0, 1fr) 156px;
+  grid-template-columns: 166px 166px;
+  justify-content: space-between;
+  align-items: end;
 }
 
-.touch-pad {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(42px, 1fr));
-  grid-template-rows: repeat(2, 42px);
-  gap: 6px;
-  align-items: stretch;
+.touch-dpad {
+  position: relative;
+  width: 156px;
+  height: 156px;
+  touch-action: none;
+  user-select: none;
+  filter: drop-shadow(0 8px 12px rgba(0, 0, 0, 0.42));
 }
 
-.touch-pad-solo {
-  grid-template-columns: repeat(3, minmax(38px, 1fr));
-  grid-template-rows: repeat(3, 38px);
-  max-width: 420px;
+.touch-dpad::before,
+.touch-dpad::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.17);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent),
+    #292d2b;
+  box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, -50%);
 }
 
-.touch-pad span {
+.touch-dpad::before {
+  width: 54px;
+  height: 148px;
+}
+
+.touch-dpad::after {
+  width: 148px;
+  height: 54px;
+}
+
+.touch-dpad.pressed::before,
+.touch-dpad.pressed::after {
+  filter: brightness(1.12);
+}
+
+.touch-dpad button {
+  position: absolute;
+  z-index: 2;
+  width: 52px;
+  height: 52px;
   display: grid;
   place-items: center;
-  border: 1px solid var(--line);
-  background: rgba(26, 28, 26, 0.92);
-  color: var(--muted);
-  font-weight: 900;
-}
-
-.touch-pad button {
-  border: 1px solid var(--line);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent),
-    rgba(34, 37, 31, 0.92);
+  border: 0;
+  background: transparent;
+  color: #d9dedb;
   cursor: pointer;
-  min-width: 0;
+  font-size: 0.72rem;
   font-weight: 900;
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.34);
+  touch-action: none;
 }
 
-.touch-pad button[data-action="useMove"],
-.touch-pad-a button[data-action="skill"] {
-  color: var(--teal);
+.touch-dpad button:not(.dpad-center) {
+  pointer-events: none;
 }
 
-.touch-actions {
+.dpad-up { left: 52px; top: 2px; }
+.dpad-left { left: 2px; top: 52px; }
+.dpad-center { left: 52px; top: 52px; color: #68706c; }
+.dpad-right { right: 2px; top: 52px; }
+.dpad-down { left: 52px; bottom: 2px; }
+
+.touch-abxy {
+  position: relative;
+  width: 166px;
+  height: 156px;
+  user-select: none;
+}
+
+.touch-abxy button {
+  position: absolute;
+  width: 58px;
+  height: 58px;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  grid-template-rows: repeat(2, minmax(0, 1fr));
-  gap: 6px;
-}
-
-.touch-actions button {
-  min-width: 0;
-  border: 1px solid var(--line);
+  place-items: center;
+  align-content: center;
+  gap: 0;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 50%;
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.08), transparent),
-    rgba(34, 37, 31, 0.92);
+    radial-gradient(circle at 34% 28%, rgba(255, 255, 255, 0.16), transparent 38%),
+    #282c2a;
   color: var(--ink);
   cursor: pointer;
+  box-shadow:
+    inset 0 -5px 0 rgba(0, 0, 0, 0.38),
+    0 7px 12px rgba(0, 0, 0, 0.36);
+  touch-action: manipulation;
+}
+
+.touch-abxy button:active,
+.touch-abxy button.pressed {
+  transform: translateY(2px);
+  box-shadow:
+    inset 0 -2px 0 rgba(0, 0, 0, 0.38),
+    0 3px 7px rgba(0, 0, 0, 0.32);
+}
+
+.touch-abxy b {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.touch-abxy small {
+  font-size: 0.42rem;
   font-weight: 900;
-  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.34);
+  line-height: 1;
 }
 
-.touch-actions button[data-action="useMove"] {
-  color: var(--teal);
+.touch-abxy .button-y {
+  left: 54px;
+  top: 0;
+  color: #81e5e7;
 }
 
-.touch-actions button[data-action="basicAttack"] {
-  color: #ff9c86;
+.touch-abxy .button-x {
+  left: 0;
+  top: 49px;
+  color: #c2a7f1;
 }
 
-.touch-pad-b button[data-action="skill"] {
-  color: var(--brass);
+.touch-abxy .button-a {
+  right: 0;
+  top: 49px;
+  color: #ff9b88;
+}
+
+.touch-abxy .button-b {
+  left: 54px;
+  bottom: 0;
+  color: #f1c66b;
 }
 
 .help-dialog {
@@ -2329,7 +2404,7 @@ button {
 
 @media (max-width: 640px) {
   .app-shell:has(.touch-controls:not([hidden])) {
-    padding-bottom: 154px;
+    padding-bottom: 184px;
   }
 
   .brand-mark {
@@ -2356,32 +2431,23 @@ button {
   }
 
   .touch-controls {
-    grid-template-columns: minmax(0, 1fr) 104px;
+    grid-template-columns: 156px 166px;
+    justify-content: space-between;
   }
 
   .touch-controls:not([hidden]) {
     display: grid;
     position: fixed;
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
+    left: max(8px, env(safe-area-inset-left));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
     z-index: 8;
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.58);
   }
 
-  .touch-pad {
-    grid-template-columns: repeat(3, minmax(34px, 1fr));
-    grid-template-rows: repeat(3, 36px);
-  }
-
-  .touch-pad-solo {
-    grid-template-columns: repeat(3, minmax(34px, 1fr));
-    grid-template-rows: repeat(3, 36px);
-    max-width: none;
-  }
-
-  .touch-pad-solo > span {
-    display: none;
+  .touch-dpad,
+  .touch-abxy {
+    max-width: 100%;
   }
 
   .mini-map-panel {
@@ -2611,6 +2677,136 @@ button {
 
   .evolution-head {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  body:has(.touch-controls:not([hidden])) {
+    overflow: hidden;
+    background: #050706;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) {
+    min-height: 100dvh;
+    display: block;
+    padding: 0;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .topbar {
+    position: fixed;
+    z-index: 7;
+    left: 50%;
+    top: max(4px, env(safe-area-inset-top));
+    width: auto;
+    min-height: 0;
+    display: block;
+    transform: translateX(-50%);
+    border: 0;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    pointer-events: none;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .brand,
+  .app-shell:has(.touch-controls:not([hidden])) .top-actions {
+    display: none;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .run-strip {
+    display: flex;
+    gap: 4px;
+    overflow: visible;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .run-strip span {
+    min-height: 26px;
+    border-color: rgba(255, 255, 255, 0.18);
+    background: rgba(10, 15, 13, 0.78);
+    padding: 0 8px;
+    font-size: 0.7rem;
+    backdrop-filter: blur(6px);
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .game-layout {
+    position: fixed;
+    z-index: 1;
+    inset: 0;
+    display: block;
+    background: #050706;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .stage-panel {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border: 0;
+    background: #050706;
+    box-shadow: none;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) #gameCanvas {
+    width: auto;
+    height: 100dvh;
+    max-width: 100vw;
+    max-height: 100dvh;
+    aspect-ratio: 3 / 2;
+    object-fit: contain;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .side-panel {
+    display: contents;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .side-panel > * {
+    display: none;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .side-panel > .mini-map-panel {
+    position: fixed;
+    z-index: 6;
+    right: max(8px, env(safe-area-inset-right));
+    top: max(6px, env(safe-area-inset-top));
+    width: 132px;
+    display: block;
+    border: 1px solid rgba(126, 229, 232, 0.38);
+    background: rgba(5, 11, 10, 0.78);
+    padding: 5px;
+    backdrop-filter: blur(5px);
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .mini-map-title,
+  .app-shell:has(.touch-controls:not([hidden])) .mini-map-key,
+  .app-shell:has(.touch-controls:not([hidden])) .terrain-legend,
+  .app-shell:has(.touch-controls:not([hidden])) .attack-hint {
+    display: none;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .event-banner {
+    bottom: max(10px, env(safe-area-inset-bottom));
+    width: min(360px, calc(100% - 370px));
+  }
+
+  .touch-controls:not([hidden]) {
+    position: fixed;
+    z-index: 8;
+    left: max(10px, env(safe-area-inset-left));
+    right: max(10px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    display: grid;
+    grid-template-columns: 156px 166px;
+    justify-content: space-between;
+    align-items: end;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    pointer-events: none;
+  }
+
+  .touch-controls > * {
+    pointer-events: auto;
   }
 }
 

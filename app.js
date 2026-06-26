@@ -827,6 +827,10 @@ let bestScore = readBestScore();
 let game;
 let audioContext = null;
 let soundEnabled = readSoundSetting();
+let touchMovePointer = null;
+let touchMoveDirection = null;
+let touchMoveTimer = null;
+let touchDashHeld = false;
 let renderCamera = { x: 0, y: 0, width: canvas.width / TILE, height: canvas.height / TILE };
 
 function createGame() {
@@ -5082,6 +5086,81 @@ function handleKey(event) {
   performAction(action);
 }
 
+function getTouchDpadDirection(event, pad) {
+  const rect = pad.getBoundingClientRect();
+  const normalizedX = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+  const normalizedY = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+  const absX = Math.abs(normalizedX);
+  const absY = Math.abs(normalizedY);
+  if (Math.hypot(normalizedX, normalizedY) < 0.24) return null;
+  return {
+    x: absX >= absY * 0.42 ? Math.sign(normalizedX) : 0,
+    y: absY >= absX * 0.42 ? Math.sign(normalizedY) : 0,
+  };
+}
+
+function performTouchMove() {
+  if (!touchMoveDirection) return;
+  performAction({ type: "move", dx: touchMoveDirection.x, dy: touchMoveDirection.y });
+  window.clearTimeout(touchMoveTimer);
+  touchMoveTimer = window.setTimeout(performTouchMove, touchDashHeld ? 92 : 158);
+}
+
+function stopTouchMove(pad) {
+  touchMovePointer = null;
+  touchMoveDirection = null;
+  window.clearTimeout(touchMoveTimer);
+  touchMoveTimer = null;
+  pad.classList.remove("pressed");
+}
+
+function bindTouchController() {
+  const pad = document.querySelector("[data-dpad]");
+  const dashButton = document.querySelector("#touchDashButton");
+  if (!pad || !dashButton) return;
+
+  pad.addEventListener("pointerdown", (event) => {
+    if (event.target.closest(".dpad-center")) return;
+    event.preventDefault();
+    touchMovePointer = event.pointerId;
+    pad.setPointerCapture(event.pointerId);
+    touchMoveDirection = getTouchDpadDirection(event, pad);
+    pad.classList.add("pressed");
+    performTouchMove();
+  });
+  pad.addEventListener("pointermove", (event) => {
+    if (event.pointerId !== touchMovePointer) return;
+    event.preventDefault();
+    const next = getTouchDpadDirection(event, pad);
+    const changed = next?.x !== touchMoveDirection?.x || next?.y !== touchMoveDirection?.y;
+    touchMoveDirection = next;
+    if (changed && next) performTouchMove();
+  });
+  for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"]) {
+    pad.addEventListener(eventName, () => stopTouchMove(pad));
+  }
+
+  const releaseDash = () => {
+    touchDashHeld = false;
+    dashButton.classList.remove("pressed");
+  };
+  dashButton.addEventListener("pointerdown", (event) => {
+    event.preventDefault();
+    touchDashHeld = true;
+    dashButton.classList.add("pressed");
+    dashButton.setPointerCapture(event.pointerId);
+  });
+  for (const eventName of ["pointerup", "pointercancel", "lostpointercapture"]) {
+    dashButton.addEventListener(eventName, releaseDash);
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      stopTouchMove(pad);
+      releaseDash();
+    }
+  });
+}
+
 function bindEvents() {
   document.addEventListener("keydown", handleKey);
   ui.soundButton.addEventListener("click", toggleSound);
@@ -5150,6 +5229,7 @@ function bindEvents() {
       performAction(action);
     });
   });
+  bindTouchController();
 }
 
 bindEvents();
@@ -5160,3 +5240,11 @@ spriteSheet.addEventListener("load", () => {
   if (game) updateAll();
 });
 requestAnimationFrame(draw);
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {
+      // The game remains playable online if offline support is unavailable.
+    });
+  });
+}
