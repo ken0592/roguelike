@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ふたりの星屑ダンジョン</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">
+            <span></span>
+          </span>
+          <div>
+            <h1>ふたりの星屑ダンジョン</h1>
+            <p>星核を探す協力ターン制ローグライク</p>
+          </div>
+        </div>
+
+        <div class="run-strip" aria-live="polite">
+          <span><b>階層</b><strong id="floorLabel">B1F</strong></span>
+          <span><b>スコア</b><strong id="scoreLabel">0 pt</strong></span>
+          <span><b>記録</b><strong id="bestLabel">Best 0</strong></span>
+        </div>
+
+        <div class="top-actions">
+          <button id="helpButton" class="icon-button" type="button" title="操作" aria-label="操作">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 17h.01M9.2 9a3 3 0 1 1 5.2 2c-1.3 1-2.4 1.7-2.4 3" />
+              <circle cx="12" cy="12" r="9" />
+            </svg>
+          </button>
+          <button id="restartButton" class="icon-button" type="button" title="新しい冒険" aria-label="新しい冒険">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M4 12a8 8 0 0 1 13.7-5.7L20 8" />
+              <path d="M20 4v4h-4" />
+              <path d="M20 12a8 8 0 0 1-13.7 5.7L4 16" />
+              <path d="M4 20v-4h4" />
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="game-layout">
+        <section class="stage-panel" aria-label="ダンジョン">
+          <canvas id="gameCanvas" width="1152" height="768"></canvas>
+          <div id="toast" class="toast" hidden></div>
+        </section>
+
+        <aside class="side-panel">
+          <section class="party-panel" aria-label="仲間">
+            <div id="partyList" class="party-list"></div>
+          </section>
+
+          <section class="guide-panel" aria-label="冒険メモ">
+            <h2>冒険メモ</h2>
+            <div class="guide-grid">
+              <p><strong>目的</strong><span id="goalLabel">二つの紋章を解除</span></p>
+              <p><strong>分担</strong><span>ミナは灯紋、レンは剣紋</span></p>
+              <p><strong>合流</strong><span>近くで戦うと追撃</span></p>
+            </div>
+          </section>
+
+          <section class="run-panel" aria-label="冒険">
+            <div class="meter-line">
+              <span>紋章</span>
+              <strong id="sealLabel">0/2</strong>
+            </div>
+            <div class="meter-line">
+              <span>絆</span>
+              <strong id="bondLabel">100</strong>
+            </div>
+            <div class="meter-line">
+              <span>救助ベル</span>
+              <strong id="bellLabel">1</strong>
+            </div>
+            <div class="meter-line">
+              <span>次の階段</span>
+              <strong id="stairsLabel">探索中</strong>
+            </div>
+            <div class="meter-line">
+              <span>ターン</span>
+              <strong id="turnLabel">1</strong>
+            </div>
+          </section>
+
+          <section class="mini-map-panel" aria-label="ミニマップ">
+            <canvas id="miniMap" width="220" height="148"></canvas>
+          </section>
+
+          <section class="log-panel" aria-label="ログ">
+            <h2>ログ</h2>
+            <ol id="logList" class="log-list"></ol>
+          </section>
+        </aside>
+      </main>
+
+      <section class="touch-controls" aria-label="タッチ操作">
+        <div class="touch-pad touch-pad-a" aria-label="プレイヤー1">
+          <span>P1</span>
+          <button type="button" data-player="0" data-action="move" data-dx="0" data-dy="-1" aria-label="P1 上">↑</button>
+          <button type="button" data-player="0" data-action="move" data-dx="-1" data-dy="0" aria-label="P1 左">←</button>
+          <button type="button" data-player="0" data-action="wait" aria-label="P1 待機">•</button>
+          <button type="button" data-player="0" data-action="move" data-dx="1" data-dy="0" aria-label="P1 右">→</button>
+          <button type="button" data-player="0" data-action="skill" aria-label="P1 スキル">✦</button>
+          <button type="button" data-player="0" data-action="move" data-dx="0" data-dy="1" aria-label="P1 下">↓</button>
+        </div>
+
+        <div class="touch-pad touch-pad-b" aria-label="プレイヤー2">
+          <span>P2</span>
+          <button type="button" data-player="1" data-action="move" data-dx="0" data-dy="-1" aria-label="P2 上">↑</button>
+          <button type="button" data-player="1" data-action="move" data-dx="-1" data-dy="0" aria-label="P2 左">←</button>
+          <button type="button" data-player="1" data-action="wait" aria-label="P2 待機">•</button>
+          <button type="button" data-player="1" data-action="move" data-dx="1" data-dy="0" aria-label="P2 右">→</button>
+          <button type="button" data-player="1" data-action="skill" aria-label="P2 スキル">✦</button>
+          <button type="button" data-player="1" data-action="move" data-dx="0" data-dy="1" aria-label="P2 下">↓</button>
+        </div>
+      </section>
+    </div>
+
+    <dialog id="helpDialog" class="help-dialog">
+      <form method="dialog">
+        <header>
+          <h2>遊び方</h2>
+          <button class="icon-button" type="submit" aria-label="閉じる">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </header>
+        <div class="control-grid">
+          <div>
+            <strong>P1</strong>
+            <span>WASD / E / Space</span>
+          </div>
+          <div>
+            <strong>P2</strong>
+            <span>矢印 / スラッシュ / Enter</span>
+          </div>
+        </div>
+        <ul class="help-list">
+          <li>二人とも行動すると敵のターンになります。</li>
+          <li>各階には二つの紋章があります。ミナは灯紋、レンは剣紋を踏むと封印を解除できます。</li>
+          <li>二つの紋章を解除するまで階段は使えません。</li>
+          <li>二人が近くで攻撃すると追撃が出ます。離れすぎると絆が下がります。</li>
+          <li>敵の隣へ移動すると攻撃。スキルはクールダウン後に再使用できます。</li>
+          <li>仲間が倒れたら、隣で行動すると救助ベルを使って復帰できます。</li>
+          <li>階段は二人が近くに集まると次の階へ進みます。</li>
+        </ul>
+        <p class="credit-line">素材: Kenney Roguelike/RPG Pack (CC0)</p>
+      </form>
+    </dialog>
+
+    <div id="endOverlay" class="end-overlay" hidden>
+      <div class="end-box" role="dialog" aria-modal="true" aria-labelledby="endTitle">
+        <h2 id="endTitle">冒険終了</h2>
+        <p id="endText"></p>
+        <button id="endRestartButton" class="primary-button" type="button">もう一度</button>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
