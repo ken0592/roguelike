@@ -1,10 +1,10 @@
-const CACHE_NAME = "stardust-rescue-v1";
+const CACHE_NAME = "stardust-rescue-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./app.js",
-  "./manifest.webmanifest",
+  "./styles.css?v=pwa2",
+  "./app.js?v=pwa2",
+  "./manifest.webmanifest?v=pwa2",
   "./assets/pwa/icon-180.png",
   "./assets/pwa/icon-192.png",
   "./assets/pwa/icon-512.png",
