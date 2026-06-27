@@ -1,62 +1,112 @@
 const TILE = 48;
-const BASE_TILE = 32;
-const ACTOR_SCALE = TILE / BASE_TILE;
 const MAP_W = 36;
 const MAP_H = 24;
-const TARGET_FLOOR = 6;
+const TARGET_FLOOR = 5;
 const VISION_RADIUS = 7;
-const STORAGE_KEY = "stardustDungeonBest";
+const BASE_BAG_CAPACITY = 20;
+const MAX_BAG_CAPACITY = 40;
+const STORAGE_KEY = "stardustRescueBest";
+const SAVE_KEY = "stardustRescueSaveV2";
+const SOUND_KEY = "stardustRescueSound";
+const SAVE_SLOT_COUNT = 3;
 const SPRITE_TILE = 16;
 const SPRITE_MARGIN = 1;
 const SPRITE_COLS = 56;
 
 const canvas = document.querySelector("#gameCanvas");
 const ctx = canvas.getContext("2d");
+const entityBuffer = document.createElement("canvas");
+entityBuffer.width = TILE;
+entityBuffer.height = TILE;
+const entityBufferCtx = entityBuffer.getContext("2d");
+const entityTint = document.createElement("canvas");
+entityTint.width = TILE;
+entityTint.height = TILE;
+const entityTintCtx = entityTint.getContext("2d");
 const miniCanvas = document.querySelector("#miniMap");
 const miniCtx = miniCanvas.getContext("2d");
+const townCanvas = document.querySelector("#townCanvas");
+const townCtx = townCanvas.getContext("2d");
 const spriteSheet = new Image();
 spriteSheet.src = "assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png";
-
-let renderCamera = { x: 0, y: 0, width: canvas.width / TILE, height: canvas.height / TILE };
 
 const ui = {
   floor: document.querySelector("#floorLabel"),
   score: document.querySelector("#scoreLabel"),
   best: document.querySelector("#bestLabel"),
-  bell: document.querySelector("#bellLabel"),
-  seal: document.querySelector("#sealLabel"),
-  bond: document.querySelector("#bondLabel"),
+  mission: document.querySelector("#sealLabel"),
+  belly: document.querySelector("#bondLabel"),
+  bag: document.querySelector("#bellLabel"),
+  gear: document.querySelector("#gearLabel"),
   goal: document.querySelector("#goalLabel"),
   stairs: document.querySelector("#stairsLabel"),
   turn: document.querySelector("#turnLabel"),
   party: document.querySelector("#partyList"),
+  moveSummary: document.querySelector("#moveSummary"),
   log: document.querySelector("#logList"),
   toast: document.querySelector("#toast"),
   helpButton: document.querySelector("#helpButton"),
+  soundButton: document.querySelector("#soundButton"),
   helpDialog: document.querySelector("#helpDialog"),
   restartButton: document.querySelector("#restartButton"),
+  saveButton: document.querySelector("#saveButton"),
+  saveDialog: document.querySelector("#saveDialog"),
+  saveDialogClose: document.querySelector("#saveDialogClose"),
+  saveDialogNote: document.querySelector("#saveDialogNote"),
+  saveSlotList: document.querySelector("#saveSlotList"),
+  stairsDialog: document.querySelector("#stairsDialog"),
+  stairsDialogKicker: document.querySelector("#stairsDialogKicker"),
+  stairsDialogTitle: document.querySelector("#stairsDialogTitle"),
+  stairsDialogText: document.querySelector("#stairsDialogText"),
+  stairsStayButton: document.querySelector("#stairsStayButton"),
+  stairsProceedButton: document.querySelector("#stairsProceedButton"),
   endOverlay: document.querySelector("#endOverlay"),
   endTitle: document.querySelector("#endTitle"),
   endText: document.querySelector("#endText"),
   endRestartButton: document.querySelector("#endRestartButton"),
+  townScreen: document.querySelector("#townScreen"),
+  gameLayout: document.querySelector("#gameLayout"),
+  touchControls: document.querySelector("#touchControls"),
+  townMission: document.querySelector("#townMissionLabel"),
+  townRank: document.querySelector("#townRankLabel"),
+  townCoin: document.querySelector("#townCoinLabel"),
+  townLeaderName: document.querySelector("#townLeaderName"),
+  townLeaderType: document.querySelector("#townLeaderType"),
+  townLeaderSwatch: document.querySelector("#townLeaderSwatch"),
+  departButton: document.querySelector("#departButton"),
+  townDialog: document.querySelector("#townDialog"),
+  townDialogTitle: document.querySelector("#townDialogTitle"),
+  townDialogBody: document.querySelector("#townDialogBody"),
+  gameMenuButton: document.querySelector("#gameMenuButton"),
+  gameMenuDialog: document.querySelector("#gameMenuDialog"),
+  gameMenuBody: document.querySelector("#gameMenuBody"),
+  tacticSummary: document.querySelector("#tacticSummary"),
+  karma: document.querySelector("#karmaLabel"),
+  chapter: document.querySelector("#chapterLabel"),
+  luck: document.querySelector("#luckLabel"),
+  eventBanner: document.querySelector("#eventBanner"),
+  eventIcon: document.querySelector("#eventIcon"),
+  eventTitle: document.querySelector("#eventTitle"),
+  eventDetail: document.querySelector("#eventDetail"),
+  mapLeaderDot: document.querySelector(".map-leader"),
 };
 
 const palette = {
   void: "#070807",
-  wall: "#2b2e2a",
-  wallDark: "#171916",
-  wallLight: "#4b5146",
-  floor: "#4a4338",
-  floorAlt: "#544b3d",
-  floorDark: "#332f29",
-  moss: "#7f9b61",
-  brass: "#e3af4c",
-  teal: "#69b9c3",
-  coral: "#de6d5e",
-  violet: "#9480d4",
-  white: "#f7efe3",
+  wall: "#292d29",
+  wallDark: "#151816",
+  wallLight: "#515846",
+  floor: "#4a4034",
+  floorAlt: "#554837",
+  floorDark: "#302a24",
+  moss: "#759a60",
+  brass: "#e5ae48",
+  teal: "#62c7cf",
+  coral: "#ef6b64",
+  violet: "#9884dc",
+  white: "#fff4df",
   ink: "#171411",
-  fog: "rgba(5, 7, 6, 0.66)",
+  fog: "rgba(5, 7, 6, 0.68)",
 };
 
 const spriteIds = {
@@ -64,61 +114,702 @@ const spriteIds = {
   moss: [560, 561, 562, 563],
   cracks: [1136, 1137, 1138, 1139],
   walls: [174, 175, 176, 177],
-  wallCaps: [677, 678, 679, 680],
   herb: 640,
-  stardust: 658,
-  guard: 554,
-  bell: 1176,
-  stairs: 1176,
-  lampSeal: 554,
-  bladeSeal: 406,
+  apple: 658,
+  badge: 554,
+  orb: 1176,
+  stairs: 406,
+  mission: 554,
   ember: 462,
-  mossEnemy: 640,
-  crystalEnemy: 554,
-  totemEnemy: 602,
+  sprout: 640,
+  crystal: 554,
+  totem: 602,
 };
 
-const enemyCatalog = [
+const moveCatalog = [
   {
-    key: "ember",
-    name: "影火",
-    hp: 9,
-    atk: 3,
-    exp: 16,
-    color: "#e17c4d",
-    accent: "#ffd66d",
-    speed: 1,
+    key: "spark",
+    name: "灯火弾",
+    hint: "前方4マス",
+    maxPp: 12,
   },
   {
-    key: "moss",
-    name: "苔玉",
-    hp: 13,
-    atk: 2,
-    exp: 18,
-    color: "#789c61",
-    accent: "#c6df8f",
-    speed: 1,
+    key: "gust",
+    name: "つむじ風",
+    hint: "周囲1マス",
+    maxPp: 8,
   },
   {
-    key: "crystal",
-    name: "結晶兵",
-    hp: 16,
-    atk: 4,
-    exp: 24,
-    color: "#7bbdd2",
-    accent: "#d6f8ff",
-    speed: 1,
+    key: "heal",
+    name: "星雫の癒し",
+    hint: "自分を回復",
+    maxPp: 6,
   },
   {
-    key: "totem",
-    name: "石像",
-    hp: 22,
-    atk: 5,
-    exp: 32,
-    color: "#9b917d",
-    accent: "#e3cf9a",
-    speed: 1,
+    key: "guard",
+    name: "星殻の構え",
+    hint: "3ターン防御",
+    maxPp: 5,
   },
+];
+
+const characterCatalog = [
+  {
+    key: "kohaku",
+    name: "コハク",
+    type: "星水",
+    color: "#62c7cf",
+    accent: "#d7fbff",
+    scarf: "#f0b34d",
+    maxHp: 34,
+    atk: 7,
+    def: 1,
+    style: "バランス",
+    moves: moveCatalog,
+  },
+];
+
+const itemCatalog = {
+  apple: {
+    name: "月蜜の実",
+    category: "食料",
+    detail: "満腹度を45回復する。",
+    sprite: spriteIds.apple,
+    color: "#f0b34d",
+    icon: "食",
+  },
+  bigApple: {
+    name: "大樹の月蜜",
+    category: "食料",
+    detail: "満腹度を80回復する。",
+    sprite: spriteIds.apple,
+    color: "#ff9a55",
+    icon: "大",
+  },
+  oran: {
+    name: "雫青の実",
+    category: "きのみ",
+    detail: "リーダーのHPを20回復する。",
+    sprite: spriteIds.herb,
+    color: "#69aef0",
+    icon: "癒",
+  },
+  elixir: {
+    name: "星露のしずく",
+    category: "ドリンク",
+    detail: "すべての技PPを5回復する。",
+    sprite: spriteIds.orb,
+    color: "#65d9d7",
+    icon: "PP",
+  },
+  reviver: {
+    name: "あかつきの種",
+    category: "タネ",
+    detail: "倒れた主人公を自動で復活させる。",
+    sprite: spriteIds.badge,
+    color: "#ffe47b",
+    icon: "復",
+    automatic: true,
+  },
+  blastSeed: {
+    name: "火走りの種",
+    category: "タネ",
+    detail: "正面3マスの敵に18ダメージ。",
+    sprite: spriteIds.ember,
+    color: "#ff795b",
+    icon: "爆",
+  },
+  sleepSeed: {
+    name: "夢まどいの種",
+    category: "タネ",
+    detail: "正面3マスの敵を4ターン眠らせる。",
+    sprite: spriteIds.herb,
+    color: "#b59af1",
+    icon: "眠",
+  },
+  slumberOrb: {
+    name: "静寂の珠",
+    category: "ふしぎだま",
+    detail: "見えている敵を3ターン眠らせる。",
+    sprite: spriteIds.orb,
+    color: "#9e85dc",
+    icon: "止",
+  },
+  warpOrb: {
+    name: "風渡りの珠",
+    category: "ふしぎだま",
+    detail: "隊を別の安全な部屋へ移動させる。",
+    sprite: spriteIds.orb,
+    color: "#6fcce8",
+    icon: "跳",
+  },
+  guidingOrb: {
+    name: "導星の珠",
+    category: "ふしぎだま",
+    detail: "この階の目的地を地図に表示する。",
+    sprite: spriteIds.badge,
+    color: "#f2c865",
+    icon: "導",
+  },
+  guardBerry: {
+    name: "鋼皮の実",
+    category: "きのみ",
+    detail: "この挑戦中、防御を1上げる。",
+    sprite: spriteIds.herb,
+    color: "#8db6c4",
+    icon: "守",
+  },
+  powerBerry: {
+    name: "牙研ぎの実",
+    category: "きのみ",
+    detail: "この挑戦中、攻撃を1上げる。",
+    sprite: spriteIds.herb,
+    color: "#ee8a67",
+    icon: "牙",
+  },
+  fortuneOrb: {
+    name: "招福の珠",
+    category: "ふしぎだま",
+    detail: "この階の運を2上げ、良い落とし物を呼ぶ。",
+    sprite: spriteIds.orb,
+    color: "#efc75f",
+    icon: "運",
+  },
+  moonShard: {
+    name: "月澄の欠片",
+    category: "進化素材",
+    detail: "星水の敵が落とす、清らかな進化素材。",
+    sprite: spriteIds.crystal,
+    color: "#7ee9f2",
+    icon: "月",
+    automatic: true,
+  },
+  emberCore: {
+    name: "緋炉の核",
+    category: "進化素材",
+    detail: "火晶の敵が落とす、熱を秘めた進化素材。",
+    sprite: spriteIds.ember,
+    color: "#ff755b",
+    icon: "炎",
+    automatic: true,
+  },
+  shadowFang: {
+    name: "宵影の牙",
+    category: "進化素材",
+    detail: "月影の敵や禁じられた行いから得る進化素材。",
+    sprite: spriteIds.badge,
+    color: "#b58ae8",
+    icon: "影",
+    automatic: true,
+  },
+  wisdomSeed: {
+    name: "叡樹の種",
+    category: "進化素材",
+    detail: "森葉の敵が落とす、知恵を宿した進化素材。",
+    sprite: spriteIds.herb,
+    color: "#83c96c",
+    icon: "樹",
+    automatic: true,
+  },
+  bossCore: {
+    name: "覇星の核",
+    category: "進化素材",
+    detail: "ボスやレア敵だけが残す、強大な進化素材。",
+    sprite: spriteIds.crystal,
+    color: "#ffe36f",
+    icon: "冠",
+    automatic: true,
+  },
+};
+
+const gearSlots = {
+  weapon: { name: "武器", color: "#ef9a5b" },
+  armor: { name: "防具", color: "#70b8cf" },
+  charm: { name: "お守り", color: "#d6b564" },
+};
+
+const gearBases = [
+  { key: "sword", slot: "weapon", name: "星鉄の剣", atk: 3, def: 0, hp: 0 },
+  { key: "wand", slot: "weapon", name: "風紋の杖", atk: 2, def: 0, hp: 4 },
+  { key: "claw", slot: "weapon", name: "月牙の爪", atk: 4, def: -1, hp: 0 },
+  { key: "cloak", slot: "armor", name: "月絹のマント", atk: 0, def: 2, hp: 3 },
+  { key: "plate", slot: "armor", name: "星殻の鎧", atk: 0, def: 3, hp: 0 },
+  { key: "vest", slot: "armor", name: "森守の服", atk: 0, def: 1, hp: 8 },
+  { key: "bell", slot: "charm", name: "きずなの鈴", atk: 1, def: 1, hp: 4 },
+  { key: "feather", slot: "charm", name: "天風の羽根", atk: 2, def: 0, hp: 3 },
+  { key: "gem", slot: "charm", name: "星命石", atk: 0, def: 1, hp: 10 },
+];
+
+const gearQualities = [
+  { name: "コモン", prefix: "使い込まれた", stars: 1, color: "#a9a39a", scale: 0, weight: 28 },
+  { name: "アンコモン", prefix: "磨かれた", stars: 2, color: "#77c8d0", scale: 1, weight: 34 },
+  { name: "レア", prefix: "輝く", stars: 3, color: "#e9bd58", scale: 2, weight: 24 },
+  { name: "エピック", prefix: "伝承の", stars: 4, color: "#c68bed", scale: 3, weight: 10 },
+  { name: "レジェンド", prefix: "星王の", stars: 5, color: "#ff8b71", scale: 4, weight: 4 },
+];
+
+const evolutionCatalog = [
+  {
+    key: "lumina",
+    from: "base",
+    stage: 1,
+    name: "星護ルミナ",
+    type: "星光",
+    color: "#61d8e6",
+    accent: "#f2ffff",
+    scarf: "#ffd96d",
+    title: "救いを選んだ守護者",
+    materials: { moonShard: 2 },
+    level: 8,
+    requirement: (stats) => stats.helped >= 3 && game.karma === 0,
+    requirementText: (stats) => `依頼達成 ${stats.helped}/3・カルマ 0`,
+    bonus: { hp: 12, atk: 1, def: 3 },
+  },
+  {
+    key: "seraph",
+    from: "lumina",
+    stage: 2,
+    name: "星導セラフィ",
+    type: "聖星",
+    color: "#d8f3f2",
+    accent: "#ffffff",
+    scarf: "#f3c44d",
+    title: "救いの軌跡を束ねた導き手",
+    materials: { moonShard: 3, bossCore: 1 },
+    level: 15,
+    requirement: (stats) => stats.helped >= 7 && stats.floorsCleared >= 8 && game.karma === 0,
+    requirementText: (stats) => `依頼達成 ${stats.helped}/7・踏破階 ${stats.floorsCleared}/8・カルマ 0`,
+    bonus: { hp: 15, atk: 3, def: 4 },
+  },
+  {
+    key: "agni",
+    from: "base",
+    stage: 1,
+    name: "炎牙アグニ",
+    type: "火晶",
+    color: "#ef6658",
+    accent: "#ffd29f",
+    scarf: "#fff078",
+    title: "戦いを重ねた猛き牙",
+    materials: { emberCore: 2 },
+    level: 9,
+    requirement: (stats) => stats.kills >= 28,
+    requirementText: (stats) => `敵撃破 ${stats.kills}/28`,
+    bonus: { hp: 5, atk: 5, def: 1 },
+  },
+  {
+    key: "vajra",
+    from: "agni",
+    stage: 2,
+    name: "焔王ヴァジュラ",
+    type: "獄炎",
+    color: "#d9413f",
+    accent: "#fff0a1",
+    scarf: "#f9c953",
+    title: "数多の戦いを越えた焔王",
+    materials: { emberCore: 3, bossCore: 1 },
+    level: 16,
+    requirement: (stats) => stats.kills >= 65 && stats.techniques >= 20,
+    requirementText: (stats) => `敵撃破 ${stats.kills}/65・技使用 ${stats.techniques}/20`,
+    bonus: { hp: 9, atk: 7, def: 2 },
+  },
+  {
+    key: "nox",
+    from: "base",
+    stage: 1,
+    name: "宵影ノクス",
+    type: "月影",
+    color: "#9c6bd4",
+    accent: "#f0dcff",
+    scarf: "#55d0cc",
+    title: "禁忌を力に変えた夜影",
+    materials: { shadowFang: 2 },
+    level: 9,
+    requirement: (stats) => stats.clientsKilled >= 1 && game.karma >= 3,
+    requirementText: (stats) => `依頼人撃破 ${stats.clientsKilled}/1・カルマ ${game.karma}/3`,
+    bonus: { hp: 4, atk: 4, def: 2 },
+  },
+  {
+    key: "abyss",
+    from: "nox",
+    stage: 2,
+    name: "冥王アビス",
+    type: "冥影",
+    color: "#663b92",
+    accent: "#e6c6ff",
+    scarf: "#e35b78",
+    title: "禁忌を喰らい尽くした冥王",
+    materials: { shadowFang: 3, bossCore: 1 },
+    level: 16,
+    requirement: (stats) => stats.clientsKilled >= 2 && game.karma >= 8,
+    requirementText: (stats) => `依頼人撃破 ${stats.clientsKilled}/2・カルマ ${game.karma}/8`,
+    bonus: { hp: 8, atk: 6, def: 3 },
+  },
+  {
+    key: "sage",
+    from: "base",
+    stage: 1,
+    name: "智樹セージ",
+    type: "森葉",
+    color: "#70ad62",
+    accent: "#e7f7ae",
+    scarf: "#edc85e",
+    title: "一度の変化で完成する叡智の賢者",
+    materials: { wisdomSeed: 3, bossCore: 1 },
+    level: 14,
+    requirement: (stats) => stats.itemUses >= 15 && game.unlockedSkills.length >= 5,
+    requirementText: (stats) => `道具使用 ${stats.itemUses}/15・スキル ${game.unlockedSkills.length}/5`,
+    bonus: { hp: 18, atk: 5, def: 4 },
+  },
+  {
+    key: "astera",
+    from: "base",
+    stage: 1,
+    name: "星王アステラ",
+    type: "天星",
+    color: "#e3bb54",
+    accent: "#fff7c4",
+    scarf: "#ef786f",
+    title: "長い未進化期を越え、一度で至る星の王",
+    materials: { moonShard: 1, emberCore: 1, wisdomSeed: 1, bossCore: 2 },
+    level: 18,
+    requirement: (stats) => stats.floorsCleared >= 16 && stats.helped >= 5 && game.karma <= 1,
+    requirementText: (stats) => `踏破階 ${stats.floorsCleared}/16・依頼達成 ${stats.helped}/5・カルマ 1以下`,
+    bonus: { hp: 20, atk: 7, def: 5 },
+  },
+];
+
+const tacticCatalog = [
+  {
+    key: "together",
+    name: "いっしょに行こう",
+    short: "追従",
+    detail: "隊列を守り、隣の敵だけを攻撃する。",
+  },
+  {
+    key: "hunt",
+    name: "敵を見つけて",
+    short: "迎撃",
+    detail: "見えている敵を積極的に追いかける。",
+  },
+  {
+    key: "wait",
+    name: "その場で待機",
+    short: "待機",
+    detail: "移動せず、隣に来た敵だけを攻撃する。",
+  },
+  {
+    key: "avoid",
+    name: "危険を避けて",
+    short: "回避",
+    detail: "敵から距離を取りながら隊についてくる。",
+  },
+  {
+    key: "explore",
+    name: "別行動で探索",
+    short: "探索",
+    detail: "未探索の通路や部屋を探しに向かう。",
+  },
+];
+
+const skillCatalog = [
+  { key: "tough", name: "鋼の節", detail: "最大HP +6", cost: 1, branch: "左前脚", icon: "HP" },
+  { key: "power", name: "狩牙の節", detail: "攻撃 +2", cost: 1, branch: "右前脚", icon: "攻", requires: "tough" },
+  { key: "shell", name: "甲殻の節", detail: "防御 +1", cost: 1, branch: "左第二脚", icon: "守" },
+  { key: "scout", name: "複眼の節", detail: "探索済みの部屋にある道具を地図に表示", cost: 1, branch: "右第二脚", icon: "眼", requires: "shell" },
+  { key: "ration", name: "貯糧の節", detail: "満腹度が減りにくくなる", cost: 1, branch: "左第三脚", icon: "食" },
+  { key: "technique", name: "糸技の節", detail: "すべての技の最大PP +2", cost: 2, branch: "右第三脚", icon: "技", requires: "ration" },
+  { key: "fortune", name: "吉兆の節", detail: "レア敵との遭遇率が少し上がる", cost: 1, branch: "左後脚", icon: "運" },
+  { key: "predator", name: "収穫の節", detail: "敵が道具を落としやすくなる", cost: 2, branch: "右後脚", icon: "収", requires: "fortune" },
+];
+
+const enemyTypes = [
+  { key: "starwater", name: "星水", prefix: "蒼", color: "#62c7cf", accent: "#d7fbff", hp: 2, atk: 0, def: 1 },
+  { key: "firecrystal", name: "火晶", prefix: "緋", color: "#ef6b64", accent: "#ffd2a6", hp: 0, atk: 2, def: 0 },
+  { key: "forestleaf", name: "森葉", prefix: "翠", color: "#76ad63", accent: "#e2f5ad", hp: 4, atk: 0, def: 0 },
+  { key: "moonshade", name: "月影", prefix: "紫", color: "#9480d4", accent: "#eadfff", hp: 0, atk: 1, def: 1 },
+  { key: "skywind", name: "天風", prefix: "碧", color: "#66aee8", accent: "#e0f4ff", hp: -1, atk: 2, def: 0 },
+];
+
+const enemyFamilies = [
+  { key: "ember", name: "ヒノコだま", friendName: "ヒノコ", hp: 12, atk: 4, def: 0, exp: 14, recruit: 0.12, sprite: 462, tier: 1 },
+  { key: "sprout", name: "コケつむり", friendName: "コケ丸", hp: 15, atk: 3, def: 1, exp: 16, recruit: 0.14, sprite: 640, tier: 1 },
+  { key: "crystal", name: "結晶兵", friendName: "キララ", hp: 19, atk: 5, def: 1, exp: 22, recruit: 0.09, sprite: 554, tier: 1 },
+  { key: "totem", name: "石の番人", friendName: "イワノ", hp: 25, atk: 6, def: 2, exp: 30, recruit: 0.07, sprite: 602, tier: 1 },
+  { key: "bellbee", name: "風鈴バチ", friendName: "リンネ", hp: 14, atk: 6, def: 0, exp: 19, recruit: 0.11, sprite: 463, tier: 1 },
+  { key: "mistowl", name: "霧フクロウ", friendName: "キリリ", hp: 18, atk: 5, def: 1, exp: 23, recruit: 0.09, sprite: 464, tier: 1 },
+  { key: "sandrunner", name: "砂走り", friendName: "サラサ", hp: 16, atk: 7, def: 0, exp: 25, recruit: 0.1, sprite: 641, tier: 1 },
+  { key: "stareater", name: "星喰い", friendName: "ホシミ", hp: 22, atk: 6, def: 1, exp: 29, recruit: 0.06, sprite: 642, tier: 1 },
+  { key: "mossbird", name: "苔鳥", friendName: "モリノ", hp: 20, atk: 5, def: 2, exp: 28, recruit: 0.1, sprite: 555, tier: 2 },
+  { key: "mooncat", name: "月影ネコ", friendName: "ミカヅキ", hp: 18, atk: 8, def: 1, exp: 31, recruit: 0.08, sprite: 556, tier: 2 },
+  { key: "thundermouse", name: "雷尾ネズミ", friendName: "ライカ", hp: 17, atk: 9, def: 0, exp: 33, recruit: 0.09, sprite: 603, tier: 2 },
+  { key: "bubblejelly", name: "泡クラゲ", friendName: "アワワ", hp: 24, atk: 6, def: 2, exp: 35, recruit: 0.08, sprite: 604, tier: 2 },
+  { key: "hollowbear", name: "樹洞グマ", friendName: "ウロロ", hp: 32, atk: 8, def: 2, exp: 42, recruit: 0.05, sprite: 690, tier: 2 },
+  { key: "ironturtle", name: "鉄甲カメ", friendName: "クロガネ", hp: 30, atk: 6, def: 4, exp: 44, recruit: 0.05, sprite: 691, tier: 2 },
+  { key: "dreamtapir", name: "夢喰いバク", friendName: "ユメジ", hp: 26, atk: 8, def: 2, exp: 41, recruit: 0.06, sprite: 744, tier: 2 },
+  { key: "ashbat", name: "灰羽コウモリ", friendName: "ハイネ", hp: 21, atk: 10, def: 1, exp: 43, recruit: 0.07, sprite: 745, tier: 2 },
+  { key: "lightdeer", name: "光角シカ", friendName: "ルクス", hp: 29, atk: 9, def: 2, exp: 48, recruit: 0.05, sprite: 800, tier: 3 },
+  { key: "snowrabbit", name: "雪玉ウサギ", friendName: "ユキネ", hp: 24, atk: 11, def: 1, exp: 47, recruit: 0.07, sprite: 801, tier: 3 },
+  { key: "craterlizard", name: "火口トカゲ", friendName: "カザン", hp: 34, atk: 10, def: 3, exp: 54, recruit: 0.04, sprite: 856, tier: 3 },
+  { key: "hollowknight", name: "虚ろ騎士", friendName: "クウガ", hp: 38, atk: 11, def: 4, exp: 62, recruit: 0.03, sprite: 857, tier: 3 },
+];
+
+const enemyCatalog = enemyFamilies.flatMap((family) =>
+  enemyTypes.map((type) => ({
+    ...family,
+    key: `${family.key}-${type.key}`,
+    familyKey: family.key,
+    typeKey: type.key,
+    type: type.name,
+    name: `${type.prefix}${family.name}`,
+    friendName: `${type.prefix}${family.friendName}`,
+    hp: Math.max(8, family.hp + type.hp),
+    atk: family.atk + type.atk,
+    def: family.def + type.def,
+    color: type.color,
+    accent: type.accent,
+  })),
+);
+
+const rareEnemyCatalog = [
+  {
+    key: "rare-stargold", name: "星金ミミック", friendName: "キンボシ", minDungeon: 1,
+    hp: 32, atk: 9, def: 3, exp: 110, recruit: 0.004, sprite: 554,
+    color: "#e9bd58", accent: "#fff3ae", rare: true,
+  },
+  {
+    key: "rare-rainbow", name: "虹羽フェニクス", friendName: "ニジハ", minDungeon: 2,
+    hp: 38, atk: 12, def: 3, exp: 155, recruit: 0.0035, sprite: 800,
+    color: "#ef7b72", accent: "#9de9df", rare: true,
+  },
+  {
+    key: "rare-moonwhite", name: "月白ユニコーン", friendName: "ハクギン", minDungeon: 3,
+    hp: 46, atk: 14, def: 5, exp: 210, recruit: 0.003, sprite: 690,
+    color: "#d9d4f2", accent: "#fffbd6", rare: true,
+  },
+  {
+    key: "rare-timehare", name: "時渡りウサギ", friendName: "トキノ", minDungeon: 4,
+    hp: 42, atk: 18, def: 4, exp: 280, recruit: 0.0025, sprite: 801,
+    color: "#79d4d9", accent: "#ffe58d", rare: true,
+  },
+  {
+    key: "rare-voidling", name: "虚空竜の幼体", friendName: "クウリュウ", minDungeon: 5,
+    hp: 58, atk: 21, def: 7, exp: 380, recruit: 0.002, sprite: 857,
+    color: "#b978df", accent: "#ffdf8b", rare: true,
+  },
+];
+
+const missionTemplates = [
+  {
+    client: "星見ギルド",
+    target: "迷子のルチル",
+    message: "ルチルを見つけて階段まで帰ろう。",
+    done: "迷子のルチルを救助した。",
+  },
+  {
+    client: "森の郵便屋",
+    target: "落とし物の星鈴",
+    message: "星鈴を回収して依頼を達成しよう。",
+    done: "星鈴を回収した。",
+  },
+  {
+    client: "月灯り食堂",
+    target: "眠ったコメット",
+    message: "コメットを起こして安全を確保しよう。",
+    done: "コメットを救助した。",
+  },
+];
+
+const storyChapters = [
+  { chapter: 1, title: "ささやきの森", dungeon: "ささやきの森", status: "入口" },
+  { chapter: 2, title: "風哭きの塔", dungeon: "風哭きの塔", status: "中級" },
+  { chapter: 3, title: "夢根の樹海", dungeon: "夢根の樹海", status: "深層" },
+  { chapter: 4, title: "灰冠都市", dungeon: "灰冠都市", status: "難関" },
+  { chapter: 5, title: "星喰いの最果て", dungeon: "星喰いの最果て", status: "最終" },
+];
+
+const townMissions = [
+  {
+    chapter: 1,
+    title: "ささやきの森",
+    dungeon: "ささやきの森",
+    theme: "forest",
+    client: "救助隊長アステル",
+    target: "虚ろの獣ノクス",
+    description: "木漏れ日の迷路を抜け、森の星明かりを奪う獣を倒す最初の挑戦。",
+    floors: 5,
+    reward: 320,
+    message: "森の奥で星明かりを奪う気配を追おう。",
+    done: "森を覆っていた星喰いの気配を退けた。",
+    boss: {
+      name: "虚ろの獣ノクス",
+      title: "星喰いの尖兵",
+      sprite: 857,
+      color: "#8f72d8",
+      accent: "#f1e2ff",
+      hp: 112,
+      atk: 11,
+      def: 3,
+      exp: 180,
+      special: "虚星衝",
+    },
+    clue: {
+      target: "欠けた星の痕跡",
+      message: "地面に残る紫の星屑を調べ、森の奥へ進もう。",
+      done: "星を吸い取る痕跡を見つけた。",
+    },
+  },
+  {
+    chapter: 2,
+    title: "風哭きの塔",
+    dungeon: "風哭きの塔",
+    theme: "tower",
+    client: "風読みミストラ",
+    target: "嵐冠ヴァルグ",
+    description: "風向きが変わる石塔を登り、町へ嵐を呼ぶ塔主を討つ。",
+    floors: 7,
+    reward: 480,
+    message: "風読みの印を集めながら、塔の頂上を目指そう。",
+    done: "風哭きの塔を静め、町へ吹く嵐を止めた。",
+    boss: {
+      name: "嵐冠ヴァルグ",
+      title: "風哭きの塔主",
+      sprite: 800,
+      color: "#58b8e8",
+      accent: "#e5fbff",
+      hp: 168,
+      atk: 15,
+      def: 5,
+      exp: 280,
+      special: "天嵐陣",
+    },
+    clue: {
+      target: "風読みの印",
+      message: "塔に残された風読みの印を探し、上階への封印を解こう。",
+      done: "風読みの印が次の階への道を示した。",
+    },
+  },
+  {
+    chapter: 3,
+    title: "夢根の樹海",
+    dungeon: "夢根の樹海",
+    theme: "dream",
+    client: "薬師ネムリ",
+    target: "夢樹母モルフェ",
+    description: "眠りを誘う巨大樹の根を進み、夢に囚われた森を目覚めさせる。",
+    floors: 10,
+    reward: 700,
+    message: "夢胞子に惑わされず、樹海の核を目指そう。",
+    done: "夢根の樹海に朝の光が戻った。",
+    boss: {
+      name: "夢樹母モルフェ",
+      title: "眠りを編む大樹",
+      sprite: 690,
+      color: "#78b86d",
+      accent: "#e8f6b8",
+      hp: 238,
+      atk: 18,
+      def: 6,
+      exp: 380,
+      special: "夢花粉",
+    },
+    clue: {
+      target: "目覚めの芽",
+      message: "光る芽を調べ、樹海を覆う夢の根をほどこう。",
+      done: "目覚めの芽が深層への道を開いた。",
+    },
+  },
+  {
+    chapter: 4,
+    title: "灰冠都市",
+    dungeon: "灰冠都市",
+    theme: "ruins",
+    client: "鍛冶師グレン",
+    target: "灰王ガルド",
+    description: "崩れた王都の機関を再起動し、灰の玉座に座す王を打ち破る。",
+    floors: 15,
+    reward: 920,
+    message: "残された炉心を探し、閉ざされた城門を開こう。",
+    done: "灰冠都市の炉に火が戻った。",
+    boss: {
+      name: "灰王ガルド",
+      title: "滅びた都の王",
+      sprite: 856,
+      color: "#d06a57",
+      accent: "#ffd29c",
+      hp: 340,
+      atk: 22,
+      def: 8,
+      exp: 520,
+      special: "灰燼波",
+    },
+    clue: {
+      target: "古炉の火種",
+      message: "灰に埋もれた火種を集め、城への道を灯そう。",
+      done: "古炉の火が城門を照らした。",
+    },
+  },
+  {
+    chapter: 5,
+    title: "星喰いの最果て",
+    dungeon: "星喰いの最果て",
+    theme: "void",
+    client: "星見ギルド",
+    target: "星喰皇ゼロム",
+    description: "五つ目の最終迷宮。消えゆく星の中心で、すべての異変の主を倒す。",
+    floors: 20,
+    reward: 1300,
+    message: "崩れる星路を越え、最果ての玉座へ進もう。",
+    done: "星喰いの夜は終わり、空に星が戻った。",
+    boss: {
+      name: "星喰皇ゼロム",
+      title: "最果てに座す皇",
+      sprite: 857,
+      color: "#b06ce0",
+      accent: "#fff0ff",
+      hp: 480,
+      atk: 27,
+      def: 10,
+      exp: 760,
+      special: "終星落とし",
+    },
+    clue: {
+      target: "砕けた星核",
+      message: "星核の欠片をつなぎ、虚空に道を作ろう。",
+      done: "星核が最果てへの道を結んだ。",
+    },
+  },
+];
+
+const dungeonThemes = {
+  forest: {
+    unknown: "#07100b", wall: "#365449", wallDark: "#1c302b", wallLight: "#527765",
+    floor: "#8b724f", floorDim: "#594b39", moss: "#477957", mossDim: "#385744", crack: "#713b37", crackDim: "#4d3231",
+  },
+  tower: {
+    unknown: "#080d12", wall: "#465766", wallDark: "#26333d", wallLight: "#718493",
+    floor: "#747680", floorDim: "#50525b", moss: "#4c7470", mossDim: "#385754", crack: "#76484a", crackDim: "#503536",
+  },
+  dream: {
+    unknown: "#0c0912", wall: "#4e4965", wallDark: "#292638", wallLight: "#746e8a",
+    floor: "#765f78", floorDim: "#514553", moss: "#557a5f", mossDim: "#3e5947", crack: "#743f60", crackDim: "#4f3045",
+  },
+  ruins: {
+    unknown: "#100a08", wall: "#63534c", wallDark: "#382d29", wallLight: "#89736a",
+    floor: "#80634e", floorDim: "#574538", moss: "#627052", mossDim: "#454f3e", crack: "#823f35", crackDim: "#572e2a",
+  },
+  void: {
+    unknown: "#050408", wall: "#393049", wallDark: "#1c1727", wallLight: "#655478",
+    floor: "#54455f", floorDim: "#392f42", moss: "#3f6865", mossDim: "#2e4b4a", crack: "#773657", crackDim: "#50273e",
+  },
+};
+
+const ranks = [
+  { name: "見習い", points: 0 },
+  { name: "ブロンズ", points: 120 },
+  { name: "シルバー", points: 320 },
+  { name: "ゴールド", points: 620 },
+  { name: "プラチナ", points: 1050 },
 ];
 
 const dirs = [
@@ -126,84 +817,193 @@ const dirs = [
   { x: 1, y: 0 },
   { x: 0, y: 1 },
   { x: -1, y: 0 },
+  { x: -1, y: -1 },
+  { x: 1, y: -1 },
+  { x: 1, y: 1 },
+  { x: -1, y: 1 },
 ];
 
 let bestScore = readBestScore();
 let game;
-let lastFrame = 0;
+let audioContext = null;
+let soundEnabled = readSoundSetting();
+let renderCamera = { x: 0, y: 0, width: canvas.width / TILE, height: canvas.height / TILE };
 
 function createGame() {
-  const nextGame = {
+  const roster = Object.fromEntries(
+    characterCatalog.map((character) => [character.key, createLeader(character.key)]),
+  );
+  game = {
+    mode: "town",
     floor: 1,
     turn: 1,
     score: 0,
-    bells: 1,
-    bond: 100,
+    rescuePoints: 0,
+    coins: 160,
+    saveSlot: null,
+    completedDungeon: 0,
+    storage: { apple: 0 },
+    selectedTownMission: 0,
+    activeTownMission: null,
+    targetFloor: TARGET_FLOOR,
+    townView: "board",
+    menuView: "moves",
+    trainingLevel: 0,
+    belly: 100,
+    bag: {
+      apple: 1,
+      bigApple: 0,
+      oran: 1,
+      elixir: 0,
+      reviver: 1,
+      blastSeed: 0,
+      sleepSeed: 0,
+      slumberOrb: 0,
+      warpOrb: 0,
+      guidingOrb: 0,
+      guardBerry: 0,
+      powerBerry: 0,
+      fortuneOrb: 0,
+      moonShard: 0,
+      emberCore: 0,
+      shadowFang: 0,
+      wisdomSeed: 0,
+      bossCore: 0,
+    },
+    bagCapacity: BASE_BAG_CAPACITY,
+    karma: 0,
+    runStats: createRunStats(),
+    selectedMove: 0,
+    focusTurns: 0,
+    skillPoints: 1,
+    unlockedSkills: [],
+    gearBag: [],
+    equipment: { weapon: null, armor: null, charm: null },
+    selectedCharacter: "kohaku",
+    roster,
     map: [],
     rooms: [],
     seen: [],
     visible: [],
-    players: [
-      {
-        id: 0,
-        name: "ミナ",
-        role: "灯の見習い",
-        color: palette.teal,
-        accent: "#d7fbff",
-        hp: 28,
-        maxHp: 28,
-        atk: 6,
-        defense: 0,
-        x: 0,
-        y: 0,
-        dx: 0,
-        dy: 1,
-        acted: false,
-        down: false,
-        cooldown: 0,
-        skillName: "癒しの輪",
-        skillHint: "E",
-        sealName: "灯紋",
-      },
-      {
-        id: 1,
-        name: "レン",
-        role: "星の剣士",
-        color: palette.brass,
-        accent: "#fff0b4",
-        hp: 34,
-        maxHp: 34,
-        atk: 7,
-        defense: 0,
-        x: 0,
-        y: 0,
-        dx: 0,
-        dy: 1,
-        acted: false,
-        down: false,
-        cooldown: 0,
-        skillName: "星斬り",
-        skillHint: "/",
-        sealName: "剣紋",
-      },
-    ],
+    mapped: [],
+    team: [roster.kohaku],
     enemies: [],
     items: [],
+    mission: null,
     stairs: { x: 0, y: 0 },
-    seals: [],
     effects: [],
+    floating: [],
     logs: [],
+    leaderTrail: [],
+    nextMoveAt: 0,
+    aimDirection: null,
+    screenFlash: null,
+    screenShake: null,
+    guidanceActive: false,
+    floorEvent: { key: "calm", name: "平穏", detail: "特別な兆しはない", luck: 0 },
+    luck: 0,
     gameOver: false,
     victory: false,
-    messageTimer: 0,
-    lastMessage: "",
-    seed: Math.floor(Math.random() * 999999),
   };
 
-  game = nextGame;
-  buildFloor();
-  addLog("星の扉が開いた。二人で奥へ進もう。");
   updateAll();
+}
+
+function startExpedition() {
+  const selected = townMissions[game.selectedTownMission];
+  if (!selected || selected.chapter > game.completedDungeon + 1) {
+    showToast("前のダンジョンを制覇すると挑戦できる");
+    return;
+  }
+  if (ui.townDialog.open) ui.townDialog.close();
+  prepareNewTry();
+  game.mode = "dungeon";
+  game.activeTownMission = selected;
+  game.targetFloor = selected.floors;
+  game.floor = 1;
+  game.turn = 1;
+  game.score = 0;
+  game.belly = 100;
+  game.gameOver = false;
+  game.victory = false;
+  game.luck = randInt(-1, 1);
+  buildFloor();
+  addLog(`新しい挑戦を開始。コハクは一人で${selected.dungeon}へ踏み込んだ。`);
+  announceEvent("TRY START", `${selected.dungeon} B1F`, "発", "mystic");
+  playSfx("depart");
+  updateAll();
+}
+
+function prepareNewTry() {
+  const leader = createLeader(game.selectedCharacter);
+  leader.atk += game.trainingLevel;
+  for (const gearId of Object.values(game.equipment || {})) {
+    const gear = game.gearBag.find((entry) => entry.id === gearId);
+    applyGearBonus(leader, gear, 1);
+  }
+  game.roster[game.selectedCharacter] = leader;
+  game.team = [leader];
+  game.selectedMove = 0;
+  game.skillPoints = 1;
+  game.unlockedSkills = [];
+  game.runStats = createRunStats();
+  game.belly = 100;
+  game.logs = [];
+  game.screenShake = null;
+}
+
+function createRunStats() {
+  return {
+    kills: 0,
+    itemUses: 0,
+    techniques: 0,
+    helped: 0,
+    clientsKilled: 0,
+    floorsCleared: 0,
+  };
+}
+
+function returnToTown() {
+  game.mode = "town";
+  game.gameOver = false;
+  game.victory = false;
+  ui.endOverlay.hidden = true;
+  if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
+  if (ui.stairsDialog.open) ui.stairsDialog.close();
+  prepareNewTry();
+  updateAll();
+}
+
+function createLeader(characterKey = "kohaku") {
+  const profile = characterCatalog.find((character) => character.key === characterKey) || characterCatalog[0];
+  return {
+    id: "leader",
+    kind: "leader",
+    profileKey: profile.key,
+    name: profile.name,
+    type: profile.type,
+    role: `${profile.type}タイプ`,
+    color: profile.color,
+    accent: profile.accent,
+    scarf: profile.scarf,
+    level: 1,
+    exp: 0,
+    nextExp: 32,
+    hp: profile.maxHp,
+    maxHp: profile.maxHp,
+    atk: profile.atk,
+    def: profile.def,
+    x: 0,
+    y: 0,
+    dx: 0,
+    dy: 1,
+    down: false,
+    appliedSkills: [],
+    evolutionKey: "base",
+    evolutionStage: 0,
+    guardTurns: 0,
+    moves: profile.moves.map((move) => ({ ...move, pp: move.maxPp })),
+  };
 }
 
 function buildFloor() {
@@ -212,106 +1012,150 @@ function buildFloor() {
   game.rooms = dungeon.rooms;
   game.seen = makeGrid(false);
   game.visible = makeGrid(false);
+  game.mapped = makeGrid(false);
   game.enemies = [];
   game.items = [];
+  game.effects = [];
+  game.floating = [];
+  game.focusTurns = 0;
+  game.aimDirection = null;
+  game.screenFlash = null;
+  game.screenShake = null;
+  game.guidanceActive = false;
+  game.leaderTrail = [];
 
   const start = centerOf(game.rooms[0]);
-  const secondSpot = nearestOpen(start.x + 1, start.y, [{ x: start.x, y: start.y }]);
-  game.players[0].x = start.x;
-  game.players[0].y = start.y;
-  game.players[0].acted = false;
-  game.players[1].x = secondSpot.x;
-  game.players[1].y = secondSpot.y;
-  game.players[1].acted = false;
+  const blockers = [];
+  game.team.forEach((actor, index) => {
+    actor.down = false;
+    actor.hp = Math.max(actor.hp, Math.ceil(actor.maxHp * 0.45));
+    const spot = index === 0 ? start : nearestOpen(start.x + index, start.y, blockers);
+    actor.x = spot.x;
+    actor.y = spot.y;
+    actor.dx = 0;
+    actor.dy = 1;
+    actor.motion = null;
+    blockers.push({ x: actor.x, y: actor.y });
+  });
 
-  const stairRoom = farthestRoomFrom(start);
-  const stairCenter = centerOf(stairRoom);
-  game.stairs = nearestOpen(stairCenter.x, stairCenter.y, []);
-  placeSeals(start);
+  const leader = getLeader();
+  game.leaderTrail = Array.from({ length: Math.max(8, game.team.length + 3) }, () => ({
+    x: leader.x,
+    y: leader.y,
+  }));
+
+  const roomsByDistance = game.rooms
+    .slice(1)
+    .map((room) => ({ room, distance: manhattan(start.x, start.y, centerOf(room).x, centerOf(room).y) }))
+    .sort((a, b) => b.distance - a.distance);
+
+  const missionRoom = roomsByDistance[0]?.room || game.rooms[game.rooms.length - 1];
+  const stairRoom = roomsByDistance.find((entry) => entry.room !== missionRoom)?.room || missionRoom;
+  const missionPoint = nearestOpen(centerOf(missionRoom).x, centerOf(missionRoom).y, blockers);
+  const stairPoint = nearestOpen(centerOf(stairRoom).x, centerOf(stairRoom).y, [...blockers, missionPoint]);
+  const contract =
+    game.activeTownMission ||
+    missionTemplates[(game.floor - 1 + randInt(0, missionTemplates.length - 1)) % missionTemplates.length];
+  const bossFloor = Boolean(contract.boss && game.floor === game.targetFloor);
+  const explorerNames = ["リオ", "ミナ", "トワ", "ハル", "ナギ", "ユラ", "セナ"];
+  const explorerName = explorerNames[(game.floor + contract.chapter) % explorerNames.length];
+  const template = bossFloor || !contract.clue
+    ? contract
+    : {
+        client: contract.client,
+        target: `先遣員${explorerName}`,
+        message: `${contract.clue.message} 先に入った${explorerName}とも合流しよう。`,
+        done: `先遣員${explorerName}を救助した。${contract.clue.done}`,
+      };
+
+  game.mission = {
+    ...template,
+    x: missionPoint.x,
+    y: missionPoint.y,
+    complete: false,
+    reward: 70 + game.floor * 28,
+    boss: bossFloor,
+  };
+  game.stairs = stairPoint;
+  game.floorEvent = rollFloorEvent();
+  game.luck = game.floorEvent.luck;
 
   spawnItems();
   spawnEnemies();
-  revealAroundPlayers();
-  addLog("灯紋と剣紋が階段を封じている。二人で分担して解除しよう。");
+  if (bossFloor) spawnBoss(contract.boss, missionPoint);
+  applyFloorEvent();
+  revealAroundTeam();
+  if (bossFloor) {
+    addLog(`最深部: ${contract.boss.name}が行く手を塞いだ。`);
+    announceEvent("ボス出現", `${contract.boss.title} ${contract.boss.name}`, "敵", "danger");
+  } else {
+    addLog(`B${game.floor}F: ${template.client}からの依頼。${template.message}`);
+  }
+  addLog(`フロア運勢「${game.floorEvent.name}」: ${game.floorEvent.detail}。`);
 }
 
-function placeSeals(start) {
-  const stairPoint = game.stairs;
-  const rankedRooms = game.rooms
-    .slice(1)
-    .map((room) => {
-      const center = centerOf(room);
-      return {
-        room,
-        score: manhattan(start.x, start.y, center.x, center.y) + manhattan(stairPoint.x, stairPoint.y, center.x, center.y) * 0.35,
-      };
-    })
-    .sort((a, b) => b.score - a.score);
-  const fallbackRooms = [game.rooms[1] || game.rooms[0], game.rooms[2] || game.rooms[0]];
-  const chosen = [
-    rankedRooms[0]?.room || fallbackRooms[0],
-    rankedRooms.find((entry) => entry.room !== rankedRooms[0]?.room)?.room || fallbackRooms[1],
-  ];
-  const blocked = [
-    ...game.players.map((player) => ({ x: player.x, y: player.y })),
-    { x: game.stairs.x, y: game.stairs.y },
-  ];
+function rollFloorEvent() {
+  return weighted([
+    { value: { key: "calm", name: "平穏", detail: "大きな変化はない", luck: 0 }, weight: 28 },
+    { value: { key: "starwind", name: "星風", detail: "隊のHPが少し回復する", luck: 2, heal: 6 }, weight: 16 },
+    { value: { key: "treasure", name: "宝運", detail: "道具が多く、珍品も出やすい", luck: 3, itemBonus: 3, rare: true }, weight: 10 },
+    { value: { key: "quiet", name: "静穏", detail: "敵が少なく探索しやすい", luck: 1, enemyBonus: -3 }, weight: 15 },
+    { value: { key: "ambush", name: "敵襲", detail: "敵が増えるが獲得経験も高い", luck: -2, enemyBonus: 3, expBonus: 0.25 }, weight: 16 },
+    { value: { key: "wandering", name: "ざわめき", detail: "増援が早く現れる", luck: -1, reinforcement: 12 }, weight: 15 },
+  ]);
+}
 
-  game.seals = game.players.map((player, index) => {
-    const center = centerOf(chosen[index]);
-    const offset = index === 0 ? -1 : 1;
-    const pos = nearestOpen(center.x + offset, center.y, blocked);
-    blocked.push(pos);
-    return {
-      id: player.id,
-      owner: player.id,
-      name: player.sealName,
-      x: pos.x,
-      y: pos.y,
-      active: false,
-      color: player.color,
-    };
-  });
+function applyFloorEvent() {
+  if (game.floorEvent.heal) {
+    for (const actor of livingTeam()) actor.hp = Math.min(actor.maxHp, actor.hp + game.floorEvent.heal);
+  }
+  if (game.floorEvent.rare) {
+    const point = randomOpenTile();
+    if (point) {
+      const kind = weighted([
+        { value: "gear", weight: 5 },
+        { value: "reviver", weight: 4 },
+        { value: "guidingOrb", weight: 4 },
+        { value: "bigApple", weight: 3 },
+        { value: "elixir", weight: 3 },
+      ]);
+      game.items.push({
+        id: cryptoId(),
+        kind,
+        gear: kind === "gear" ? generateGear(2, 2) : undefined,
+        x: point.x,
+        y: point.y,
+      });
+    }
+  }
 }
 
 function generateDungeon() {
-  let best = null;
-
-  for (let attempt = 0; attempt < 60; attempt += 1) {
+  for (let attempt = 0; attempt < 12; attempt += 1) {
     const map = makeGrid("wall");
     const rooms = [];
-    const targetRooms = randInt(9, 13);
+    const roomCount = randInt(7, 10);
 
-    for (let i = 0; i < targetRooms; i += 1) {
-      const w = randInt(4, 8);
+    for (let i = 0; i < roomCount * 8 && rooms.length < roomCount; i += 1) {
+      const w = randInt(5, 9);
       const h = randInt(4, 7);
       const x = randInt(1, MAP_W - w - 2);
       const y = randInt(1, MAP_H - h - 2);
       const room = { x, y, w, h };
-
-      if (rooms.some((other) => rectsOverlap(room, other, 2))) {
-        continue;
-      }
-
+      if (rooms.some((other) => overlaps(room, other, 2))) continue;
       carveRoom(map, room);
-      if (rooms.length > 0) {
-        connectRooms(map, centerOf(rooms[rooms.length - 1]), centerOf(room));
-      }
+      if (rooms.length) connectRooms(map, centerOf(rooms[rooms.length - 1]), centerOf(room));
       rooms.push(room);
     }
 
-    if (!best || rooms.length > best.rooms.length) {
-      best = { map, rooms };
-    }
-
-    if (rooms.length >= 8) {
-      addFloorDetails(map, rooms);
+    if (rooms.length >= 5) {
+      scatterTerrain(map);
       return { map, rooms };
     }
   }
 
-  addFloorDetails(best.map, best.rooms);
-  return best;
+  const fallback = makeGrid("floor");
+  return { map: fallback, rooms: [{ x: 1, y: 1, w: MAP_W - 2, h: MAP_H - 2 }] };
 }
 
 function carveRoom(map, room) {
@@ -323,389 +1167,3213 @@ function carveRoom(map, room) {
 }
 
 function connectRooms(map, a, b) {
-  const horizontalFirst = Math.random() > 0.5;
+  const horizontalFirst = Math.random() < 0.5;
   if (horizontalFirst) {
-    carveH(map, a.x, b.x, a.y);
-    carveV(map, a.y, b.y, b.x);
+    carveHorizontal(map, a.x, b.x, a.y);
+    carveVertical(map, a.y, b.y, b.x);
   } else {
-    carveV(map, a.y, b.y, a.x);
-    carveH(map, a.x, b.x, b.y);
+    carveVertical(map, a.y, b.y, a.x);
+    carveHorizontal(map, a.x, b.x, b.y);
   }
 }
 
-function carveH(map, x1, x2, y) {
-  const start = Math.min(x1, x2);
-  const end = Math.max(x1, x2);
-  for (let x = start; x <= end; x += 1) {
-    if (inBounds(x, y)) {
-      map[y][x] = "floor";
-      if (inBounds(x, y - 1) && Math.random() < 0.18) map[y - 1][x] = "floor";
-      if (inBounds(x, y + 1) && Math.random() < 0.18) map[y + 1][x] = "floor";
-    }
+function carveHorizontal(map, x1, x2, y) {
+  for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x += 1) {
+    if (inBounds(x, y)) map[y][x] = "floor";
+    if (inBounds(x, y + 1) && Math.random() < 0.16) map[y + 1][x] = "floor";
   }
 }
 
-function carveV(map, y1, y2, x) {
-  const start = Math.min(y1, y2);
-  const end = Math.max(y1, y2);
-  for (let y = start; y <= end; y += 1) {
-    if (inBounds(x, y)) {
-      map[y][x] = "floor";
-      if (inBounds(x - 1, y) && Math.random() < 0.18) map[y][x - 1] = "floor";
-      if (inBounds(x + 1, y) && Math.random() < 0.18) map[y][x + 1] = "floor";
-    }
+function carveVertical(map, y1, y2, x) {
+  for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y += 1) {
+    if (inBounds(x, y)) map[y][x] = "floor";
+    if (inBounds(x + 1, y) && Math.random() < 0.16) map[y][x + 1] = "floor";
   }
 }
 
-function addFloorDetails(map, rooms) {
-  for (const room of rooms) {
-    const details = randInt(2, 5);
-    for (let i = 0; i < details; i += 1) {
-      const x = randInt(room.x, room.x + room.w - 1);
-      const y = randInt(room.y, room.y + room.h - 1);
-      if (Math.random() < 0.45) {
-        map[y][x] = "moss";
-      } else if (Math.random() < 0.34) {
-        map[y][x] = "crack";
-      }
+function scatterTerrain(map) {
+  for (let y = 1; y < MAP_H - 1; y += 1) {
+    for (let x = 1; x < MAP_W - 1; x += 1) {
+      if (map[y][x] !== "floor") continue;
+      const n = noise(x, y, game?.floor || 1);
+      if (n > 0.972) map[y][x] = "moss";
+      else if (n < 0.018) map[y][x] = "crack";
     }
   }
 }
 
 function spawnItems() {
-  const count = 7 + game.floor;
-  const possible = [
-    { kind: "herb", name: "薬草", weight: 5 },
-    { kind: "stardust", name: "星くず", weight: 5 },
-    { kind: "guard", name: "護符", weight: 2 },
-    { kind: "bell", name: "救助ベル", weight: 1 },
-  ];
-
+  const count = clamp(4 + Math.floor(game.floor / 4) + (game.floorEvent?.itemBonus || 0), 4, 9);
   for (let i = 0; i < count; i += 1) {
-    const itemDef = weighted(possible);
-    const pos = randomOpenSpot();
-    if (!pos) continue;
-    game.items.push({
-      id: cryptoId(),
-      kind: itemDef.kind,
-      name: itemDef.name,
-      x: pos.x,
-      y: pos.y,
-      pulse: Math.random() * Math.PI * 2,
-    });
+    const kind = weighted([
+      { value: "apple", weight: 18 },
+      { value: "bigApple", weight: 7 },
+      { value: "oran", weight: 18 },
+      { value: "elixir", weight: 10 },
+      { value: "reviver", weight: 5 },
+      { value: "blastSeed", weight: 10 },
+      { value: "sleepSeed", weight: 8 },
+      { value: "slumberOrb", weight: 5 },
+      { value: "warpOrb", weight: 5 },
+      { value: "guidingOrb", weight: 5 },
+      { value: "guardBerry", weight: 6 },
+      { value: "powerBerry", weight: 4 },
+      { value: "fortuneOrb", weight: 3 },
+      { value: "badge", weight: 2 },
+      { value: "stardust", weight: 10 },
+    ]);
+    const point = randomOpenTile();
+    if (!point) continue;
+    game.items.push({ id: cryptoId(), kind, x: point.x, y: point.y });
   }
+  const gearCount = game.floor >= 4 ? 2 : 1;
+  for (let i = 0; i < gearCount; i += 1) {
+    const point = randomOpenTile();
+    if (!point) continue;
+    game.items.push({ id: cryptoId(), kind: "gear", gear: generateGear(), x: point.x, y: point.y });
+  }
+}
+
+function generateGear(qualityBoost = 0, minimumStars = 1) {
+  const base = gearBases[randInt(0, gearBases.length - 1)];
+  const depth = game.floor + (game.activeTownMission?.chapter || 1) * 2;
+  let quality = weighted(
+    gearQualities.map((entry, index) => ({
+      value: entry,
+      weight: Math.max(1, entry.weight + (index - 1) * (depth + qualityBoost * 5)),
+    })),
+  );
+  if (quality.stars < minimumStars) quality = gearQualities[minimumStars - 1];
+  const power = quality.scale + qualityBoost + Math.floor(depth / 4);
+  const slotBonus = base.slot === "weapon"
+    ? { atk: power, def: 0, hp: 0 }
+    : base.slot === "armor"
+      ? { atk: 0, def: Math.floor(power / 2), hp: power * 2 }
+      : { atk: Math.floor(power / 2), def: Math.floor(power / 3), hp: power * 3 };
+  return {
+    id: cryptoId(),
+    key: base.key,
+    slot: base.slot,
+    name: `${quality.prefix}${base.name}`,
+    quality: quality.name,
+    stars: quality.stars,
+    color: quality.color,
+    atk: base.atk + slotBonus.atk,
+    def: base.def + slotBonus.def,
+    hp: base.hp + slotBonus.hp,
+  };
 }
 
 function spawnEnemies() {
-  const count = 5 + game.floor * 2;
+  const count = clamp(6 + Math.ceil(game.floor * 1.1) + (game.floorEvent?.enemyBonus || 0), 4, 24);
+  const rareChance =
+    0.012 +
+    (game.activeTownMission?.chapter || 1) * 0.002 +
+    Math.max(0, game.luck) * 0.002 +
+    (hasSkill("fortune") ? 0.009 : 0);
+  let rareSpawned = false;
   for (let i = 0; i < count; i += 1) {
-    const catalog = enemyCatalog[Math.min(enemyCatalog.length - 1, randInt(0, Math.floor(game.floor / 2) + 1))];
-    const pos = randomOpenSpot(8);
-    if (!pos) continue;
-    const scale = game.floor - 1;
-    game.enemies.push({
-      id: cryptoId(),
-      key: catalog.key,
-      name: catalog.name,
-      x: pos.x,
-      y: pos.y,
-      hp: catalog.hp + scale * 4,
-      maxHp: catalog.hp + scale * 4,
-      atk: catalog.atk + Math.floor(scale * 1.4),
-      exp: catalog.exp + scale * 5,
-      color: catalog.color,
-      accent: catalog.accent,
-      wobble: Math.random() * Math.PI * 2,
-      alerted: false,
-    });
+    const spawnRare = !rareSpawned && Math.random() < rareChance;
+    const catalog = spawnRare ? randomRareEnemyProfile() : randomEnemyProfile();
+    rareSpawned ||= spawnRare;
+    const point = randomOpenTile();
+    if (!point) continue;
+    game.enemies.push(createEnemy(catalog, point));
   }
 }
 
-function performAction(playerIndex, action) {
+function randomRareEnemyProfile() {
+  const dungeon = game.activeTownMission?.chapter || 1;
+  const pool = rareEnemyCatalog.filter((enemy) => enemy.minDungeon <= dungeon);
+  return pool[randInt(0, pool.length - 1)] || rareEnemyCatalog[0];
+}
+
+function randomEnemyProfile() {
+  const chapter = game.activeTownMission?.chapter || 1;
+  const maxTier = Math.min(3, chapter + (game.floor >= 5 ? 1 : 0));
+  const families = enemyFamilies.filter((family) => family.tier <= maxTier);
+  const family = families[randInt(0, families.length - 1)];
+  const type = enemyTypes[randInt(0, enemyTypes.length - 1)];
+  return enemyCatalog.find((enemy) => enemy.familyKey === family.key && enemy.typeKey === type.key);
+}
+
+function createEnemy(catalog, point, alerted = false) {
+  const scale = (game.activeTownMission?.chapter - 1 || 0) * 3 + Math.floor((game.floor - 1) * 0.75);
+  const expMultiplier = 1 + (game.floorEvent?.expBonus || 0);
+  const hp = catalog.hp + scale * 4;
+  return {
+    id: cryptoId(),
+    ...catalog,
+    hp,
+    maxHp: hp,
+    atk: catalog.atk + Math.floor(scale * 1.2),
+    def: catalog.def + Math.floor(scale / 4),
+    exp: Math.round((catalog.exp + scale * 5) * expMultiplier),
+    x: point.x,
+    y: point.y,
+    wobble: Math.random() * Math.PI * 2,
+    alerted,
+  };
+}
+
+function spawnBoss(profile, point) {
+  const bossType = enemyTypes[(game.activeTownMission.chapter - 1) % enemyTypes.length];
+  game.enemies.push({
+    id: cryptoId(),
+    ...profile,
+    key: `boss-${game.activeTownMission.chapter}`,
+    familyKey: "boss",
+    type: bossType.name,
+    typeKey: bossType.key,
+    friendName: profile.name,
+    maxHp: profile.hp,
+    recruit: 0,
+    x: point.x,
+    y: point.y,
+    wobble: Math.random() * Math.PI * 2,
+    alerted: true,
+    boss: true,
+    specialCooldown: 2,
+  });
+}
+
+function performAction(action) {
+  if (action.type === "openMenu") {
+    toggleGameMenu("moves");
+    return;
+  }
+  if (game.mode !== "dungeon") return;
   if (game.gameOver || game.victory) return;
-  const player = game.players[playerIndex];
-  if (!player || player.down) return;
-  if (player.acted) {
-    showToast(`${player.name}は敵の動きを待っている。`);
+  const leader = getLeader();
+  if (leader.down) return;
+
+  if (action.type === "selectMove") {
+    game.selectedMove = clamp(action.index, 0, leader.moves.length - 1);
+    const selected = leader.moves[game.selectedMove];
+    announceEvent("技を選択", `${selected.name}　右クリック / Jで発動`, "技", "mystic");
+    showToast(`${selected.name}をセット`);
+    updateAll();
     return;
   }
 
-  let acted = false;
+  if (action.type === "cycleMove") {
+    game.selectedMove = (game.selectedMove + 1) % leader.moves.length;
+    updateAll();
+    return;
+  }
 
-  if (tryRescue(player)) {
-    acted = true;
-  } else if (action.type === "move") {
-    acted = moveOrAttack(player, action.dx, action.dy);
-  } else if (action.type === "skill") {
-    acted = useSkill(player);
-  } else if (action.type === "wait") {
-    addLog(`${player.name}は息を整えた。`);
-    healPlayer(player, 1, false);
+  if (action.type === "face") {
+    leader.dx = action.dx;
+    leader.dy = action.dy;
+    addEffect("face", leader.x, leader.y, leader.color, action.dx, action.dy);
+    return;
+  }
+
+  game.swappedAllyId = null;
+  let acted = false;
+  if (action.type === "move") acted = tryMoveLeader(action.dx, action.dy);
+  if (action.type === "wait") {
+    addLog(`${leader.name}は様子を見た。`);
     acted = true;
   }
+  if (action.type === "basicAttack") acted = basicAttack(action.dx, action.dy);
+  if (action.type === "useMove") acted = useSelectedMove();
+  if (action.type === "eatApple") acted = eatApple();
+  if (action.type === "useItem") acted = useItem(action.kind);
 
   if (!acted) return;
-
-  player.acted = true;
-  pickupItems(player);
-  checkSeal(player);
-  revealAroundPlayers();
-  checkStairs();
-  updateAll();
-
-  if (game.gameOver || game.victory) return;
-
-  if (everyoneReadyForEnemyTurn()) {
-    enemyTurn();
-  }
+  finishHeroTurn();
 }
 
-function moveOrAttack(player, dx, dy) {
-  player.dx = dx;
-  player.dy = dy;
-  const tx = player.x + dx;
-  const ty = player.y + dy;
+function eatApple() {
+  return useItem("apple");
+}
 
-  if (!inBounds(tx, ty)) return false;
+function tryMoveLeader(dx, dy) {
+  const leader = getLeader();
+  leader.dx = dx;
+  leader.dy = dy;
+  const tx = leader.x + dx;
+  const ty = leader.y + dy;
+  if (!inBounds(tx, ty) || !canTakeStep(leader.x, leader.y, dx, dy)) {
+    startBumpMotion(leader, dx, dy);
+    return false;
+  }
 
   const enemy = enemyAt(tx, ty);
   if (enemy) {
-    strikeEnemy(player, enemy, player.atk, "攻撃");
-    tryCoopFollowUp(player, enemy);
-    return true;
+    startBumpMotion(leader, dx, dy, 0.16);
+    showToast("敵がいる。左クリックかFで攻撃");
+    return false;
   }
 
-  const ally = game.players.find((other) => other.id !== player.id && other.x === tx && other.y === ty);
+  const ally = allyAt(tx, ty);
   if (ally) {
-    showToast("仲間と場所が重なっている。別の道を探そう。");
-    return false;
-  }
-
-  if (!isWalkable(tx, ty)) {
-    addEffect("bump", tx, ty, palette.wallLight);
-    showToast("壁が行く手をふさいでいる。");
-    return false;
-  }
-
-  player.x = tx;
-  player.y = ty;
-  addEffect("step", tx, ty, player.color);
-  return true;
-}
-
-function useSkill(player) {
-  if (player.cooldown > 0) {
-    showToast(`${player.skillName}はあと${player.cooldown}ターン。`);
-    return false;
-  }
-
-  if (player.id === 0) {
-    const allies = game.players.filter((ally) => distance(player, ally) <= 3 && !ally.down);
-    const healed = allies.reduce((total, ally) => total + healPlayer(ally, 8 + game.floor, true), 0);
-    const nearbyEnemies = game.enemies.filter((enemy) => distance(player, enemy) <= 1.5);
-    for (const enemy of nearbyEnemies) {
-      damageEnemy(enemy, 4 + game.floor, player, "灯の波");
-    }
-    player.cooldown = 5;
-    addRingEffect(player.x, player.y, player.color);
-    addLog(`${player.name}の癒しの輪。合計${healed}回復した。`);
+    const from = { x: leader.x, y: leader.y };
+    const allyFrom = { x: ally.x, y: ally.y };
+    leader.x = allyFrom.x;
+    leader.y = allyFrom.y;
+    ally.x = from.x;
+    ally.y = from.y;
+    ally.dx = -dx;
+    ally.dy = -dy;
+    startWalkMotion(leader, from.x, from.y, leader.x, leader.y);
+    startWalkMotion(ally, allyFrom.x, allyFrom.y, ally.x, ally.y, 35);
+    game.swappedAllyId = ally.id;
+    game.leaderTrail.unshift(from);
+    game.leaderTrail.length = Math.min(game.leaderTrail.length, Math.max(12, game.team.length + 5));
+    addEffect("step", leader.x, leader.y, leader.color);
+    addEffect("step", ally.x, ally.y, ally.color);
+    applyStepTerrain(leader);
+    if (!ally.down) applyStepTerrain(ally);
+    if (!leader.down) pickUpItem();
+    addLog(`${leader.name}と${ally.name}が場所を入れ替えた。`);
+    showToast(`${ally.name}と場所を交代`);
     return true;
   }
 
-  const line = [];
-  for (let i = 1; i <= 3; i += 1) {
-    const x = player.x + player.dx * i;
-    const y = player.y + player.dy * i;
-    if (!inBounds(x, y) || !isWalkable(x, y)) break;
-    line.push({ x, y });
-  }
-
-  for (const point of line) {
-    addEffect("slash", point.x, point.y, player.color);
-    const enemy = enemyAt(point.x, point.y);
-    if (enemy) {
-      damageEnemy(enemy, player.atk + 6 + game.floor, player, "星斬り");
-      tryCoopFollowUp(player, enemy);
-      player.cooldown = 4;
-      addLog(`${player.name}の星斬りが${enemy.name}を貫いた。`);
-      return true;
-    }
-  }
-
-  if (line.length === 0) {
-    showToast("その方向には振り抜けない。");
-    return false;
-  }
-
-  player.cooldown = 4;
-  addLog(`${player.name}は星斬りを放った。`);
+  const from = { x: leader.x, y: leader.y };
+  leader.x = tx;
+  leader.y = ty;
+  startWalkMotion(leader, from.x, from.y, tx, ty);
+  game.leaderTrail.unshift(from);
+  game.leaderTrail.length = Math.min(game.leaderTrail.length, Math.max(12, game.team.length + 5));
+  addEffect("step", tx, ty, leader.color);
+  applyStepTerrain(leader);
+  if (!leader.down) pickUpItem();
   return true;
 }
 
-function strikeEnemy(player, enemy, amount, label) {
-  const variance = randInt(-1, 2);
-  damageEnemy(enemy, Math.max(1, amount + variance), player, label);
+function basicAttack(dx = 0, dy = 0) {
+  const leader = getLeader();
+  const attackDx = Math.sign(dx || leader.dx);
+  const attackDy = Math.sign(dy || leader.dy);
+  if (!attackDx && !attackDy) return false;
+  leader.dx = attackDx;
+  leader.dy = attackDy;
+
+  const tx = leader.x + attackDx;
+  const ty = leader.y + attackDy;
+  startBumpMotion(leader, attackDx, attackDy, 0.34);
+  const enemy = inBounds(tx, ty) ? enemyAt(tx, ty) : null;
+  if (enemy && canTakeStep(leader.x, leader.y, attackDx, attackDy)) {
+    actorStrikeEnemy(leader, enemy, `${leader.name}の通常攻撃`);
+    setScreenFlash("#f7c86b", 160);
+    playSfx("attack");
+    return true;
+  }
+
+  if (
+    game.mission &&
+    !game.mission.complete &&
+    !game.mission.boss &&
+    game.mission.x === tx &&
+    game.mission.y === ty
+    && canTakeStep(leader.x, leader.y, attackDx, attackDy)
+  ) {
+    attackMissionClient();
+    return true;
+  }
+
+  if (inBounds(tx, ty)) addEffect("slash", tx, ty, palette.brass, attackDx, attackDy);
+  addLog(`${leader.name}の通常攻撃。しかし当たらなかった。`);
+  playSfx("miss");
+  return true;
 }
 
-function damageEnemy(enemy, amount, player, label) {
+function attackMissionClient() {
+  const mission = game.mission;
+  if (!mission.threatened) {
+    mission.threatened = true;
+    addEffect("hit", mission.x, mission.y, "#ff6d61");
+    addLog(`${mission.target}へ刃を向けた。もう一度攻撃すれば、取り返しがつかない。`);
+    announceEvent("警告", "依頼人への攻撃はカルマを生む", "!", "danger");
+    setScreenFlash("#ff6d61", 380);
+    triggerScreenShake(7, 220);
+    playSfx("warning");
+    return;
+  }
+
+  mission.complete = true;
+  mission.clientKilled = true;
+  game.karma += 3;
+  game.runStats.clientsKilled += 1;
+  game.score = Math.max(0, game.score - 100);
+  addEffect("burst", mission.x, mission.y, "#8f58c7");
+  addFloatingText(mission.x, mission.y, "KARMA +3", "#dca2ff");
+  addLog(`${mission.target}を倒した。カルマ +3。階段は禍々しい光とともに開いた。`);
+  announceEvent("禁じられた選択", `カルマ ${game.karma}　宵影の牙が残った`, "影", "danger");
+  dropEvolutionMaterial("shadowFang", mission.x, mission.y, true);
+  setScreenFlash("#7b3fac", 650);
+  triggerScreenShake(15, 430);
+  playSfx("karma");
+}
+
+function useSelectedMove() {
+  const leader = getLeader();
+  const move = leader.moves[game.selectedMove];
+  if (!move || move.pp <= 0) {
+    showToast("その技はもう使えない");
+    return false;
+  }
+
+  announceEvent(move.name, `${move.hint}　PP ${move.pp - 1}/${move.maxPp}`, "技", "mystic");
+  setScreenFlash(leader.color, 220);
+  move.pp -= 1;
+  game.runStats.techniques += 1;
+  playSfx("move");
+  if (move.key === "spark") return useSpark(leader, move);
+  if (move.key === "gust") return useGust(leader, move);
+  if (move.key === "heal") return useHeal(leader, move);
+  if (move.key === "guard") return useGuard(leader, move);
+  return false;
+}
+
+function useSpark(actor, move) {
+  const ray = [];
+  for (let i = 1; i <= 4; i += 1) {
+    const x = actor.x + actor.dx * i;
+    const y = actor.y + actor.dy * i;
+    if (!inBounds(x, y) || !isWalkable(x, y)) break;
+    ray.push({ x, y });
+  }
+
+  const target = ray.map((point) => enemyAt(point.x, point.y)).find(Boolean);
+  addEffect("beam", actor.x, actor.y, actor.color, actor.dx, actor.dy);
+  if (!target) {
+    addLog(`${move.name}を放ったが、敵には届かなかった。`);
+    return true;
+  }
+  damageEnemy(target, actor.atk + 7 + actor.level, actor, move.name);
+  return true;
+}
+
+function useGust(actor, move) {
+  const targets = game.enemies.filter((enemy) => gridDistance(actor, enemy) <= 1);
+  addEffect("burst", actor.x, actor.y, actor.color);
+  if (!targets.length) {
+    addLog(`${move.name}が周囲のほこりを巻き上げた。`);
+    return true;
+  }
+  for (const enemy of targets) {
+    damageEnemy(enemy, actor.atk + 4, actor, move.name);
+    pushEnemy(enemy, Math.sign(enemy.x - actor.x), Math.sign(enemy.y - actor.y));
+  }
+  return true;
+}
+
+function useHeal(actor, move) {
+  const total = healActor(actor, 12 + actor.level * 2);
+  addEffect("heal", actor.x, actor.y, actor.color);
+  addLog(`${move.name}。HPを${total}回復した。`);
+  return true;
+}
+
+function useGuard(actor, move) {
+  actor.guardTurns = 3;
+  addEffect("heal", actor.x, actor.y, "#8dcbd9");
+  addLog(`${move.name}。3ターンの間、受けるダメージを半減する。`);
+  return true;
+}
+
+function finishHeroTurn() {
+  checkMission();
+  if (tryUseStairs()) return;
+  resolveWorldTurn();
+}
+
+function resolveWorldTurn() {
+  if (getLeader().down) {
+    checkGameOver();
+    updateAll();
+    return;
+  }
+  enemyTurn();
+  tickHunger();
+  if (game.focusTurns > 0) game.focusTurns -= 1;
+  if (getLeader().guardTurns > 0) getLeader().guardTurns -= 1;
+  game.turn += 1;
+  revealAroundTeam();
+  checkGameOver();
+  updateAll();
+}
+
+function companionTurns() {
+  const leader = getLeader();
+  for (let index = 1; index < game.team.length; index += 1) {
+    const ally = game.team[index];
+    if (ally.id === leader.id || ally.down) continue;
+    if (ally.id === game.swappedAllyId) continue;
+    const tactic = ally.tactic || "together";
+    const adjacent = adjacentEnemies(ally)[0];
+
+    if (tactic === "avoid") {
+      const threat = nearestEnemy(ally, (enemy) => distance(ally, enemy) <= 5 && isVisible(enemy.x, enemy.y));
+      if (threat && moveActorAway(ally, threat, index * 45)) continue;
+    }
+
+    if (adjacent && tactic !== "avoid") {
+      startBumpMotion(ally, Math.sign(adjacent.x - ally.x), Math.sign(adjacent.y - ally.y), 0.32, index * 45);
+      actorStrikeEnemy(ally, adjacent, `${ally.name}の援護`);
+      continue;
+    }
+
+    if (tactic === "wait") continue;
+
+    if (tactic === "hunt") {
+      const target = nearestEnemy(ally, (enemy) => distance(ally, enemy) <= 10 && isVisible(enemy.x, enemy.y));
+      if (target && moveActorToward(ally, target, true, index * 45)) continue;
+    }
+
+    if (tactic === "explore") {
+      const target = nearestUnmappedTile(ally);
+      if (target && moveActorToward(ally, target, false, index * 45)) continue;
+    }
+
+    if (tactic === "avoid" && nearestEnemy(ally, (enemy) => distance(ally, enemy) <= 5)) {
+      continue;
+    }
+
+    const trailTarget = game.leaderTrail[Math.min(index - 1, game.leaderTrail.length - 1)];
+    if (trailTarget && gridDistance(ally, trailTarget) > 0) {
+      moveActorToward(ally, trailTarget, false, index * 45);
+      continue;
+    }
+
+    if (gridDistance(ally, leader) > 1) {
+      moveActorToward(ally, leader, false, index * 45);
+    }
+  }
+  game.swappedAllyId = null;
+}
+
+function moveActorAway(actor, threat, delay = 0) {
+  const candidates = dirs
+    .map((dir) => ({ dir, x: actor.x + dir.x, y: actor.y + dir.y }))
+    .filter((point) => (
+      canTakeStep(actor.x, actor.y, point.dir.x, point.dir.y) &&
+      !actorAt(point.x, point.y) &&
+      !enemyAt(point.x, point.y)
+    ))
+    .sort((a, b) => {
+      const aSafety = gridDistance(a, threat) * 5 - gridDistance(a, getLeader());
+      const bSafety = gridDistance(b, threat) * 5 - gridDistance(b, getLeader());
+      return bSafety - aSafety;
+    });
+  const next = candidates[0];
+  if (!next || gridDistance(next, threat) <= gridDistance(actor, threat)) return false;
+  const from = { x: actor.x, y: actor.y };
+  actor.dx = next.dir.x;
+  actor.dy = next.dir.y;
+  actor.x = next.x;
+  actor.y = next.y;
+  startWalkMotion(actor, from.x, from.y, next.x, next.y, delay);
+  applyStepTerrain(actor);
+  return true;
+}
+
+function nearestUnmappedTile(actor) {
+  const queue = [{ x: actor.x, y: actor.y }];
+  const visited = makeGrid(false);
+  visited[actor.y][actor.x] = true;
+  while (queue.length) {
+    const current = queue.shift();
+    if (!game.mapped[current.y][current.x] && isWalkable(current.x, current.y)) return current;
+    for (const dir of dirs) {
+      const x = current.x + dir.x;
+      const y = current.y + dir.y;
+      if (!inBounds(x, y) || visited[y][x] || !canTakeStep(current.x, current.y, dir.x, dir.y)) continue;
+      visited[y][x] = true;
+      queue.push({ x, y });
+    }
+  }
+  return null;
+}
+
+function enemyTurn() {
+  const enemies = [...game.enemies];
+  for (const enemy of enemies) {
+    if (!game.enemies.includes(enemy)) continue;
+    if ((enemy.sleepTurns || 0) > 0) {
+      enemy.sleepTurns -= 1;
+      if (enemy.sleepTurns === 0 && isVisible(enemy.x, enemy.y)) addLog(`${enemy.name}は目を覚ました。`);
+      continue;
+    }
+    const target = nearestLivingAlly(enemy);
+    if (!target) continue;
+
+    if (enemy.boss) {
+      enemy.specialCooldown = Math.max(0, (enemy.specialCooldown || 0) - 1);
+      if (enemy.specialCooldown === 0 && gridDistance(enemy, target) <= 5) {
+        bossSpecialAttack(enemy, target);
+        enemy.specialCooldown = randInt(3, 5);
+        continue;
+      }
+    }
+
+    if (gridDistance(enemy, target) === 1) {
+      startBumpMotion(enemy, Math.sign(target.x - enemy.x), Math.sign(target.y - enemy.y), 0.3, 70);
+      enemyAttack(enemy, target);
+      continue;
+    }
+
+    const aware = enemy.alerted || distance(enemy, target) <= 7 || isVisible(enemy.x, enemy.y);
+    if (aware) {
+      enemy.alerted = true;
+      moveEnemyToward(enemy, target);
+    } else {
+      enemyWander(enemy);
+    }
+  }
+
+  const reinforcementTurn = game.floorEvent?.reinforcement || 18;
+  if (game.turn > 1 && game.turn % reinforcementTurn === 0 && game.enemies.length < 24) {
+    const catalog = randomEnemyProfile();
+    const point = randomOpenTile();
+    if (point) {
+      game.enemies.push(createEnemy(catalog, point, true));
+      addLog("遠くから敵の気配が近づいてきた。");
+    }
+  }
+}
+
+function bossSpecialAttack(enemy, target) {
+  const base = 5 + (game.activeTownMission?.chapter || 1) * 3;
+  const rawDamage = Math.max(2, base + randInt(-2, 3) - target.def);
+  const damage = target.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
+  target.hp = Math.max(0, target.hp - damage);
+  addEffect("burst", enemy.x, enemy.y, enemy.color);
+  addEffect("hit", target.x, target.y, enemy.color);
+  addFloatingText(target.x, target.y, `-${damage}`, palette.coral);
+  addLog(`${enemy.name}の${enemy.special}。${target.name}に${damage}ダメージ。`);
+  announceEvent(enemy.special, `${target.name}に${damage}ダメージ`, "!", "danger");
+  setScreenFlash(enemy.color, 360);
+  if (target.id === "leader") triggerScreenShake(18, 420);
+  if (target.id === "leader") playSfx("hurt");
+  if (target.hp > 0) return;
+  if (tryReviveActor(target)) return;
+  target.down = true;
+  if (target.id === "leader") checkGameOver();
+}
+
+function actorStrikeEnemy(actor, enemy, label) {
+  actor.dx = Math.sign(enemy.x - actor.x);
+  actor.dy = Math.sign(enemy.y - actor.y);
+  const focusBonus = actor.id !== "leader" && game.focusTurns > 0 ? 3 : 0;
+  const damage = Math.max(1, actor.atk + focusBonus + randInt(-1, 2) - enemy.def);
+  damageEnemy(enemy, damage, actor, label);
+}
+
+function damageEnemy(enemy, amount, source, label) {
+  if (!game.enemies.includes(enemy)) return;
   enemy.hp -= amount;
   enemy.alerted = true;
+  addEffect("hit", enemy.x, enemy.y, source.color || palette.brass);
   addFloatingText(enemy.x, enemy.y, `-${amount}`, palette.brass);
-  addEffect("hit", enemy.x, enemy.y, player.color);
+  playSfx("hit");
 
   if (enemy.hp <= 0) {
     game.enemies = game.enemies.filter((target) => target.id !== enemy.id);
     game.score += enemy.exp;
-    addLog(`${label}で${enemy.name}を倒した。+${enemy.exp}pt`);
-    maybeDropItem(enemy.x, enemy.y);
+    game.runStats.kills += 1;
+    addLog(`${label}。${enemy.name}を倒した。+${enemy.exp}pt`);
+    gainExp(enemy.exp);
+    if (enemy.boss) {
+      dropEvolutionMaterial("bossCore", enemy.x, enemy.y, true);
+      completeBossMission(enemy);
+    } else {
+      maybeDropEvolutionMaterial(enemy);
+      if (enemy.rare) {
+        dropRareEnemyLoot(enemy.x, enemy.y);
+        if (Math.random() < 0.55) dropEvolutionMaterial("bossCore", enemy.x, enemy.y);
+      } else {
+        maybeDropItem(enemy.x, enemy.y);
+      }
+    }
   } else {
     addLog(`${label}。${enemy.name}に${amount}ダメージ。`);
   }
 }
 
-function tryCoopFollowUp(player, enemy) {
-  if (!game.enemies.includes(enemy)) return false;
-  const ally = game.players.find((candidate) => candidate.id !== player.id && !candidate.down);
-  if (!ally || distance(player, ally) > 2.2) return false;
-  const amount = Math.max(2, Math.floor((ally.atk + player.atk) * 0.42 + game.bond / 28));
-  game.bond = clamp(game.bond + 8, 0, 100);
-  addEffect("link", player.x, player.y, player.color);
-  addEffect("link", ally.x, ally.y, ally.color);
-  damageEnemy(enemy, amount, ally, "絆追撃");
-  addLog(`${ally.name}が合わせた。近くで戦うと追撃が出る。`);
-  return true;
+function dropRareEnemyLoot(x, y) {
+  const gear = generateGear(2, 3);
+  const point = findDropTile(x, y);
+  game.items.push({ id: cryptoId(), kind: "gear", gear, x: point.x, y: point.y });
+  addLog(`レア敵の戦利品。${gearRarityLabel(gear)}「${gear.name}」が落ちた。`);
+  announceEvent("レアドロップ", `${gearRarityLabel(gear)} ${gear.name}`, "★", "good");
 }
 
-function checkSeal(player) {
-  const seal = game.seals.find((candidate) => candidate.x === player.x && candidate.y === player.y);
-  if (!seal) return false;
+function completeBossMission(enemy) {
+  game.mission.complete = true;
+  game.score += game.mission.reward;
+  game.rescuePoints += game.mission.reward;
+  const point = { x: enemy.x, y: enemy.y };
+  const dropPoint = findDropTile(point.x, point.y);
+  game.items.push({ id: cryptoId(), kind: "gear", gear: generateGear(3, 4), x: dropPoint.x, y: dropPoint.y });
+  addEffect("burst", point.x, point.y, palette.brass);
+  addLog(`${enemy.name}を撃破。最深部の封印が解けた。`);
+  announceEvent("ボス撃破", "階段の封印が解けた", "冠", "good");
+  setScreenFlash("#ffe08a", 700);
+}
 
-  if (seal.owner !== player.id) {
-    const owner = game.players[seal.owner];
-    showToast(`${seal.name}は${owner.name}が解除する紋章。`);
+function enemyAttack(enemy, actor) {
+  const rawDamage = Math.max(1, enemy.atk + randInt(-1, 2) - actor.def);
+  const damage = actor.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
+  actor.hp = Math.max(0, actor.hp - damage);
+  enemy.alerted = true;
+  addEffect("hit", actor.x, actor.y, enemy.color);
+  addFloatingText(actor.x, actor.y, `-${damage}`, palette.coral);
+  addLog(`${enemy.name}の攻撃。${actor.name}に${damage}ダメージ。`);
+  if (actor.id === "leader") {
+    setScreenFlash("#ef6b64", 260);
+    triggerScreenShake(enemy.boss ? 15 : 9, enemy.boss ? 360 : 240);
+    playSfx("hurt");
+  }
+
+  if (actor.hp <= 0) {
+    if (tryReviveActor(actor)) return;
+    if (actor.id === "leader") {
+      actor.down = true;
+      checkGameOver();
+    } else {
+      actor.down = true;
+      addLog(`${actor.name}は倒れた。次の階で復帰する。`);
+    }
+  }
+}
+
+function gainExp(amount) {
+  for (const actor of game.team) {
+    if (actor.down || actor.kind === "recruit") continue;
+    actor.exp += amount;
+    while (actor.exp >= actor.nextExp) {
+      actor.exp -= actor.nextExp;
+      actor.level += 1;
+      actor.nextExp = Math.floor(actor.nextExp * 1.34 + 12);
+      actor.maxHp += 4;
+      actor.hp = actor.maxHp;
+      actor.atk += 1;
+      if (actor.level % 2 === 0) actor.def += 1;
+      if (actor.id === "leader") game.skillPoints += 1;
+      addEffect("heal", actor.x, actor.y, actor.color);
+      addLog(`${actor.name}はLv.${actor.level}になった。`);
+      const bonusText = actor.id === "leader" ? "　スキルポイント +1" : "";
+      announceEvent("レベルアップ", `${actor.name} Lv.${actor.level}${bonusText}`, "Lv", "good");
+      playSfx("level");
+    }
+  }
+}
+
+function maybeDropEvolutionMaterial(enemy) {
+  const materialByType = {
+    starwater: "moonShard",
+    firecrystal: "emberCore",
+    forestleaf: "wisdomSeed",
+    moonshade: "shadowFang",
+  };
+  let kind = materialByType[enemy.typeKey];
+  if (!kind && enemy.typeKey === "skywind") {
+    kind = ["moonShard", "emberCore", "wisdomSeed", "shadowFang"][randInt(0, 3)];
+  }
+  const chance = clamp(0.09 + game.luck * 0.012 + (hasSkill("predator") ? 0.06 : 0), 0.04, 0.28);
+  if (kind && Math.random() < chance) dropEvolutionMaterial(kind, enemy.x, enemy.y);
+}
+
+function dropEvolutionMaterial(kind, x, y, guaranteed = false) {
+  const catalog = itemCatalog[kind];
+  if (!catalog) return;
+  const point = findDropTile(x, y);
+  game.items.push({ id: cryptoId(), kind, x: point.x, y: point.y });
+  addLog(`${catalog.name}が${guaranteed ? "強い光とともに" : ""}落ちた。進化に使える。`);
+  announceEvent("進化素材ドロップ", catalog.name, catalog.icon, "mystic");
+  playSfx("material");
+}
+
+function findDropTile(x, y) {
+  const candidates = [{ x, y }, ...dirs.map((dir) => ({ x: x + dir.x, y: y + dir.y }))];
+  const point = candidates.find((candidate) => (
+    isWalkable(candidate.x, candidate.y) &&
+    !actorAt(candidate.x, candidate.y) &&
+    !enemyAt(candidate.x, candidate.y) &&
+    !itemAt(candidate.x, candidate.y)
+  ));
+  return point || { x, y };
+}
+
+function maybeDropItem(x, y) {
+  const chance = clamp(0.14 + game.luck * 0.025 + (hasSkill("predator") ? 0.05 : 0), 0.05, 0.34);
+  if (Math.random() > chance || itemAt(x, y)) return;
+  const kind = weighted([
+    { value: "oran", weight: 22 },
+    { value: "blastSeed", weight: 18 },
+    { value: "sleepSeed", weight: 16 },
+    { value: "elixir", weight: 14 },
+    { value: "apple", weight: 14 },
+    { value: "reviver", weight: 4 },
+    { value: "stardust", weight: 12 },
+    { value: "gear", weight: 5 },
+  ]);
+  game.items.push({ id: cryptoId(), kind, gear: kind === "gear" ? generateGear() : undefined, x, y });
+}
+
+function pushEnemy(enemy, dx, dy) {
+  if (!game.enemies.includes(enemy)) return;
+  const x = enemy.x + dx;
+  const y = enemy.y + dy;
+  if (!dx && !dy) return;
+  if (!canTakeStep(enemy.x, enemy.y, dx, dy) || actorAt(x, y) || enemyAt(x, y)) return;
+  const from = { x: enemy.x, y: enemy.y };
+  enemy.x = x;
+  enemy.y = y;
+  startWalkMotion(enemy, from.x, from.y, x, y);
+}
+
+function applyStepTerrain(actor) {
+  const terrain = game.map[actor.y]?.[actor.x];
+  if (terrain === "moss") {
+    const healed = healActor(actor, 2);
+    if (healed > 0 && actor.id === "leader") addLog("回復苔の力でHPが2回復した。");
+    if (healed > 0) addEffect("heal", actor.x, actor.y, "#91e27b");
+    return;
+  }
+
+  if (terrain !== "crack") return;
+  actor.hp = Math.max(0, actor.hp - 2);
+  addFloatingText(actor.x, actor.y, "-2", "#ff8a68");
+  addEffect("hit", actor.x, actor.y, "#ff8a68");
+  addLog(`${actor.name}は亀裂を踏み、2ダメージ。`);
+  if (actor.id === "leader") {
+    setScreenFlash("#ff6e55", 240);
+    triggerScreenShake(6, 180);
+  }
+  if (actor.hp > 0) return;
+  if (tryReviveActor(actor)) return;
+  actor.down = true;
+  if (actor.id !== "leader") addLog(`${actor.name}は倒れた。次の階で復帰する。`);
+}
+
+function pickUpItem() {
+  const leader = getLeader();
+  const item = itemAt(leader.x, leader.y);
+  if (!item) return;
+
+  if (item.kind === "gear" && item.gear) {
+    if (game.gearBag.length >= 24) {
+      const equippedIds = new Set(Object.values(game.equipment));
+      const disposable = game.gearBag
+        .filter((gear) => !equippedIds.has(gear.id))
+        .sort((a, b) => gearPower(a) - gearPower(b))[0];
+      if (!disposable) {
+        showToast("装備袋がいっぱい");
+        return;
+      }
+      game.gearBag = game.gearBag.filter((gear) => gear.id !== disposable.id);
+      addLog(`${disposable.name}を手放し、装備袋を空けた。`);
+    }
+    game.items = game.items.filter((candidate) => candidate.id !== item.id);
+    game.gearBag.push(item.gear);
+    const autoEquipped = !game.equipment[item.gear.slot];
+    if (autoEquipped) equipGear(item.gear.id, false);
+    const detail = `${gearRarityLabel(item.gear)}　${gearSlots[item.gear.slot].name}　${gearStatText(item.gear)}`;
+    addLog(`${item.gear.name}を拾った。${autoEquipped ? "そのまま装備した。" : "装備袋に入れた。"}`);
+    announceEvent(item.gear.name, detail, "装", "good");
+    setScreenFlash(item.gear.color, 260);
+    playSfx("gear");
+    return;
+  }
+
+  if (item.kind === "badge") {
+    game.items = game.items.filter((candidate) => candidate.id !== item.id);
+    leader.atk += 1;
+    leader.def += 1;
+    addLog("隊長バッジを拾った。攻撃と防御が上がった。");
+    announceEvent("隊長バッジ", "攻撃と防御が1上がった", "徽", "good");
+    return;
+  }
+
+  if (item.kind === "stardust") {
+    game.items = game.items.filter((candidate) => candidate.id !== item.id);
+    const points = 45 + game.floor * 8;
+    game.score += points;
+    addLog(`星屑を集めた。救助pt +${points}。`);
+    announceEvent("星屑を発見", `救助pt +${points}`, "星", "mystic");
+    return;
+  }
+
+  const catalog = itemCatalog[item.kind];
+  if (!catalog) return;
+  if (bagTotal() >= game.bagCapacity) {
+    showToast(`バッグがいっぱい。${catalog.name}を拾えない`);
+    return;
+  }
+  game.items = game.items.filter((candidate) => candidate.id !== item.id);
+  game.bag[item.kind] = (game.bag[item.kind] || 0) + 1;
+  addLog(`${catalog.name}を拾った。バッグ ${bagTotal()}/${game.bagCapacity}。`);
+  announceEvent(catalog.name, `${catalog.category}をバッグに入れた`, catalog.icon, "good");
+  setScreenFlash(catalog.color, 230);
+  playSfx(catalog.category === "進化素材" ? "material" : "pickup");
+}
+
+function gearPower(gear) {
+  return gear.atk * 3 + gear.def * 3 + gear.hp;
+}
+
+function gearRarityLabel(gear) {
+  const stars = clamp(gear.stars || 1, 1, 5);
+  return `${"★".repeat(stars)}${"☆".repeat(5 - stars)} ${gear.quality || "コモン"}`;
+}
+
+function gearStatText(gear) {
+  return [
+    gear.atk ? `攻撃 ${gear.atk > 0 ? "+" : ""}${gear.atk}` : "",
+    gear.def ? `防御 ${gear.def > 0 ? "+" : ""}${gear.def}` : "",
+    gear.hp ? `HP +${gear.hp}` : "",
+  ].filter(Boolean).join("　") || "補正なし";
+}
+
+function applyGearBonus(actor, gear, direction) {
+  if (!gear) return;
+  actor.atk += gear.atk * direction;
+  actor.def += gear.def * direction;
+  actor.maxHp += gear.hp * direction;
+  if (direction > 0) actor.hp += gear.hp;
+  else actor.hp = Math.min(actor.hp, actor.maxHp);
+  actor.maxHp = Math.max(1, actor.maxHp);
+  actor.hp = clamp(actor.hp, 1, actor.maxHp);
+}
+
+function equipGear(gearId, announce = true) {
+  const gear = game.gearBag.find((entry) => entry.id === gearId);
+  if (!gear) return;
+  const currentId = game.equipment[gear.slot];
+  if (currentId === gear.id) return;
+  const current = game.gearBag.find((entry) => entry.id === currentId);
+  const leader = getLeader();
+  applyGearBonus(leader, current, -1);
+  game.equipment[gear.slot] = gear.id;
+  applyGearBonus(leader, gear, 1);
+  if (announce) {
+    addLog(`${leader.name}は${gear.name}を装備した。`);
+    announceEvent("装備変更", `${gearRarityLabel(gear)}　${gearStatText(gear)}`, "装", "mystic");
+    updateAll();
+    renderGameMenu("gear");
+  }
+}
+
+function bagTotal() {
+  return Object.values(game.bag).reduce((sum, count) => sum + count, 0);
+}
+
+function useItem(kind) {
+  const catalog = itemCatalog[kind];
+  if (!catalog || (game.bag[kind] || 0) <= 0) {
+    showToast("その道具は持っていない");
+    return false;
+  }
+  if (catalog.automatic) {
+    showToast("倒れた時に自動で使う道具");
     return false;
   }
 
-  if (seal.active) {
-    showToast(`${seal.name}は解除済み。`);
-    return false;
+  const leader = getLeader();
+  let detail = catalog.detail;
+  if (kind === "apple" || kind === "bigApple") {
+    const amount = kind === "apple" ? 45 : 80;
+    const before = game.belly;
+    game.belly = clamp(game.belly + amount, 0, 100);
+    detail = `満腹度 +${Math.floor(game.belly - before)}`;
+    addEffect("heal", leader.x, leader.y, catalog.color);
+  } else if (kind === "oran") {
+    if (leader.hp >= leader.maxHp) {
+      showToast("HPは満タン");
+      return false;
+    }
+    const healed = healActor(leader, 20);
+    detail = `${leader.name}のHP +${healed}`;
+    addEffect("heal", leader.x, leader.y, catalog.color);
+  } else if (kind === "elixir") {
+    const needsPp = leader.moves.some((move) => move.pp < move.maxPp);
+    if (!needsPp) {
+      showToast("技PPは満タン");
+      return false;
+    }
+    for (const move of leader.moves) move.pp = Math.min(move.maxPp, move.pp + 5);
+    detail = "すべての技PP +5";
+  } else if (kind === "blastSeed") {
+    const target = enemyInFacingLine(leader, 3);
+    if (!target) {
+      showToast("正面3マスに敵がいない");
+      return false;
+    }
+    damageEnemy(target, 18 + leader.level, leader, catalog.name);
+    addEffect("burst", target.x, target.y, catalog.color);
+    detail = `${target.name}に${18 + leader.level}ダメージ`;
+  } else if (kind === "sleepSeed") {
+    const target = enemyInFacingLine(leader, 3);
+    if (!target) {
+      showToast("正面3マスに敵がいない");
+      return false;
+    }
+    target.sleepTurns = Math.max(target.sleepTurns || 0, 4);
+    addEffect("sleep", target.x, target.y, catalog.color);
+    detail = `${target.name}を4ターン眠らせた`;
+  } else if (kind === "slumberOrb") {
+    const targets = game.enemies.filter((enemy) => isVisible(enemy.x, enemy.y));
+    if (!targets.length) {
+      showToast("見えている敵がいない");
+      return false;
+    }
+    for (const target of targets) {
+      target.sleepTurns = Math.max(target.sleepTurns || 0, 3);
+      addEffect("sleep", target.x, target.y, catalog.color);
+    }
+    detail = `${targets.length}体の敵を眠らせた`;
+  } else if (kind === "warpOrb") {
+    warpTeamToSafeRoom();
+    detail = "別の安全な部屋へ移動";
+  } else if (kind === "guidingOrb") {
+    game.guidanceActive = true;
+    detail = "目的地がミニマップに表示された";
+  } else if (kind === "guardBerry") {
+    leader.def += 1;
+    detail = "この挑戦中、防御 +1";
+    addEffect("heal", leader.x, leader.y, catalog.color);
+  } else if (kind === "powerBerry") {
+    leader.atk += 1;
+    detail = "この挑戦中、攻撃 +1";
+    addEffect("burst", leader.x, leader.y, catalog.color);
+  } else if (kind === "fortuneOrb") {
+    game.luck += 2;
+    detail = "この階の運 +2";
+    addEffect("burst", leader.x, leader.y, catalog.color);
   }
 
-  seal.active = true;
-  game.score += 80 + game.floor * 15;
-  game.bond = clamp(game.bond + 15, 0, 100);
-  addRingEffect(seal.x, seal.y, player.color);
-  addFloatingText(seal.x, seal.y, "OPEN", player.color);
-  addLog(`${player.name}が${seal.name}を解除した。`);
-  if (allSealsActive()) {
-    addLog("二つの紋章が響き合い、階段の封印が解けた。");
-    showToast("階段が開いた。二人で合流しよう。");
-  }
+  game.bag[kind] -= 1;
+  game.runStats.itemUses += 1;
+  addLog(`${catalog.name}を使った。${detail}。`);
+  announceEvent(catalog.name, detail, catalog.icon, "mystic");
+  setScreenFlash(catalog.color, 260);
+  playSfx("item");
   return true;
 }
 
-function allSealsActive() {
-  return game.seals.length > 0 && game.seals.every((seal) => seal.active);
+function enemyInFacingLine(actor, range) {
+  for (let step = 1; step <= range; step += 1) {
+    const x = actor.x + actor.dx * step;
+    const y = actor.y + actor.dy * step;
+    if (!inBounds(x, y) || !isWalkable(x, y)) return null;
+    const target = enemyAt(x, y);
+    if (target) return target;
+  }
+  return null;
 }
 
-function enemyTurn() {
-  for (const player of game.players) {
-    player.acted = false;
-    if (player.cooldown > 0) player.cooldown -= 1;
+function warpTeamToSafeRoom() {
+  const leader = getLeader();
+  const choices = game.rooms.filter((room) => !pointInRoom(leader.x, leader.y, room));
+  const room = choices[randInt(0, Math.max(0, choices.length - 1))] || game.rooms[0];
+  const destination = centerOf(room);
+  const blockers = [];
+  game.team.forEach((actor, index) => {
+    if (actor.down) return;
+    const point = index === 0
+      ? nearestOpen(destination.x, destination.y, blockers)
+      : nearestOpen(destination.x + index, destination.y, blockers);
+    actor.x = point.x;
+    actor.y = point.y;
+    actor.motion = null;
+    blockers.push(point);
+    addEffect("heal", point.x, point.y, "#6fcce8");
+  });
+  game.leaderTrail = Array.from({ length: Math.max(8, game.team.length + 3) }, () => ({
+    x: leader.x,
+    y: leader.y,
+  }));
+  revealAroundTeam();
+}
+
+function tickHunger() {
+  const hungerCost = hasSkill("ration") ? 0.08 : 0.14;
+  game.belly = clamp(game.belly - hungerCost, 0, 100);
+  if (game.belly === 0) {
+    const leader = getLeader();
+    leader.hp = Math.max(0, leader.hp - 1);
+    addFloatingText(leader.x, leader.y, "-1", palette.coral);
+    if (game.turn % 3 === 0) addLog("お腹が空いて力が出ない。");
+    if (leader.hp <= 0 && !tryReviveActor(leader)) leader.down = true;
   }
-  updateBondAfterTurn();
+}
 
-  const enemies = [...game.enemies];
-  for (const enemy of enemies) {
-    if (!game.enemies.includes(enemy)) continue;
-    const target = nearestLivingPlayer(enemy);
-    if (!target) break;
+function tryReviveActor(actor) {
+  if ((game.bag.reviver || 0) <= 0) return false;
+  game.bag.reviver -= 1;
+  actor.down = false;
+  actor.hp = Math.max(1, Math.ceil(actor.maxHp * 0.55));
+  addEffect("heal", actor.x, actor.y, "#ffe47b");
+  addFloatingText(actor.x, actor.y, "REVIVE", "#ffe47b");
+  addLog(`あかつきの種が光り、${actor.name}は立ち上がった。`);
+  announceEvent("あかつきの種", `${actor.name}がHP ${actor.hp}で復活`, "復", "good");
+  setScreenFlash("#ffe47b", 360);
+  return true;
+}
 
-    if (manhattan(enemy.x, enemy.y, target.x, target.y) === 1) {
-      enemyAttack(enemy, target);
-      continue;
-    }
+function checkMission() {
+  if (!game.mission || game.mission.complete) return;
+  if (game.mission.boss) return;
+  const leader = getLeader();
+  if (manhattan(leader.x, leader.y, game.mission.x, game.mission.y) > 0) return;
+  game.mission.complete = true;
+  game.runStats.helped += 1;
+  if (game.karma > 0) game.karma -= 1;
+  game.score += game.mission.reward;
+  game.rescuePoints += game.mission.reward;
+  addEffect("heal", game.mission.x, game.mission.y, palette.brass);
+  addLog(`${game.mission.done} 報酬 +${game.mission.reward}pt。善行によりカルマ ${game.karma}。`);
+  announceEvent("依頼達成", `${game.mission.done} 階段が開いた`, "印", "good");
+  setScreenFlash("#e5ae48", 420);
+  playSfx("rescue");
+}
 
-    const aware = enemy.alerted || distance(enemy, target) <= 8 || game.visible[enemy.y][enemy.x];
-    if (!aware) {
-      enemyWander(enemy);
-      continue;
-    }
+function tryUseStairs() {
+  const leader = getLeader();
+  if (leader.x !== game.stairs.x || leader.y !== game.stairs.y) return false;
+  if (!game.mission.complete) {
+    addLog("この階の依頼に決着をつけるまで、階段は動かない。");
+    return false;
+  }
+  if (!ui.stairsDialog.open) openStairsDialog();
+  return true;
+}
 
-    enemy.alerted = true;
-    const next = stepToward(enemy, target);
-    if (next && !blockedByActor(next.x, next.y)) {
-      enemy.x = next.x;
-      enemy.y = next.y;
-      addEffect("step", enemy.x, enemy.y, enemy.color);
-    }
+function openStairsDialog() {
+  const finalFloor = game.floor >= game.targetFloor;
+  ui.stairsDialogKicker.textContent = finalFloor ? "ボス撃破" : `B${game.floor}F 踏破`;
+  ui.stairsDialogTitle.textContent = finalFloor ? "町へ帰還しますか？" : "次の階へ進みますか？";
+  ui.stairsDialogText.textContent = finalFloor
+    ? "戦利品を確定し、ダンジョン制覇の報告へ戻ります。"
+    : "次へ進むと、この階には戻れません。残った道具を探すこともできます。";
+  ui.stairsProceedButton.textContent = finalFloor ? "町へ帰還" : `B${game.floor + 1}Fへ進む`;
+  ui.stairsDialog.showModal();
+}
+
+function stayOnCurrentFloor() {
+  if (ui.stairsDialog.open) ui.stairsDialog.close();
+  addLog("階段を降りず、この階の探索を続けることにした。");
+  resolveWorldTurn();
+}
+
+function proceedThroughStairs() {
+  if (ui.stairsDialog.open) ui.stairsDialog.close();
+
+  if (game.floor >= game.targetFloor) {
+    game.runStats.floorsCleared += 1;
+    game.victory = true;
+    const dungeonNo = game.activeTownMission?.chapter || 1;
+    game.completedDungeon = Math.max(game.completedDungeon, dungeonNo);
+    const contractReward = game.activeTownMission?.reward || 500;
+    game.score += contractReward;
+    game.coins += contractReward;
+    game.rescuePoints += contractReward;
+    const nextMission = townMissions.findIndex((mission) => mission.chapter === dungeonNo + 1);
+    if (nextMission >= 0) game.selectedTownMission = nextMission;
+    saveBestScore();
+    saveCurrentGame(true);
+    ui.endTitle.textContent = `${game.activeTownMission?.dungeon || "ダンジョン"} 制覇`;
+    const next = townMissions.find((mission) => mission.chapter === dungeonNo + 1);
+    const continuation = next
+      ? `次の探索先「${next.dungeon}」が解放された。`
+      : "5つのダンジョンをすべて制覇した。";
+    ui.endText.textContent = `ボスを倒して町へ帰還。報酬 ${contractReward}星貨。${continuation}`;
+    ui.endRestartButton.textContent = "町へ戻る";
+    ui.endOverlay.hidden = false;
+    playSfx("victory");
+    updateAll();
+    return;
   }
 
-  game.turn += 1;
-  if (game.turn % 12 === 0) {
-    const pos = randomOpenSpot(7);
-    if (pos) {
-      const base = enemyCatalog[Math.min(enemyCatalog.length - 1, Math.floor(game.floor / 2))];
-      game.enemies.push({
-        id: cryptoId(),
-        key: base.key,
-        name: base.name,
-        x: pos.x,
-        y: pos.y,
-        hp: base.hp + game.floor * 3,
-        maxHp: base.hp + game.floor * 3,
-        atk: base.atk + game.floor,
-        exp: base.exp + game.floor * 4,
-        color: base.color,
-        accent: base.accent,
-        wobble: Math.random() * Math.PI * 2,
-        alerted: true,
-      });
-      addLog("奥から気配が近づいてくる。");
-    }
+  game.runStats.floorsCleared += 1;
+  game.floor += 1;
+  game.turn = 1;
+  game.belly = clamp(game.belly + 14, 0, 100);
+  for (const actor of game.team) {
+    actor.hp = Math.min(actor.maxHp, actor.hp + 8);
+    actor.down = false;
   }
-
-  revealAroundPlayers();
-  checkGameEnd();
+  buildFloor();
+  announceEvent("次の階へ", `B${game.floor}F　新しい地形を探索`, "階", "mystic");
+  playSfx("stairs");
   updateAll();
 }
 
-function enemyAttack(enemy, player) {
-  const fearBonus = game.bond <= 20 ? 1 : 0;
-  const damage = Math.max(1, enemy.atk + randInt(-1, 2) + fearBonus - player.defense);
-  player.hp -= damage;
-  addEffect("hit", player.x, player.y, enemy.color);
-  addFloatingText(player.x, player.y, `-${damage}`, palette.coral);
-  addLog(`${enemy.name}の攻撃。${player.name}に${damage}ダメージ。`);
+function checkGameOver() {
+  const leader = getLeader();
+  if (!leader.down && leader.hp > 0) return;
+  game.gameOver = true;
+  saveBestScore();
+  ui.endTitle.textContent = "救助失敗";
+  ui.endText.textContent = `B${game.floor}Fで力尽きた。救助pt ${game.score}。`;
+  ui.endRestartButton.textContent = "町へ戻る";
+  ui.endOverlay.hidden = false;
+  updateAll();
+}
 
-  if (player.hp <= 0) {
-    player.hp = 0;
-    player.down = true;
-    player.acted = true;
-    addLog(`${player.name}が倒れた。隣で救助ベルを鳴らそう。`);
-    showToast(`${player.name}が倒れた。`);
+function updateAll() {
+  if (!game) return;
+  const rank = currentRank();
+  const inTown = game.mode === "town";
+  ui.townScreen.hidden = !inTown;
+  ui.gameLayout.hidden = inTown;
+  ui.touchControls.hidden = inTown;
+
+  if (inTown) {
+    const mission = townMissions[game.selectedTownMission];
+    const leader = getLeader();
+    ui.floor.textContent = "町";
+    ui.score.textContent = `${game.coins} 星貨`;
+    ui.best.textContent = rank.name;
+    ui.townMission.textContent = `迷宮 ${mission.chapter}/5　${mission.dungeon} / 全${mission.floors}階`;
+    ui.townRank.textContent = rank.name;
+    ui.townCoin.textContent = `${game.coins}`;
+    ui.townLeaderName.textContent = leader.name;
+    ui.townLeaderType.textContent = `${leader.type}タイプ`;
+    ui.townLeaderSwatch.style.background = leader.color;
+    ui.departButton.querySelector("span").textContent = `迷宮 ${mission.chapter}/5　${mission.dungeon} / 報酬 ${mission.reward}星貨`;
+    return;
+  }
+
+  ui.floor.textContent = `B${game.floor}F`;
+  ui.score.textContent = `${game.score} pt`;
+  ui.best.textContent = `Best ${bestScore}`;
+  ui.mission.textContent = game.mission?.complete ? "解除" : game.mission?.boss ? "ボス戦" : "探索中";
+  ui.belly.textContent = `${Math.ceil(game.belly)}`;
+  ui.bag.textContent = `バッグ ${bagTotal()}/${game.bagCapacity}`;
+  ui.gear.textContent = `${Object.values(game.equipment).filter(Boolean).length} / 3`;
+  ui.turn.textContent = `${game.turn}`;
+  ui.stairs.textContent = game.mission?.complete ? "使用可" : "封印中";
+  ui.goal.textContent = game.mission?.complete
+    ? "階段へ向かう"
+    : game.mission?.boss
+      ? `${game.mission.target}を倒す`
+      : `${game.mission?.target || "階の印"}を探す`;
+  ui.chapter.textContent = `${game.activeTownMission?.dungeon || "ダンジョン"}`;
+  ui.luck.textContent = game.floorEvent?.name || "平穏";
+  ui.luck.style.color = game.luck > 0 ? "#9ee88c" : game.luck < 0 ? "#ff9b87" : "";
+  ui.mapLeaderDot.style.background = getLeader().color;
+  ui.tacticSummary.textContent = game.karma === 0 ? "清廉" : game.karma < 5 ? "影が差す" : "深い業";
+  ui.karma.textContent = `${game.karma}`;
+  ui.karma.style.color = game.karma === 0 ? "#8ee3d5" : game.karma < 5 ? "#d9a0e8" : "#ff776c";
+  renderParty(rank);
+  renderMoves();
+  renderLog();
+}
+
+function renderParty(rank) {
+  ui.party.innerHTML = "";
+  for (const actor of game.team) {
+    const card = document.createElement("article");
+    card.className = `player-card ${actor.down ? "down" : ""}`;
+    card.style.borderLeftColor = actor.color;
+    const hpRatio = actor.maxHp ? (actor.hp / actor.maxHp) * 100 : 0;
+    const expRatio = actor.kind === "recruit" ? 100 : (actor.exp / actor.nextExp) * 100;
+    card.innerHTML = `
+      <div class="portrait"><canvas width="48" height="48"></canvas></div>
+      <div class="player-info">
+        <div class="player-head">
+          <strong>${actor.name}</strong>
+          <span class="type-label"><i style="background:${actor.color}"></i>${actor.kind === "leader" ? `${actor.type}タイプ` : actor.role}</span>
+        </div>
+        <div class="bar"><div class="bar-fill" style="width:${hpRatio}%; background:${actor.color}"></div></div>
+        <div class="player-meta">
+          <span>Lv.${actor.level}</span>
+          <span>HP ${actor.hp}/${actor.maxHp}</span>
+          <span>${actor.kind === "leader" ? `EXP ${Math.floor(expRatio)}%` : (tacticCatalog.find((entry) => entry.key === actor.tactic)?.short || "追従")}</span>
+        </div>
+      </div>
+    `;
+    ui.party.appendChild(card);
+    drawPortrait(card.querySelector("canvas"), actor);
   }
 }
 
-function updateBondAfterTurn() {
-  const alive = livingPlayers();
-  if (alive.length < 2) return;
-  const d = manhattan(alive[0].x, alive[0].y, alive[1].x, alive[1].y);
-  const before = game.bond;
-  if (d <= 2) {
-    game.bond = clamp(game.bond + 6, 0, 100);
-  } else if (d >= 8) {
-    game.bond = clamp(game.bond - 9, 0, 100);
-  } else if (d >= 6) {
-    game.bond = clamp(game.bond - 4, 0, 100);
+function renderMoves() {
+  const leader = getLeader();
+  const selected = leader.moves[game.selectedMove];
+  ui.moveSummary.textContent = `${selected.name} ${selected.pp}/${selected.maxPp}`;
+  if (ui.gameMenuDialog.open) renderGameMenu(game.menuView);
+}
+
+function openGameMenu(view = "moves") {
+  if (game.mode !== "dungeon" || game.gameOver || game.victory) return;
+  renderGameMenu(view);
+  if (!ui.gameMenuDialog.open) ui.gameMenuDialog.showModal();
+}
+
+function toggleGameMenu(view = "moves") {
+  if (game.mode !== "dungeon") return;
+  if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
+  else openGameMenu(view);
+}
+
+function renderGameMenu(view = "moves") {
+  game.menuView = view;
+  document.querySelectorAll("[data-menu-view]").forEach((button) => {
+    button.classList.toggle("active", button.dataset.menuView === view);
+  });
+  ui.gameMenuBody.innerHTML = "";
+
+  if (view === "moves") {
+    const leader = getLeader();
+    leader.moves.forEach((move, index) => {
+      const button = document.createElement("button");
+      button.className = `move-button ${index === game.selectedMove ? "active" : ""}`;
+      button.type = "button";
+      button.innerHTML = `
+        <span class="move-key">${index + 1}</span>
+        <span class="move-name"><strong>${move.name}</strong><span>${move.hint}</span></span>
+        <span class="move-pp">${move.pp}/${move.maxPp}</span>
+      `;
+      button.addEventListener("click", () => {
+        performAction({ type: "selectMove", index });
+        ui.gameMenuDialog.close();
+      });
+      ui.gameMenuBody.appendChild(button);
+    });
+    return;
   }
 
-  if (before >= 25 && game.bond < 25) {
-    addLog("二人が離れすぎて絆が弱まった。敵の攻撃が少し痛くなる。");
-    showToast("離れすぎ。合流して絆を戻そう。");
-  } else if (before < 80 && game.bond >= 80) {
-    addLog("二人の息が合っている。近くで攻撃すると追撃が強くなる。");
+  if (view === "bag") {
+    ui.gameMenuBody.innerHTML = `
+      <div class="menu-stat-grid">
+        <div class="menu-stat"><span>満腹度</span><strong>${Math.ceil(game.belly)} / 100</strong></div>
+        <div class="menu-stat"><span>バッグ</span><strong>${bagTotal()} / ${game.bagCapacity}</strong></div>
+      </div>
+    `;
+    const owned = Object.entries(itemCatalog).filter(([kind]) => (game.bag[kind] || 0) > 0);
+    if (!owned.length) {
+      ui.gameMenuBody.insertAdjacentHTML("beforeend", '<p class="town-note">バッグは空です。</p>');
+      return;
+    }
+    for (const [kind, item] of owned) {
+      appendTownEntry(ui.gameMenuBody, {
+        title: `${item.name} × ${game.bag[kind]}`,
+        detail: item.detail,
+        meta: `${item.category}　${item.category === "進化素材" ? "進化画面で消費" : item.automatic ? "倒れた時に自動使用" : "使用すると1ターン消費"}`,
+        iconKind: kind,
+        buttonLabel: item.automatic ? "自動" : "使う",
+        disabled: item.automatic,
+        onClick: () => {
+          ui.gameMenuDialog.close();
+          performAction({ type: "useItem", kind });
+        },
+      });
+    }
+    return;
   }
+
+  if (view === "gear") {
+    renderGearMenu();
+    return;
+  }
+
+  if (view === "evolution") {
+    renderEvolutionBoard();
+    return;
+  }
+
+  if (view === "skills") {
+    renderSkillBoard();
+    return;
+  }
+
+  const mission = game.activeTownMission;
+  ui.gameMenuBody.innerHTML = `
+    <p class="town-note">${mission?.description || "探索情報がありません。"}</p>
+    <div class="menu-stat-grid">
+      <div class="menu-stat"><span>現在地</span><strong>B${game.floor}F / B${game.targetFloor}F</strong></div>
+      <div class="menu-stat"><span>階の目的</span><strong>${game.mission?.complete ? "達成" : game.mission?.boss ? "ボス戦" : "先遣員の捜索"}</strong></div>
+      <div class="menu-stat"><span>案内人</span><strong>${mission?.client || "-"}</strong></div>
+      <div class="menu-stat"><span>最深部ボス</span><strong>${mission?.target || "-"}</strong></div>
+      <div class="menu-stat"><span>フロア運勢</span><strong>${game.floorEvent?.name || "平穏"}</strong></div>
+      <div class="menu-stat"><span>運勢の効果</span><strong>${game.floorEvent?.detail || "-"}</strong></div>
+    </div>
+  `;
+}
+
+function renderGearMenu() {
+  const equippedCount = Object.values(game.equipment).filter(Boolean).length;
+  ui.gameMenuBody.innerHTML = `
+    <div class="gear-summary">
+      ${Object.entries(gearSlots).map(([slot, info]) => {
+        const gear = game.gearBag.find((entry) => entry.id === game.equipment[slot]);
+        return `<div style="--gear-color:${gear?.color || info.color}">
+          <span>${info.name}</span>
+          <strong>${gear?.name || "未装備"}</strong>
+          <small>${gear ? gearStatText(gear) : "補正なし"}</small>
+        </div>`;
+      }).join("")}
+    </div>
+    <div class="gear-rarity-legend">
+      ${gearQualities.map((quality) => `<span style="--rarity-color:${quality.color}"><b>${"★".repeat(quality.stars)}</b>${quality.name}</span>`).join("")}
+    </div>
+    <p class="town-note">装備は町へ持ち帰り、次の挑戦にも引き継がれます。装備袋は24個までです。</p>
+    <div class="gear-list"></div>
+  `;
+  const list = ui.gameMenuBody.querySelector(".gear-list");
+  if (!game.gearBag.length) {
+    list.innerHTML = '<p class="town-note">装備はまだ見つかっていません。</p>';
+    return;
+  }
+  for (const gear of game.gearBag) {
+    const equipped = game.equipment[gear.slot] === gear.id;
+    appendTownEntry(list, {
+      title: gear.name,
+      detail: `${gearSlots[gear.slot].name}　${gearStatText(gear)}`,
+      meta: `レア度 ${gearRarityLabel(gear)}`,
+      iconGear: gear,
+      selected: equipped,
+      buttonLabel: equipped ? "装備中" : "装備する",
+      disabled: equipped,
+      onClick: () => equipGear(gear.id),
+    });
+  }
+  if (equippedCount === 3) {
+    list.insertAdjacentHTML("beforeend", '<p class="gear-complete">3部位装備中。拾った装備はいつでも付け替えられます。</p>');
+  }
+}
+
+function renderEvolutionBoard() {
+  const leader = getLeader();
+  const current = evolutionCatalog.find((entry) => entry.key === leader.evolutionKey);
+  const stats = game.runStats;
+  ui.gameMenuBody.innerHTML = `
+    <div class="evolution-head" style="--evo-color:${leader.color}">
+      <div>
+        <span>現在の姿</span>
+        <strong>${leader.name}</strong>
+        <small>${current?.title || "まだ何色にも染まっていない星の子"}</small>
+      </div>
+      <div class="evolution-head-stats">
+        <b>Lv.${leader.level}</b>
+        <b>カルマ ${game.karma}</b>
+        <b>撃破 ${stats.kills}</b>
+        <b>救助 ${stats.helped}</b>
+      </div>
+    </div>
+    <p class="town-note">進化は急がなくて大丈夫です。コハクのまま積み重ねた行動、レベル、素材が新しい道を開きます。</p>
+    <div class="evolution-grid"></div>
+  `;
+  const grid = ui.gameMenuBody.querySelector(".evolution-grid");
+  for (const evolution of evolutionCatalog) {
+    const routeOpen = leader.evolutionKey === evolution.from;
+    const materialsReady = hasEvolutionMaterials(evolution);
+    const behaviorReady = evolution.requirement(stats);
+    const levelReady = leader.level >= evolution.level;
+    const available = routeOpen && materialsReady && behaviorReady && levelReady;
+    const completed = leader.evolutionKey === evolution.key;
+    const materialText = Object.entries(evolution.materials)
+      .map(([kind, count]) => `${itemCatalog[kind].name} ${game.bag[kind] || 0}/${count}`)
+      .join("・");
+    const card = document.createElement("article");
+    card.className = `evolution-card ${available ? "available" : ""} ${completed ? "completed" : ""}`;
+    card.style.setProperty("--evo-color", evolution.color);
+    card.innerHTML = `
+      <header>
+        <span>${evolution.stage === 2 ? "第二進化" : evolution.from === "base" ? "進化候補" : "進化"}</span>
+        <b>${evolution.type}</b>
+      </header>
+      <strong>${evolution.name}</strong>
+      <small>${evolution.title}</small>
+      <div class="evolution-requirements">
+        <span class="${levelReady ? "met" : ""}">Lv.${evolution.level}以上</span>
+        <span class="${behaviorReady ? "met" : ""}">${evolution.requirementText(stats)}</span>
+        <span class="${materialsReady ? "met" : ""}">${materialText}</span>
+      </div>
+      <button type="button" ${available ? "" : "disabled"}>${completed ? "進化済み" : routeOpen ? available ? "この姿へ進化" : "条件不足" : "別の進化経路"}</button>
+    `;
+    card.querySelector("button").addEventListener("click", () => evolveTo(evolution.key));
+    grid.appendChild(card);
+  }
+}
+
+function hasEvolutionMaterials(evolution) {
+  return Object.entries(evolution.materials).every(([kind, count]) => (game.bag[kind] || 0) >= count);
+}
+
+function evolveTo(key) {
+  const evolution = evolutionCatalog.find((entry) => entry.key === key);
+  const leader = getLeader();
+  if (!evolution || leader.evolutionKey !== evolution.from) return;
+  if (leader.level < evolution.level || !evolution.requirement(game.runStats) || !hasEvolutionMaterials(evolution)) return;
+  for (const [kind, count] of Object.entries(evolution.materials)) game.bag[kind] -= count;
+  leader.evolutionKey = evolution.key;
+  leader.evolutionStage = evolution.stage;
+  leader.name = evolution.name;
+  leader.type = evolution.type;
+  leader.role = `${evolution.type}タイプ`;
+  leader.color = evolution.color;
+  leader.accent = evolution.accent;
+  leader.scarf = evolution.scarf;
+  leader.maxHp += evolution.bonus.hp;
+  leader.hp = leader.maxHp;
+  leader.atk += evolution.bonus.atk;
+  leader.def += evolution.bonus.def;
+  addEffect("burst", leader.x, leader.y, evolution.color);
+  addLog(`コハクは${evolution.name}へ進化した。${evolution.title}。`);
+  announceEvent("進化", `${evolution.name}　${evolution.type}タイプ`, "進", "good");
+  setScreenFlash(evolution.color, 900);
+  triggerScreenShake(10, 520);
+  playSfx("evolve");
+  updateAll();
+  renderGameMenu("evolution");
+}
+
+function renderSkillBoard() {
+  ui.gameMenuBody.innerHTML = `
+    <div class="skill-board-head">
+      <div><span>使用できるポイント</span><strong>${game.skillPoints}</strong></div>
+      <p>この挑戦だけの成長です。レベルアップでポイントを得て、毎回違う道を選べます。</p>
+    </div>
+    <div class="skill-board">
+      <div class="spider-sigil" aria-hidden="true">
+        <i class="spider-body"></i>
+        <i class="spider-head"></i>
+        ${Array.from({ length: 8 }, (_, index) => `<i class="spider-leg leg-${index + 1}"></i>`).join("")}
+      </div>
+    </div>
+  `;
+  const board = ui.gameMenuBody.querySelector(".skill-board");
+  skillCatalog.forEach((skill, index) => {
+    const unlocked = hasSkill(skill.key);
+    const requirementMet = !skill.requires || hasSkill(skill.requires);
+    const affordable = game.skillPoints >= skill.cost;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `skill-node spider-node-${index + 1} ${unlocked ? "unlocked" : ""} ${requirementMet && affordable && !unlocked ? "available" : ""}`;
+    button.disabled = unlocked || !requirementMet || !affordable;
+    button.innerHTML = `
+      <span class="skill-node-icon">${skill.icon}</span>
+      <span class="skill-node-copy">
+        <b>${skill.branch}</b>
+        <strong>${skill.name}</strong>
+        <small>${skill.detail}</small>
+      </span>
+      <span class="skill-cost">${unlocked ? "習得済" : `${skill.cost} pt`}</span>
+    `;
+    button.addEventListener("click", () => unlockSkill(skill.key));
+    board.appendChild(button);
+  });
+}
+
+function unlockSkill(key) {
+  const skill = skillCatalog.find((entry) => entry.key === key);
+  if (!skill || hasSkill(key)) return;
+  if (skill.requires && !hasSkill(skill.requires)) return;
+  if (game.skillPoints < skill.cost) return;
+  game.skillPoints -= skill.cost;
+  game.unlockedSkills.push(key);
+
+  if (["tough", "power", "shell", "technique"].includes(key)) {
+    applyUnlockedSkillsToLeader(getLeader());
+  }
+
+  addLog(`スキル「${skill.name}」を習得した。`);
+  announceEvent("スキル習得", `${skill.name}: ${skill.detail}`, skill.icon, "good");
+  setScreenFlash("#9f8ae1", 320);
+  updateAll();
+  renderGameMenu("skills");
+}
+
+function hasSkill(key) {
+  return game.unlockedSkills.includes(key);
+}
+
+function applyUnlockedSkillsToLeader(leader) {
+  leader.appliedSkills ||= [];
+  if (hasSkill("tough") && !leader.appliedSkills.includes("tough")) {
+    leader.maxHp += 6;
+    leader.hp += 6;
+    leader.appliedSkills.push("tough");
+  }
+  if (hasSkill("power") && !leader.appliedSkills.includes("power")) {
+    leader.atk += 2;
+    leader.appliedSkills.push("power");
+  }
+  if (hasSkill("shell") && !leader.appliedSkills.includes("shell")) {
+    leader.def += 1;
+    leader.appliedSkills.push("shell");
+  }
+  if (hasSkill("technique") && !leader.appliedSkills.includes("technique")) {
+    for (const move of leader.moves) {
+      move.maxPp += 2;
+      move.pp += 2;
+    }
+    leader.appliedSkills.push("technique");
+  }
+}
+
+function openTownFacility(view) {
+  game.townView = view;
+  renderTownFacility();
+  if (!ui.townDialog.open) ui.townDialog.showModal();
+}
+
+function renderTownFacility() {
+  const view = game.townView;
+  ui.townDialogBody.innerHTML = "";
+
+  if (view === "characters") {
+    renderCharacterSelection();
+    return;
+  }
+
+  if (view === "board") {
+    ui.townDialogTitle.textContent = "5つのダンジョン";
+    ui.townDialogBody.innerHTML = '<p class="town-note">町で準備してから挑戦します。マップ、道具、装備、スキル構成は毎回変わり、最深部のボスを倒すと次の迷宮が解放されます。</p>';
+    townMissions.forEach((mission, index) => {
+      const unlocked = mission.chapter <= game.completedDungeon + 1;
+      const cleared = mission.chapter <= game.completedDungeon;
+      appendTownEntry(ui.townDialogBody, {
+        title: `迷宮 ${mission.chapter}/5　${mission.dungeon}`,
+        detail: mission.description,
+        meta: `全${mission.floors}階　ボス ${mission.target}　報酬 ${mission.reward}星貨`,
+        buttonLabel: cleared ? "再挑戦" : !unlocked ? "未解放" : index === game.selectedTownMission ? "選択中" : "選ぶ",
+        selected: index === game.selectedTownMission,
+        disabled: !unlocked || (index === game.selectedTownMission && !cleared),
+        onClick: () => {
+          game.selectedTownMission = index;
+          updateAll();
+          renderTownFacility();
+        },
+      });
+    });
+    const roadmap = document.createElement("section");
+    roadmap.className = "chapter-roadmap";
+    roadmap.innerHTML = "<h3>攻略ルート</h3>";
+    for (const chapter of storyChapters) {
+      const cleared = chapter.chapter <= game.completedDungeon;
+      const current = chapter.chapter === Math.min(5, game.completedDungeon + 1);
+      roadmap.insertAdjacentHTML(
+        "beforeend",
+        `<div class="chapter-roadmap-row ${cleared ? "cleared" : current ? "current" : ""}">
+          <b>${chapter.chapter}/5</b>
+          <span>${chapter.dungeon}</span>
+          <em>${cleared ? "制覇" : chapter.status}</em>
+        </div>`,
+      );
+    }
+    ui.townDialogBody.appendChild(roadmap);
+    return;
+  }
+
+  if (view === "shop") {
+    ui.townDialogTitle.textContent = "星の商店";
+    ui.townDialogBody.innerHTML = `<p class="town-note">現在の所持金: ${game.coins}星貨</p>`;
+    appendTownEntry(ui.townDialogBody, {
+      title: "月蜜の実",
+      detail: "満腹度を45回復する。バッグに入る。",
+      meta: "35星貨",
+      iconKind: "apple",
+      buttonLabel: "買う",
+      disabled: game.coins < 35 || bagTotal() >= game.bagCapacity,
+      onClick: () => {
+        game.coins -= 35;
+        game.bag.apple += 1;
+        updateAll();
+        renderTownFacility();
+      },
+    });
+    appendTownEntry(ui.townDialogBody, {
+      title: "雫青の実",
+      detail: "リーダーのHPを20回復する。",
+      meta: "45星貨",
+      iconKind: "oran",
+      buttonLabel: "買う",
+      disabled: game.coins < 45 || bagTotal() >= game.bagCapacity,
+      onClick: () => {
+        game.coins -= 45;
+        game.bag.oran += 1;
+        updateAll();
+        renderTownFacility();
+      },
+    });
+    appendTownEntry(ui.townDialogBody, {
+      title: "あかつきの種",
+      detail: "倒れた主人公をその場で自動復活させる。",
+      meta: "120星貨",
+      iconKind: "reviver",
+      buttonLabel: "買う",
+      disabled: game.coins < 120 || bagTotal() >= game.bagCapacity,
+      onClick: () => {
+        game.coins -= 120;
+        game.bag.reviver += 1;
+        updateAll();
+        renderTownFacility();
+      },
+    });
+    appendTownEntry(ui.townDialogBody, {
+      title: "導星の珠",
+      detail: "この階の目的地を地図に表示する。",
+      meta: "75星貨",
+      iconKind: "guidingOrb",
+      buttonLabel: "買う",
+      disabled: game.coins < 75 || bagTotal() >= game.bagCapacity,
+      onClick: () => {
+        game.coins -= 75;
+        game.bag.guidingOrb += 1;
+        updateAll();
+        renderTownFacility();
+      },
+    });
+    const leader = getLeader();
+    const needsPp = leader.moves.some((move) => move.pp < move.maxPp);
+    appendTownEntry(ui.townDialogBody, {
+      title: `旅袋の拡張 ${game.bagCapacity}枠 → ${Math.min(MAX_BAG_CAPACITY, game.bagCapacity + 2)}枠`,
+      detail: "バッグの上限を永久に2枠増やす。セーブデータごとに引き継がれる。",
+      meta: `${bagExpansionCost()}星貨`,
+      buttonLabel: game.bagCapacity >= MAX_BAG_CAPACITY ? "最大" : "拡張",
+      disabled: game.bagCapacity >= MAX_BAG_CAPACITY || game.coins < bagExpansionCost(),
+      onClick: () => {
+        game.coins -= bagExpansionCost();
+        game.bagCapacity = Math.min(MAX_BAG_CAPACITY, game.bagCapacity + 2);
+        playSfx("upgrade");
+        saveCurrentGame(true);
+        updateAll();
+        renderTownFacility();
+      },
+    });
+    appendTownEntry(ui.townDialogBody, {
+      title: "星のオーブ",
+      detail: "すべての技PPを2ずつ回復する。",
+      meta: "60星貨",
+      buttonLabel: "使う",
+      disabled: game.coins < 60 || !needsPp,
+      onClick: () => {
+        game.coins -= 60;
+        for (const move of leader.moves) move.pp = Math.min(move.maxPp, move.pp + 2);
+        updateAll();
+        renderTownFacility();
+      },
+    });
+    return;
+  }
+
+  if (view === "storage") {
+    ui.townDialogTitle.textContent = "風見倉庫";
+    ui.townDialogBody.innerHTML = `
+      <div class="menu-stat-grid">
+        <div class="menu-stat"><span>バッグ</span><strong>月蜜の実 ${game.bag.apple}</strong></div>
+        <div class="menu-stat"><span>倉庫</span><strong>月蜜の実 ${game.storage.apple}</strong></div>
+      </div>
+    `;
+    appendTownEntry(ui.townDialogBody, {
+      title: "月蜜の実を1個預ける",
+      detail: "冒険で失敗しても倉庫の道具は残る。",
+      buttonLabel: "預ける",
+      disabled: game.bag.apple <= 0,
+      onClick: () => {
+        game.bag.apple -= 1;
+        game.storage.apple += 1;
+        renderTownFacility();
+      },
+    });
+    appendTownEntry(ui.townDialogBody, {
+      title: "月蜜の実を1個取り出す",
+      detail: "次の冒険へ持っていく。",
+      buttonLabel: "取出す",
+      disabled: game.storage.apple <= 0 || bagTotal() >= game.bagCapacity,
+      onClick: () => {
+        game.storage.apple -= 1;
+        game.bag.apple += 1;
+        renderTownFacility();
+      },
+    });
+    return;
+  }
+
+  if (view === "training") {
+    ui.townDialogTitle.textContent = "月影道場";
+    ui.townDialogBody.innerHTML = `<p class="town-note">所持金 ${game.coins}星貨。コハクの状態を整えられます。</p>`;
+    appendTownEntry(ui.townDialogBody, {
+      title: "休息と技の手入れ",
+      detail: "コハクのHPと技PPを完全回復する。",
+      meta: "45星貨",
+      buttonLabel: "休む",
+      disabled: game.coins < 45,
+      onClick: () => {
+        game.coins -= 45;
+        for (const actor of game.team) {
+          actor.hp = actor.maxHp;
+          actor.down = false;
+          if (actor.moves) for (const move of actor.moves) move.pp = move.maxPp;
+        }
+        updateAll();
+        renderTownFacility();
+      },
+    });
+    const cost = 120 + game.trainingLevel * 80;
+    appendTownEntry(ui.townDialogBody, {
+      title: `星牙鍛錬 Lv.${game.trainingLevel + 1}`,
+      detail: "コハクの基礎攻撃を永久に1上げる。",
+      meta: `${cost}星貨`,
+      buttonLabel: "鍛える",
+      disabled: game.coins < cost || game.trainingLevel >= 3,
+      onClick: () => {
+        game.coins -= cost;
+        game.trainingLevel += 1;
+        game.team[0].atk += 1;
+        playSfx("upgrade");
+        updateAll();
+        renderTownFacility();
+      },
+    });
+    return;
+  }
+
+  ui.townDialogTitle.textContent = "救助隊本部";
+  const rank = currentRank();
+  ui.townDialogBody.innerHTML = `
+    <div class="menu-stat-grid">
+      <div class="menu-stat"><span>救助隊ランク</span><strong>${rank.name}</strong></div>
+      <div class="menu-stat"><span>累計救助pt</span><strong>${game.rescuePoints}</strong></div>
+      <div class="menu-stat"><span>迷宮制覇</span><strong>${game.completedDungeon} / 5</strong></div>
+      <div class="menu-stat"><span>敵図鑑</span><strong>${enemyCatalog.length + rareEnemyCatalog.length}種</strong></div>
+      <div class="menu-stat"><span>カルマ</span><strong>${game.karma}</strong></div>
+      <div class="menu-stat"><span>装備保管</span><strong>${game.gearBag.length} / 24</strong></div>
+    </div>
+    <p class="town-note">救助はカルマを1清め、依頼人を倒すとカルマが3増えます。善悪どちらの履歴も、コハクの進化先を変えます。</p>
+  `;
+}
+
+function renderCharacterSelection() {
+  ui.townDialogTitle.textContent = "星の子 コハク";
+  ui.townDialogBody.innerHTML = `
+    <p class="town-note">最初の姿はコハク一体だけです。長く未進化で旅をし、戦い方、救助、カルマ、素材、レベルによって五系統の進化へ分かれます。</p>
+    <div class="character-grid"></div>
+  `;
+  const grid = ui.townDialogBody.querySelector(".character-grid");
+  for (const profile of characterCatalog) {
+    const actor = game.roster[profile.key];
+    const preview = {
+      ...actor,
+      level: 1,
+      maxHp: profile.maxHp,
+      hp: profile.maxHp,
+      atk: profile.atk + game.trainingLevel,
+      def: profile.def,
+    };
+    const selected = profile.key === game.selectedCharacter;
+    const card = document.createElement("article");
+    card.className = `character-choice ${selected ? "selected" : ""}`;
+    card.style.setProperty("--type-color", profile.color);
+    card.innerHTML = `
+      <div class="character-choice-head">
+        <canvas width="48" height="48"></canvas>
+        <div>
+          <span><i style="background:${profile.color}"></i>${profile.type}タイプ</span>
+          <strong>${profile.name}</strong>
+          <small>${profile.style}</small>
+        </div>
+      </div>
+      <div class="character-stats">
+        <span>HP <b>${preview.maxHp}</b></span>
+        <span>攻撃 <b>${preview.atk}</b></span>
+        <span>防御 <b>${preview.def}</b></span>
+      </div>
+      <div class="character-moves">${preview.moves.map((move) => `<span>${move.name}</span>`).join("")}</div>
+      <button type="button" disabled>唯一の出発者</button>
+    `;
+    drawPortrait(card.querySelector("canvas"), preview);
+    grid.appendChild(card);
+  }
+  ui.townDialogBody.insertAdjacentHTML(
+    "beforeend",
+    `<div class="evolution-preview">${[
+      ["救済", "星護ルミナ → 星導セラフィ"],
+      ["闘争", "炎牙アグニ → 焔王ヴァジュラ"],
+      ["禁忌", "宵影ノクス → 冥王アビス"],
+      ["叡智", "智樹セージ"],
+      ["星王", "星王アステラ"],
+    ].map(([route, names]) => `<span><b>${route}</b>${names}</span>`).join("")}</div>`,
+  );
+}
+
+function bagExpansionCost() {
+  return 240 + Math.floor((game.bagCapacity - BASE_BAG_CAPACITY) / 2) * 140;
+}
+
+function appendTownEntry(container, options) {
+  const entry = document.createElement("div");
+  const hasIcon = Boolean(options.iconKind || options.iconGear);
+  entry.className = `town-entry ${options.selected ? "selected" : ""} ${hasIcon ? "has-icon" : ""}`;
+  entry.innerHTML = `
+    ${hasIcon ? '<canvas class="item-entry-icon" width="48" height="48" aria-hidden="true"></canvas>' : ""}
+    <div class="town-entry-copy">
+      <strong>${options.title}</strong>
+      ${options.detail ? `<span>${options.detail}</span>` : ""}
+      ${options.meta ? `<small>${options.meta}</small>` : ""}
+    </div>
+  `;
+  if (options.buttonLabel) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = options.buttonLabel;
+    button.disabled = Boolean(options.disabled);
+    if (options.onClick) button.addEventListener("click", options.onClick);
+    entry.appendChild(button);
+  }
+  container.appendChild(entry);
+  if (hasIcon) drawItemIcon(entry.querySelector("canvas"), options.iconKind || "gear", options.iconGear);
+}
+
+function renderLog() {
+  ui.log.innerHTML = "";
+  for (const entry of game.logs.slice(-9)) {
+    const li = document.createElement("li");
+    li.textContent = entry;
+    ui.log.appendChild(li);
+  }
+  ui.log.scrollTop = ui.log.scrollHeight;
+}
+
+function currentRank() {
+  let rank = ranks[0];
+  for (const candidate of ranks) {
+    if (game.rescuePoints >= candidate.points) rank = candidate;
+  }
+  return rank;
+}
+
+function draw(time = 0) {
+  if (!game) {
+    requestAnimationFrame(draw);
+    return;
+  }
+  if (game.mode === "town") {
+    drawTown(time);
+    requestAnimationFrame(draw);
+    return;
+  }
+  renderCamera = getCamera(time);
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = currentDungeonTheme().unknown;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const shake = getScreenShakeOffset(time);
+  ctx.save();
+  ctx.translate(shake.x, shake.y);
+  drawDungeon(time);
+  ctx.restore();
+  drawMiniMap();
+  requestAnimationFrame(draw);
+}
+
+function drawTown(time) {
+  const width = townCanvas.width;
+  const height = townCanvas.height;
+  const sky = townCtx.createLinearGradient(0, 0, 0, height);
+  sky.addColorStop(0, "#78aeb5");
+  sky.addColorStop(0.42, "#b9d6bd");
+  sky.addColorStop(0.43, "#76985c");
+  sky.addColorStop(1, "#3d6447");
+  townCtx.fillStyle = sky;
+  townCtx.fillRect(0, 0, width, height);
+
+  townCtx.fillStyle = "#587c63";
+  townCtx.beginPath();
+  townCtx.moveTo(0, 220);
+  townCtx.quadraticCurveTo(130, 112, 300, 205);
+  townCtx.quadraticCurveTo(440, 100, 610, 197);
+  townCtx.quadraticCurveTo(800, 85, 970, 195);
+  townCtx.quadraticCurveTo(1070, 130, width, 182);
+  townCtx.lineTo(width, 310);
+  townCtx.lineTo(0, 310);
+  townCtx.closePath();
+  townCtx.fill();
+
+  townCtx.fillStyle = "#6f965f";
+  townCtx.beginPath();
+  townCtx.moveTo(0, 260);
+  townCtx.quadraticCurveTo(180, 180, 350, 255);
+  townCtx.quadraticCurveTo(550, 170, 730, 245);
+  townCtx.quadraticCurveTo(930, 155, width, 244);
+  townCtx.lineTo(width, height);
+  townCtx.lineTo(0, height);
+  townCtx.closePath();
+  townCtx.fill();
+
+  for (let y = 245; y < height; y += 24) {
+    for (let x = 10; x < width; x += 28) {
+      const fleck = noise(x, y, 71);
+      if (fleck < 0.7) continue;
+      townCtx.fillStyle = fleck > 0.9 ? "#f3cb68" : "#a8c979";
+      townCtx.fillRect(x + fleck * 8, y + fleck * 5, 3, 3);
+    }
+  }
+
+  drawTownPath([
+    [576, 690],
+    [576, 365],
+    [576, 200],
+  ], 82);
+  drawTownPath([
+    [576, 365],
+    [226, 292],
+  ], 58);
+  drawTownPath([
+    [576, 365],
+    [924, 285],
+  ], 58);
+  drawTownPath([
+    [576, 395],
+    [232, 520],
+  ], 54);
+  drawTownPath([
+    [576, 395],
+    [920, 520],
+  ], 54);
+
+  townCtx.fillStyle = "#477c7b";
+  townCtx.beginPath();
+  townCtx.moveTo(0, 565);
+  townCtx.bezierCurveTo(250, 525, 405, 610, 620, 570);
+  townCtx.bezierCurveTo(820, 532, 985, 600, width, 550);
+  townCtx.lineTo(width, 635);
+  townCtx.bezierCurveTo(900, 670, 720, 615, 560, 650);
+  townCtx.bezierCurveTo(340, 692, 180, 615, 0, 652);
+  townCtx.closePath();
+  townCtx.fill();
+  townCtx.strokeStyle = "rgba(224, 247, 230, 0.34)";
+  townCtx.lineWidth = 4;
+  for (let x = 20; x < width; x += 76) {
+    const wave = Math.sin(time / 520 + x * 0.02) * 7;
+    townCtx.beginPath();
+    townCtx.moveTo(x, 596 + wave);
+    townCtx.quadraticCurveTo(x + 18, 588 + wave, x + 38, 596 + wave);
+    townCtx.stroke();
+  }
+
+  drawTownBridge(576, 588);
+
+  const trees = [
+    [40, 190, 1.15], [104, 160, 0.9], [1080, 185, 1.2], [1022, 145, 0.92],
+    [36, 400, 1], [1085, 390, 1.1], [375, 160, 0.82], [778, 145, 0.86],
+    [350, 505, 0.75], [805, 500, 0.74],
+  ];
+  trees.forEach(([x, y, scale]) => drawTownTree(x, y, scale));
+
+  drawTownBuilding({
+    x: 445, y: 98, width: 262, height: 148,
+    roof: "#47694f", wall: "#e2d1a6", trim: "#f1c65d", sign: "救助隊本部", tower: true,
+  });
+  drawTownBoard(185, 245);
+  drawTownBuilding({
+    x: 837, y: 206, width: 190, height: 130,
+    roof: "#bd5d50", wall: "#ead1a1", trim: "#ffd473", sign: "星の商店",
+  });
+  drawTownBuilding({
+    x: 833, y: 424, width: 190, height: 128,
+    roof: "#4f8990", wall: "#c5d5c6", trim: "#e7f5e3", sign: "風見倉庫",
+  });
+  drawTownBuilding({
+    x: 126, y: 420, width: 214, height: 132,
+    roof: "#7663a6", wall: "#d6c5ba", trim: "#f0d67c", sign: "月影道場",
+  });
+
+  drawTownPlaza(time);
+  drawTownGate(time);
+
+  drawTownNpc(enemyCatalog[1], 372, 342, time, "#e8f3c8");
+  drawTownNpc(enemyCatalog[0], 786, 355, time + 500, "#ffe0ad");
+  drawTownNpc(enemyCatalog[2], 755, 500, time + 900, "#d8f6ff");
+
+  const leader = getLeader();
+  const bob = Math.sin(time / 330) * 2;
+  drawActorBody(townCtx, leader, 552, 414 + bob, 1.62, time);
+
+  townCtx.fillStyle = "rgba(19, 28, 21, 0.82)";
+  townCtx.fillRect(476, 486, 206, 30);
+  townCtx.fillStyle = "#fff3c9";
+  townCtx.font = "800 15px sans-serif";
+  townCtx.textAlign = "center";
+  townCtx.fillText(`${leader.name}の進化譚`, 579, 506);
+
+  for (let i = 0; i < 16; i += 1) {
+    const phase = time / 850 + i * 2.17;
+    const x = 430 + ((i * 83) % 310) + Math.sin(phase) * 13;
+    const y = 250 + ((i * 47) % 210) + Math.cos(phase * 1.3) * 11;
+    const alpha = 0.28 + (Math.sin(phase * 2) + 1) * 0.22;
+    townCtx.fillStyle = `rgba(255, 226, 130, ${alpha})`;
+    townCtx.fillRect(x, y, 3, 3);
+  }
+}
+
+function drawTownPath(points, width) {
+  townCtx.save();
+  townCtx.lineCap = "round";
+  townCtx.lineJoin = "round";
+  townCtx.strokeStyle = "#b99b6d";
+  townCtx.lineWidth = width;
+  townCtx.beginPath();
+  points.forEach(([x, y], index) => {
+    if (index === 0) townCtx.moveTo(x, y);
+    else townCtx.lineTo(x, y);
+  });
+  townCtx.stroke();
+  townCtx.strokeStyle = "rgba(255, 231, 174, 0.26)";
+  townCtx.lineWidth = Math.max(3, width - 12);
+  townCtx.stroke();
+  townCtx.restore();
+}
+
+function drawTownTree(x, y, scale = 1) {
+  townCtx.save();
+  townCtx.translate(x, y);
+  townCtx.scale(scale, scale);
+  townCtx.fillStyle = "rgba(22, 39, 25, 0.32)";
+  townCtx.beginPath();
+  townCtx.ellipse(0, 54, 42, 15, 0, 0, Math.PI * 2);
+  townCtx.fill();
+  townCtx.fillStyle = "#705237";
+  townCtx.fillRect(-8, 20, 16, 42);
+  townCtx.fillStyle = "#2f5d41";
+  townCtx.beginPath();
+  townCtx.arc(-20, 8, 27, 0, Math.PI * 2);
+  townCtx.arc(17, 2, 30, 0, Math.PI * 2);
+  townCtx.arc(0, -22, 31, 0, Math.PI * 2);
+  townCtx.fill();
+  townCtx.fillStyle = "#5d8d54";
+  townCtx.beginPath();
+  townCtx.arc(-12, -13, 19, 0, Math.PI * 2);
+  townCtx.arc(18, -16, 17, 0, Math.PI * 2);
+  townCtx.fill();
+  townCtx.restore();
+}
+
+function drawTownBuilding({ x, y, width, height, roof, wall, trim, sign, tower = false }) {
+  townCtx.fillStyle = "rgba(21, 31, 23, 0.34)";
+  townCtx.fillRect(x + 14, y + height - 4, width, 18);
+  townCtx.fillStyle = wall;
+  townCtx.fillRect(x + 12, y + 48, width - 24, height - 48);
+  townCtx.fillStyle = "rgba(73, 52, 37, 0.18)";
+  for (let lineY = y + 66; lineY < y + height; lineY += 18) {
+    townCtx.fillRect(x + 16, lineY, width - 32, 2);
+  }
+
+  townCtx.fillStyle = roof;
+  townCtx.beginPath();
+  townCtx.moveTo(x - 8, y + 58);
+  townCtx.lineTo(x + width / 2, y);
+  townCtx.lineTo(x + width + 8, y + 58);
+  townCtx.closePath();
+  townCtx.fill();
+  townCtx.fillStyle = trim;
+  townCtx.fillRect(x - 5, y + 55, width + 10, 8);
+
+  if (tower) {
+    townCtx.fillStyle = roof;
+    townCtx.fillRect(x + width / 2 - 31, y - 45, 62, 58);
+    townCtx.beginPath();
+    townCtx.moveTo(x + width / 2 - 43, y - 42);
+    townCtx.lineTo(x + width / 2, y - 82);
+    townCtx.lineTo(x + width / 2 + 43, y - 42);
+    townCtx.closePath();
+    townCtx.fill();
+    townCtx.fillStyle = trim;
+    townCtx.beginPath();
+    townCtx.arc(x + width / 2, y - 22, 12, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.fillStyle = roof;
+    townCtx.beginPath();
+    townCtx.arc(x + width / 2, y - 22, 6, 0, Math.PI * 2);
+    townCtx.fill();
+  }
+
+  townCtx.fillStyle = "#594737";
+  townCtx.fillRect(x + width / 2 - 22, y + height - 57, 44, 57);
+  townCtx.fillStyle = "#f0d875";
+  townCtx.fillRect(x + width / 2 + 11, y + height - 31, 5, 5);
+  townCtx.fillStyle = "#7db0af";
+  townCtx.fillRect(x + 30, y + 76, 34, 27);
+  townCtx.fillRect(x + width - 64, y + 76, 34, 27);
+  townCtx.fillStyle = "#f7df8b";
+  townCtx.fillRect(x + 45, y + 76, 4, 27);
+  townCtx.fillRect(x + width - 49, y + 76, 4, 27);
+
+  townCtx.fillStyle = "#2e352d";
+  townCtx.fillRect(x + width / 2 - 65, y + 29, 130, 30);
+  townCtx.strokeStyle = trim;
+  townCtx.lineWidth = 2;
+  townCtx.strokeRect(x + width / 2 - 65, y + 29, 130, 30);
+  townCtx.fillStyle = "#fff3ce";
+  townCtx.font = "800 14px sans-serif";
+  townCtx.textAlign = "center";
+  townCtx.fillText(sign, x + width / 2, y + 49);
+}
+
+function drawTownBoard(x, y) {
+  townCtx.fillStyle = "rgba(24, 31, 23, 0.3)";
+  townCtx.fillRect(x - 70, y + 86, 150, 16);
+  townCtx.fillStyle = "#654831";
+  townCtx.fillRect(x - 55, y, 12, 94);
+  townCtx.fillRect(x + 55, y, 12, 94);
+  townCtx.fillStyle = "#bf9659";
+  townCtx.fillRect(x - 78, y - 8, 162, 80);
+  townCtx.fillStyle = "#e8d9ac";
+  for (let i = 0; i < 6; i += 1) {
+    const noteX = x - 65 + (i % 3) * 48;
+    const noteY = y + 3 + Math.floor(i / 3) * 34;
+    townCtx.save();
+    townCtx.translate(noteX, noteY);
+    townCtx.rotate((i % 2 ? 1 : -1) * 0.05);
+    townCtx.fillRect(0, 0, 38, 27);
+    townCtx.fillStyle = i % 2 ? "#d46659" : "#5b8f95";
+    townCtx.fillRect(17, -2, 5, 5);
+    townCtx.restore();
+    townCtx.fillStyle = "#e8d9ac";
+  }
+  townCtx.fillStyle = "#2e352d";
+  townCtx.fillRect(x - 50, y - 34, 106, 28);
+  townCtx.fillStyle = "#fff0bf";
+  townCtx.font = "800 14px sans-serif";
+  townCtx.textAlign = "center";
+  townCtx.fillText("ダンジョン門", x + 3, y - 15);
+}
+
+function drawTownPlaza(time) {
+  townCtx.fillStyle = "#a8875e";
+  townCtx.beginPath();
+  townCtx.ellipse(576, 365, 125, 82, 0, 0, Math.PI * 2);
+  townCtx.fill();
+  townCtx.strokeStyle = "rgba(255, 232, 180, 0.34)";
+  townCtx.lineWidth = 5;
+  townCtx.stroke();
+  townCtx.fillStyle = "#6f7771";
+  townCtx.beginPath();
+  townCtx.ellipse(576, 346, 58, 31, 0, 0, Math.PI * 2);
+  townCtx.fill();
+  townCtx.fillStyle = "#68a9ac";
+  townCtx.beginPath();
+  townCtx.ellipse(576, 341, 46, 21, 0, 0, Math.PI * 2);
+  townCtx.fill();
+  townCtx.fillStyle = "#d6c778";
+  townCtx.beginPath();
+  const pulse = 17 + Math.sin(time / 300) * 2;
+  for (let i = 0; i < 10; i += 1) {
+    const angle = -Math.PI / 2 + (i * Math.PI) / 5;
+    const radius = i % 2 ? pulse * 0.45 : pulse;
+    const x = 576 + Math.cos(angle) * radius;
+    const y = 315 + Math.sin(angle) * radius;
+    if (i === 0) townCtx.moveTo(x, y);
+    else townCtx.lineTo(x, y);
+  }
+  townCtx.closePath();
+  townCtx.fill();
+}
+
+function drawTownBridge(x, y) {
+  townCtx.fillStyle = "#684b33";
+  townCtx.fillRect(x - 66, y - 45, 132, 94);
+  townCtx.fillStyle = "#b3814a";
+  for (let yy = y - 40; yy < y + 45; yy += 13) {
+    townCtx.fillRect(x - 60, yy, 120, 9);
+  }
+  townCtx.fillStyle = "#493724";
+  townCtx.fillRect(x - 70, y - 49, 10, 100);
+  townCtx.fillRect(x + 60, y - 49, 10, 100);
+}
+
+function drawTownGate(time) {
+  const glow = 0.36 + (Math.sin(time / 360) + 1) * 0.12;
+  townCtx.fillStyle = "#5c4632";
+  townCtx.fillRect(500, 638, 18, 52);
+  townCtx.fillRect(634, 638, 18, 52);
+  townCtx.fillRect(490, 630, 172, 17);
+  townCtx.fillStyle = `rgba(255, 210, 105, ${glow})`;
+  townCtx.fillRect(521, 648, 110, 42);
+  townCtx.fillStyle = "#2e352d";
+  townCtx.fillRect(518, 607, 116, 27);
+  townCtx.fillStyle = "#fff1bc";
+  townCtx.font = "800 14px sans-serif";
+  townCtx.textAlign = "center";
+  townCtx.fillText("出発門", 576, 625);
+}
+
+function drawTownNpc(enemy, x, y, time, bubbleColor) {
+  const bob = Math.sin(time / 310 + x) * 2;
+  townCtx.fillStyle = "rgba(19, 27, 21, 0.25)";
+  townCtx.beginPath();
+  townCtx.ellipse(x + 22, y + 44, 22, 7, 0, 0, Math.PI * 2);
+  townCtx.fill();
+  drawSpriteOnContext(townCtx, enemy.sprite, x, y + bob, 44, 44);
+  townCtx.fillStyle = bubbleColor;
+  townCtx.beginPath();
+  townCtx.arc(x + 48, y - 4 + bob, 6, 0, Math.PI * 2);
+  townCtx.fill();
+  townCtx.beginPath();
+  townCtx.arc(x + 61, y - 13 + bob, 4, 0, Math.PI * 2);
+  townCtx.fill();
+}
+
+function getCamera(time) {
+  const leader = getLeader();
+  const visual = getActorVisualPosition(leader, time);
+  const viewW = Math.floor(canvas.width / TILE);
+  const viewH = Math.floor(canvas.height / TILE);
+  return {
+    x: clamp(visual.x - viewW / 2, 0, Math.max(0, MAP_W - viewW)),
+    y: clamp(visual.y - viewH / 2, 0, Math.max(0, MAP_H - viewH)),
+    width: viewW,
+    height: viewH,
+  };
+}
+
+function drawDungeon(time) {
+  const startX = Math.max(0, Math.floor(renderCamera.x) - 1);
+  const endX = Math.min(MAP_W, Math.ceil(renderCamera.x + renderCamera.width) + 1);
+  const startY = Math.max(0, Math.floor(renderCamera.y) - 1);
+  const endY = Math.min(MAP_H, Math.ceil(renderCamera.y + renderCamera.height) + 1);
+
+  for (let y = startY; y < endY; y += 1) {
+    for (let x = startX; x < endX; x += 1) {
+      if (!game.seen[y][x]) drawUnknownTile(x, y);
+      else drawTile(x, y, game.map[y][x], game.visible[y][x]);
+    }
+  }
+
+  if (game.seen[game.stairs.y][game.stairs.x] && inCamera(game.stairs.x, game.stairs.y)) drawStairs(time);
+  if (game.mission && game.seen[game.mission.y][game.mission.x] && inCamera(game.mission.x, game.mission.y)) {
+    drawMission(time);
+  }
+
+  for (const item of game.items) {
+    if (isVisible(item.x, item.y) && inCamera(item.x, item.y)) drawItem(item, time);
+  }
+  for (const enemy of game.enemies) {
+    if (isVisible(enemy.x, enemy.y) && inCamera(enemy.x, enemy.y)) drawEnemy(enemy, time);
+  }
+  for (const actor of game.team.filter((member) => member.id !== "leader")) {
+    if (game.seen[actor.y][actor.x] && inCamera(actor.x, actor.y)) drawActor(actor, time);
+  }
+  const leader = getLeader();
+  if (game.seen[leader.y][leader.x] && inCamera(leader.x, leader.y)) drawActor(leader, time);
+
+  for (const effect of game.effects) drawEffect(effect, time);
+  for (const text of game.floating) drawFloatingText(text, time);
+  drawFog();
+  drawObjectivePointer(time);
+  drawAimIndicator();
+  drawBossHud();
+  drawScreenFlash(time);
+  game.effects = game.effects.filter((effect) => time - effect.created < effect.life);
+  game.floating = game.floating.filter((text) => time - text.created < text.life);
+}
+
+function drawUnknownTile(x, y) {
+  const { x: px, y: py } = toScreen(x, y);
+  ctx.fillStyle = currentDungeonTheme().unknown;
+  ctx.fillRect(px, py, TILE, TILE);
+  ctx.fillStyle = "rgba(255,255,255,0.025)";
+  if ((x + y) % 2 === 0) ctx.fillRect(px + 12, py + 12, 6, 6);
+}
+
+function drawTile(x, y, type, visible) {
+  const { x: px, y: py } = toScreen(x, y);
+  const theme = currentDungeonTheme();
+  if (type === "wall") {
+    ctx.fillStyle = visible ? theme.wall : theme.wallDark;
+    ctx.fillRect(px, py, TILE, TILE);
+    ctx.fillStyle = visible ? theme.wallLight : theme.wall;
+    ctx.fillRect(px + 2, py + 2, TILE - 4, 9);
+    ctx.fillStyle = "rgba(5, 12, 14, 0.34)";
+    ctx.fillRect(px + 2, py + TILE - 7, TILE - 4, 5);
+    ctx.strokeStyle = visible ? "rgba(235, 239, 220, 0.22)" : "rgba(150, 160, 155, 0.12)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px + 3, py + 3, TILE - 6, TILE - 8);
+    ctx.beginPath();
+    ctx.moveTo(px + 4, py + 25);
+    ctx.lineTo(px + TILE - 4, py + 25);
+    ctx.moveTo(px + 24, py + 4);
+    ctx.lineTo(px + 24, py + 25);
+    ctx.moveTo(px + 15, py + 25);
+    ctx.lineTo(px + 15, py + TILE - 8);
+    ctx.stroke();
+    return;
+  }
+
+  const floorColors = {
+    floor: visible ? theme.floor : theme.floorDim,
+    moss: visible ? theme.moss : theme.mossDim,
+    crack: visible ? theme.crack : theme.crackDim,
+  };
+  ctx.fillStyle = floorColors[type] || floorColors.floor;
+  ctx.fillRect(px, py, TILE, TILE);
+  ctx.strokeStyle = "rgba(255, 239, 200, 0.1)";
+  ctx.lineWidth = 1;
+  ctx.strokeRect(px + 2, py + 2, TILE - 4, TILE - 4);
+  ctx.fillStyle = "rgba(20, 15, 12, 0.2)";
+  ctx.fillRect(px, py + TILE - 4, TILE, 4);
+
+  if (type === "floor") {
+    const grain = noise(x, y, 93);
+    ctx.fillStyle = visible ? "rgba(255, 227, 174, 0.16)" : "rgba(255, 227, 174, 0.08)";
+    ctx.fillRect(px + 8 + grain * 18, py + 11, 3, 3);
+    ctx.fillRect(px + 30 - grain * 12, py + 32, 4, 2);
+  }
+
+  if (type === "moss") {
+    ctx.fillStyle = visible ? "#70a96a" : "#527a55";
+    ctx.beginPath();
+    ctx.arc(px + 13, py + 14, 5, 0, Math.PI * 2);
+    ctx.arc(px + 33, py + 31, 7, 0, Math.PI * 2);
+    ctx.arc(px + 12, py + 36, 4, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = visible ? "#c9ef91" : "#86a873";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(px + 24, py + 17);
+    ctx.lineTo(px + 24, py + 31);
+    ctx.moveTo(px + 17, py + 24);
+    ctx.lineTo(px + 31, py + 24);
+    ctx.stroke();
+  }
+
+  if (type === "crack") {
+    ctx.strokeStyle = visible ? "#ffc45a" : "#a86d4e";
+    ctx.lineWidth = 3;
+    ctx.shadowColor = visible ? "#ff7b48" : "transparent";
+    ctx.shadowBlur = visible ? 7 : 0;
+    ctx.beginPath();
+    ctx.moveTo(px + 7, py + 12);
+    ctx.lineTo(px + 20, py + 20);
+    ctx.lineTo(px + 15, py + 29);
+    ctx.lineTo(px + 29, py + 34);
+    ctx.lineTo(px + 39, py + 42);
+    ctx.moveTo(px + 20, py + 20);
+    ctx.lineTo(px + 33, py + 13);
+    ctx.moveTo(px + 15, py + 29);
+    ctx.lineTo(px + 7, py + 38);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  }
+}
+
+function currentDungeonTheme() {
+  return dungeonThemes[game.activeTownMission?.theme] || dungeonThemes.forest;
+}
+
+function drawStairs(time) {
+  const { x: px, y: py } = toScreen(game.stairs.x, game.stairs.y);
+  const open = game.mission?.complete;
+  const pulse = Math.sin(time / 190) * 2;
+  ctx.save();
+  ctx.fillStyle = "rgba(0,0,0,0.34)";
+  ctx.beginPath();
+  ctx.ellipse(px + 24, py + 40, 20, 6, 0, 0, Math.PI * 2);
+  ctx.fill();
+  if (open) {
+    ctx.fillStyle = "rgba(255, 215, 113, 0.18)";
+    ctx.beginPath();
+    ctx.arc(px + 24, py + 23, 23 + pulse, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#ffe49a";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(px + 24, py + 23, 17 + pulse * 0.4, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.fillStyle = "rgba(240, 179, 77, 0.5)";
+    ctx.fillRect(px + 11, py + 8, 26, 31);
+    ctx.fillStyle = "#fff7ce";
+    for (let y = 0; y < 2; y += 1) {
+      const offset = y * 11;
+      ctx.beginPath();
+      ctx.moveTo(px + 16, py + 25 - offset);
+      ctx.lineTo(px + 24, py + 17 - offset);
+      ctx.lineTo(px + 32, py + 25 - offset);
+      ctx.lineTo(px + 32, py + 30 - offset);
+      ctx.lineTo(px + 24, py + 22 - offset);
+      ctx.lineTo(px + 16, py + 30 - offset);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.fillStyle = "#251d12";
+    ctx.fillRect(px + 8, py + 39, 32, 8);
+    ctx.fillStyle = "#ffe7a6";
+    ctx.font = "900 7px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(game.floor >= game.targetFloor ? "TOWN" : "NEXT", px + 24, py + 46);
+  } else {
+    ctx.fillStyle = "#555b5a";
+    ctx.fillRect(px + 8, py + 32, 32, 10);
+    ctx.fillStyle = "#707776";
+    ctx.fillRect(px + 13, py + 25, 22, 10);
+    ctx.strokeStyle = "#a5aaa6";
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(px + 24, py + 23, 9, Math.PI, 0);
+    ctx.stroke();
+    ctx.fillStyle = "#2a2e2d";
+    ctx.fillRect(px + 21, py + 30, 6, 7);
+  }
+  ctx.restore();
+}
+
+function drawMission(time) {
+  if (game.mission.complete || game.mission.boss) return;
+  const { x: px, y: py } = toScreen(game.mission.x, game.mission.y);
+  const bob = Math.sin(time / 240) * 3;
+  ctx.fillStyle = game.mission.threatened ? "rgba(255,79,79,0.28)" : "rgba(229,174,72,0.22)";
+  ctx.beginPath();
+  ctx.arc(px + 24, py + 24 + bob, 18, 0, Math.PI * 2);
+  ctx.fill();
+  drawSprite(spriteIds.mission, px + 10, py + 8 + bob, 28, 28);
+  ctx.fillStyle = game.mission.threatened ? "#ff8a79" : palette.white;
+  ctx.font = "700 10px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(game.mission.threatened ? "WARN" : "HELP", px + 24, py + 43 + bob);
+}
+
+function drawItem(item, time) {
+  const { x: px, y: py } = toScreen(item.x, item.y);
+  const bob = Math.sin(time / 260 + item.x) * 2;
+  drawOutlinedEntity((targetCtx) => {
+    drawItemIcon(targetCtx, item.kind, item.gear);
+  }, px, py + bob, "#ffd84d", 2);
+}
+
+function drawItemIcon(target, kind, gear) {
+  const iconCtx = target instanceof HTMLCanvasElement ? target.getContext("2d") : target;
+  if (target instanceof HTMLCanvasElement) iconCtx.clearRect(0, 0, target.width, target.height);
+  iconCtx.save();
+  iconCtx.imageSmoothingEnabled = false;
+  iconCtx.lineJoin = "miter";
+  iconCtx.lineCap = "square";
+  const dark = "#251b1b";
+  const light = "#fff3c4";
+
+  if (kind === "gear" && gear) {
+    drawGearIcon(iconCtx, gear);
+  } else if (kind === "apple" || kind === "bigApple") {
+    const large = kind === "bigApple";
+    iconCtx.fillStyle = dark;
+    iconCtx.fillRect(22, 7, 5, 10);
+    iconCtx.fillStyle = "#78b85f";
+    iconCtx.fillRect(26, 7, 10, 5);
+    iconCtx.fillRect(29, 11, 5, 4);
+    iconCtx.fillStyle = large ? "#ff8c56" : "#e9b34f";
+    iconCtx.fillRect(10, 17, 28, 18);
+    iconCtx.fillRect(14, 13, 10, 26);
+    iconCtx.fillRect(25, 14, 10, 24);
+    iconCtx.fillStyle = "#ffd784";
+    iconCtx.fillRect(15, 17, 7, 5);
+    if (large) {
+      iconCtx.fillStyle = light;
+      iconCtx.fillRect(35, 8, 3, 10);
+      iconCtx.fillRect(31, 12, 11, 3);
+    }
+  } else if (["oran", "guardBerry", "powerBerry", "wisdomSeed"].includes(kind)) {
+    const berryColors = {
+      oran: ["#5aa5eb", "#bfeaff"],
+      guardBerry: ["#729eaa", "#d5f2f4"],
+      powerBerry: ["#d85f50", "#ffd0a6"],
+      wisdomSeed: ["#6fa95a", "#e4f6ac"],
+    };
+    const [berryColor, berryLight] = berryColors[kind];
+    iconCtx.fillStyle = "#6faa5d";
+    iconCtx.fillRect(21, 7, 6, 11);
+    iconCtx.fillRect(13, 10, 10, 5);
+    iconCtx.fillStyle = berryColor;
+    iconCtx.fillRect(11, 19, 12, 14);
+    iconCtx.fillRect(18, 15, 13, 20);
+    iconCtx.fillRect(27, 20, 10, 13);
+    iconCtx.fillStyle = berryLight;
+    iconCtx.fillRect(19, 19, 5, 5);
+  } else if (kind === "elixir") {
+    iconCtx.fillStyle = "#d7eff0";
+    iconCtx.fillRect(19, 6, 11, 5);
+    iconCtx.fillStyle = "#53767a";
+    iconCtx.fillRect(21, 11, 7, 6);
+    iconCtx.fillStyle = "#79e3dc";
+    iconCtx.fillRect(13, 17, 22, 21);
+    iconCtx.fillRect(10, 23, 28, 12);
+    iconCtx.fillStyle = "#d9fffa";
+    iconCtx.fillRect(15, 20, 5, 12);
+    iconCtx.fillStyle = "#238e9b";
+    iconCtx.fillRect(22, 27, 11, 5);
+  } else if (["reviver", "blastSeed", "sleepSeed"].includes(kind)) {
+    const colors = {
+      reviver: ["#f5c957", "#fff4a8"],
+      blastSeed: ["#ef5d4f", "#ffb34f"],
+      sleepSeed: ["#8c70cf", "#d9c9ff"],
+    };
+    const [body, shine] = colors[kind];
+    iconCtx.fillStyle = body;
+    iconCtx.beginPath();
+    iconCtx.moveTo(24, 7);
+    iconCtx.lineTo(37, 21);
+    iconCtx.lineTo(31, 38);
+    iconCtx.lineTo(17, 38);
+    iconCtx.lineTo(11, 21);
+    iconCtx.closePath();
+    iconCtx.fill();
+    iconCtx.fillStyle = shine;
+    if (kind === "reviver") {
+      iconCtx.fillRect(21, 13, 6, 19);
+      iconCtx.fillRect(15, 20, 18, 6);
+    } else if (kind === "blastSeed") {
+      iconCtx.fillRect(22, 14, 6, 18);
+      iconCtx.fillRect(17, 20, 5, 8);
+      iconCtx.fillRect(27, 10, 4, 10);
+    } else {
+      iconCtx.beginPath();
+      iconCtx.arc(25, 23, 9, 0, Math.PI * 2);
+      iconCtx.fill();
+      iconCtx.fillStyle = body;
+      iconCtx.beginPath();
+      iconCtx.arc(29, 19, 9, 0, Math.PI * 2);
+      iconCtx.fill();
+    }
+  } else if (["slumberOrb", "warpOrb", "guidingOrb", "fortuneOrb"].includes(kind)) {
+    const body = itemColor(kind);
+    iconCtx.fillStyle = "#d6f7f2";
+    iconCtx.beginPath();
+    iconCtx.arc(24, 24, 18, 0, Math.PI * 2);
+    iconCtx.fill();
+    iconCtx.fillStyle = body;
+    iconCtx.beginPath();
+    iconCtx.arc(24, 24, 14, 0, Math.PI * 2);
+    iconCtx.fill();
+    iconCtx.fillStyle = light;
+    if (kind === "slumberOrb") {
+      iconCtx.fillRect(16, 17, 5, 14);
+      iconCtx.fillRect(27, 17, 5, 14);
+    } else if (kind === "warpOrb") {
+      iconCtx.fillRect(13, 21, 22, 6);
+      iconCtx.fillRect(13, 17, 6, 14);
+      iconCtx.fillRect(29, 17, 6, 14);
+    } else if (kind === "guidingOrb") {
+      drawPixelStar(iconCtx, 24, 24, 12, light);
+    } else {
+      iconCtx.fillRect(21, 12, 6, 24);
+      iconCtx.fillRect(14, 19, 20, 6);
+    }
+    iconCtx.fillStyle = "rgba(255,255,255,0.55)";
+    iconCtx.fillRect(14, 13, 6, 4);
+  } else if (["moonShard", "emberCore", "shadowFang", "bossCore"].includes(kind)) {
+    const materialColors = {
+      moonShard: "#7ee9f2",
+      emberCore: "#ff755b",
+      shadowFang: "#b58ae8",
+      bossCore: "#ffe36f",
+    };
+    iconCtx.fillStyle = materialColors[kind];
+    iconCtx.beginPath();
+    iconCtx.moveTo(24, 5);
+    iconCtx.lineTo(39, 20);
+    iconCtx.lineTo(31, 40);
+    iconCtx.lineTo(15, 40);
+    iconCtx.lineTo(8, 20);
+    iconCtx.closePath();
+    iconCtx.fill();
+    iconCtx.fillStyle = light;
+    drawPixelStar(iconCtx, 24, 23, kind === "bossCore" ? 14 : 9, light);
+  } else if (kind === "badge") {
+    iconCtx.fillStyle = "#7d69c5";
+    iconCtx.fillRect(13, 8, 8, 16);
+    iconCtx.fillRect(27, 8, 8, 16);
+    drawPixelStar(iconCtx, 24, 27, 17, "#f2cb5b");
+    drawPixelStar(iconCtx, 24, 27, 8, light);
+  } else {
+    drawPixelStar(iconCtx, 24, 23, 18, "#f4d86b");
+    drawPixelStar(iconCtx, 24, 23, 8, "#fffbe0");
+  }
+  iconCtx.restore();
+}
+
+function drawGearIcon(targetCtx, gear) {
+  const color = gear.color || gearSlots[gear.slot]?.color || "#ddd";
+  const bright = "#fff3d0";
+  const dark = "#2a2022";
+  if (gear.slot === "weapon") {
+    targetCtx.fillStyle = color;
+    if (gear.key === "wand") {
+      targetCtx.fillRect(21, 9, 7, 30);
+      drawPixelStar(targetCtx, 24, 10, 13, bright);
+      targetCtx.fillStyle = dark;
+      targetCtx.fillRect(19, 35, 11, 5);
+    } else if (gear.key === "claw") {
+      targetCtx.fillRect(10, 12, 7, 27);
+      targetCtx.fillRect(21, 8, 7, 30);
+      targetCtx.fillRect(32, 12, 7, 27);
+      targetCtx.fillStyle = bright;
+      targetCtx.fillRect(10, 8, 7, 8);
+      targetCtx.fillRect(21, 4, 7, 8);
+      targetCtx.fillRect(32, 8, 7, 8);
+    } else {
+      targetCtx.fillRect(21, 5, 7, 29);
+      targetCtx.fillStyle = bright;
+      targetCtx.fillRect(23, 7, 3, 23);
+      targetCtx.fillStyle = "#8b6547";
+      targetCtx.fillRect(21, 33, 7, 11);
+      targetCtx.fillStyle = color;
+      targetCtx.fillRect(13, 30, 23, 6);
+    }
+  } else if (gear.slot === "armor") {
+    targetCtx.fillStyle = color;
+    targetCtx.fillRect(12, 14, 24, 27);
+    targetCtx.fillRect(7, 18, 9, 17);
+    targetCtx.fillRect(32, 18, 9, 17);
+    targetCtx.fillStyle = dark;
+    targetCtx.fillRect(20, 14, 8, 8);
+    targetCtx.fillStyle = bright;
+    targetCtx.fillRect(16, 25, 16, 5);
+    targetCtx.fillRect(22, 20, 5, 16);
+  } else if (gear.key === "feather") {
+    targetCtx.fillStyle = color;
+    targetCtx.beginPath();
+    targetCtx.ellipse(25, 21, 12, 18, 0.55, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.fillStyle = bright;
+    targetCtx.fillRect(21, 12, 4, 28);
+    targetCtx.fillRect(14, 22, 10, 3);
+    targetCtx.fillRect(22, 17, 12, 3);
+  } else if (gear.key === "gem") {
+    targetCtx.fillStyle = color;
+    targetCtx.beginPath();
+    targetCtx.moveTo(24, 6);
+    targetCtx.lineTo(39, 19);
+    targetCtx.lineTo(32, 39);
+    targetCtx.lineTo(16, 39);
+    targetCtx.lineTo(9, 19);
+    targetCtx.closePath();
+    targetCtx.fill();
+    targetCtx.fillStyle = bright;
+    targetCtx.fillRect(20, 13, 8, 18);
+    targetCtx.fillRect(15, 19, 18, 7);
+  } else {
+    targetCtx.fillStyle = "#8b6547";
+    targetCtx.fillRect(22, 5, 5, 12);
+    targetCtx.fillStyle = color;
+    targetCtx.beginPath();
+    targetCtx.arc(24, 26, 14, Math.PI, 0);
+    targetCtx.lineTo(38, 34);
+    targetCtx.lineTo(10, 34);
+    targetCtx.closePath();
+    targetCtx.fill();
+    targetCtx.fillStyle = bright;
+    targetCtx.fillRect(21, 34, 7, 7);
+  }
+  const stars = clamp(gear.stars || 1, 1, 5);
+  targetCtx.fillStyle = "rgba(16, 14, 15, 0.86)";
+  targetCtx.fillRect(4, 40, 40, 7);
+  for (let index = 0; index < 5; index += 1) {
+    targetCtx.fillStyle = index < stars ? color : "#4c4949";
+    targetCtx.fillRect(7 + index * 8, 42, 5, 3);
+  }
+}
+
+function drawPixelStar(targetCtx, x, y, size, color) {
+  const arm = Math.max(3, Math.floor(size / 3));
+  targetCtx.fillStyle = color;
+  targetCtx.fillRect(x - arm, y - Math.floor(size / 2), arm * 2, size);
+  targetCtx.fillRect(x - Math.floor(size / 2), y - arm, size, arm * 2);
+  targetCtx.fillRect(x - arm - 2, y - arm - 2, (arm + 2) * 2, (arm + 2) * 2);
+}
+
+function drawActor(actor, time) {
+  const visual = getActorVisualPosition(actor, time);
+  const { x: px, y: py } = toScreen(visual.x, visual.y);
+  const stepBob = visual.walking ? Math.abs(Math.sin(visual.phase * Math.PI * 2)) * 3 : 0;
+  const bob = actor.down ? 5 : Math.sin(time / 330 + actor.x) * 0.8 - stepBob;
+  drawOutlinedEntity(
+    (targetCtx) => drawActorBody(targetCtx, actor, 0, 0, 1, time),
+    px,
+    py + bob,
+    "#62efff",
+    3,
+  );
+}
+
+function drawActorBody(targetCtx, actor, px, py, scale, time) {
+  const s = scale;
+  const visual = getActorVisualPosition(actor, time);
+  const walking = visual.walking;
+  const footStep = walking ? Math.sin(visual.phase * Math.PI * 4) * 2 : 0;
+  const facingBack = actor.dy < 0 && Math.abs(actor.dy) >= Math.abs(actor.dx);
+  const facingSide = actor.dx !== 0 && Math.abs(actor.dx) >= Math.abs(actor.dy);
+  const faceSign = actor.dx < 0 ? -1 : 1;
+  const scarf = actor.kind === "leader" ? (actor.scarf || palette.brass) : actor.kind === "partner" ? palette.teal : palette.white;
+  targetCtx.save();
+  targetCtx.translate(px, py);
+  targetCtx.scale(s, s);
+  targetCtx.fillStyle = "rgba(0,0,0,0.28)";
+  targetCtx.beginPath();
+  targetCtx.ellipse(24, 39, 16, 6, 0, 0, Math.PI * 2);
+  targetCtx.fill();
+
+  if (actor.sprite && drawSpriteOnContext(targetCtx, actor.sprite, 8, 8, 32, 32)) {
+    targetCtx.restore();
+    return;
+  }
+
+  const body = actor.down ? "#777" : actor.color;
+  const light = actor.down ? "#aaa" : actor.accent;
+
+  targetCtx.fillStyle = body;
+  targetCtx.beginPath();
+  const tailX = facingSide ? 24 - faceSign * 12 : 12;
+  targetCtx.ellipse(tailX, 29, 9, 5, facingSide ? faceSign * 0.35 : -0.45, 0, Math.PI * 2);
+  targetCtx.fill();
+
+  targetCtx.fillStyle = body;
+  targetCtx.fillRect(15, 23, 18, 12);
+  targetCtx.fillStyle = light;
+  targetCtx.fillRect(18, 25, 12, 7);
+
+  targetCtx.fillStyle = body;
+  targetCtx.beginPath();
+  targetCtx.arc(24, 17, 11, 0, Math.PI * 2);
+  targetCtx.fill();
+
+  targetCtx.beginPath();
+  targetCtx.moveTo(15, 12);
+  targetCtx.lineTo(17, 3);
+  targetCtx.lineTo(23, 10);
+  targetCtx.moveTo(25, 10);
+  targetCtx.lineTo(31, 3);
+  targetCtx.lineTo(34, 13);
+  targetCtx.fill();
+
+  targetCtx.fillStyle = light;
+  targetCtx.beginPath();
+  targetCtx.moveTo(18, 10);
+  targetCtx.lineTo(19, 6);
+  targetCtx.lineTo(22, 11);
+  targetCtx.moveTo(27, 11);
+  targetCtx.lineTo(30, 6);
+  targetCtx.lineTo(31, 11);
+  targetCtx.fill();
+
+  targetCtx.fillStyle = scarf;
+  targetCtx.fillRect(14, 22, 20, 4);
+  targetCtx.fillRect(facingSide && faceSign < 0 ? 30 : 14, 25, 5, 7);
+
+  if (!facingBack) {
+    targetCtx.fillStyle = palette.ink;
+    if (facingSide) {
+      targetCtx.fillRect(faceSign > 0 ? 27 : 18, 15, 3, 4);
+      targetCtx.fillStyle = "#fff8df";
+      targetCtx.fillRect(faceSign > 0 ? 28 : 18, 15, 1, 1);
+    } else {
+      targetCtx.fillRect(19, 15, 3, 4);
+      targetCtx.fillRect(27, 15, 3, 4);
+      targetCtx.fillStyle = "#fff8df";
+      targetCtx.fillRect(19, 15, 1, 1);
+      targetCtx.fillRect(27, 15, 1, 1);
+    }
+    targetCtx.fillStyle = light;
+    targetCtx.fillRect(22, 20, 5, 2);
+  } else {
+    targetCtx.fillStyle = scarf;
+    targetCtx.fillRect(29, 24, 6, 5);
+  }
+
+  targetCtx.fillStyle = body;
+  targetCtx.fillRect(16, 34 + Math.max(0, footStep), 7, 5);
+  targetCtx.fillRect(27, 34 + Math.max(0, -footStep), 7, 5);
+  targetCtx.fillStyle = light;
+  targetCtx.fillRect(16, 38 + Math.max(0, footStep), 7, 2);
+  targetCtx.fillRect(27, 38 + Math.max(0, -footStep), 7, 2);
+
+  targetCtx.fillStyle = "#fff1b6";
+  targetCtx.fillRect(23, 25, 4, 4);
+  targetCtx.restore();
+}
+
+function drawEnemy(enemy, time) {
+  const visual = getActorVisualPosition(enemy, time);
+  const { x: px, y: py } = toScreen(visual.x, visual.y);
+  const wobble = Math.sin(time / 240 + enemy.wobble) * 2.4;
+  drawOutlinedEntity((targetCtx) => {
+    const spriteInset = enemy.boss ? 3 : 8;
+    const spriteSize = enemy.boss ? 42 : 32;
+    drawSpriteOnContext(targetCtx, enemy.sprite, spriteInset, enemy.boss ? 0 : 5, spriteSize, spriteSize);
+    targetCtx.globalAlpha = enemy.boss ? 0.62 : 0.86;
+    targetCtx.fillStyle = enemy.color;
+    targetCtx.beginPath();
+    targetCtx.ellipse(24, enemy.boss ? 25 : 27, enemy.boss ? 18 : 13, enemy.boss ? 16 : 13, 0, 0, Math.PI * 2);
+    targetCtx.fill();
+    targetCtx.globalAlpha = 1;
+    targetCtx.fillStyle = enemy.accent;
+    targetCtx.fillRect(enemy.boss ? 14 : 17, enemy.boss ? 17 : 19, enemy.boss ? 7 : 5, enemy.boss ? 6 : 5);
+    targetCtx.fillRect(enemy.boss ? 28 : 27, enemy.boss ? 17 : 19, enemy.boss ? 7 : 5, enemy.boss ? 6 : 5);
+    if (enemy.boss) {
+      targetCtx.fillStyle = "#f6cf64";
+      targetCtx.fillRect(13, 3, 22, 5);
+      targetCtx.fillRect(13, 0, 5, 8);
+      targetCtx.fillRect(22, 0, 5, 8);
+      targetCtx.fillRect(30, 0, 5, 8);
+    } else if (enemy.rare) {
+      drawPixelStar(targetCtx, 9, 9, 7, "#ffe978");
+      drawPixelStar(targetCtx, 39, 12, 6, "#fff7c7");
+    }
+  }, px, py + wobble, enemy.rare ? "#ffe978" : enemy.boss ? "#ff4fc1" : "#ff5f62", enemy.boss || enemy.rare ? 3 : 2);
+  if (enemy.rare) {
+    ctx.fillStyle = "rgba(23, 16, 8, 0.9)";
+    ctx.fillRect(px + 7, py - 4 + wobble, 34, 9);
+    ctx.fillStyle = "#ffe978";
+    ctx.font = "900 7px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("RARE", px + 24, py + 3 + wobble);
+  }
+  if ((enemy.sleepTurns || 0) > 0) {
+    ctx.fillStyle = "#d8c9ff";
+    ctx.font = "900 13px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Z", px + 37, py + 10 + wobble);
+  }
+  drawEnemyHp(enemy, px, py);
+}
+
+function drawBossHud() {
+  const boss = game.enemies.find((enemy) => enemy.boss);
+  if (!boss) return;
+  const width = Math.min(430, canvas.width - 240);
+  const x = (canvas.width - width) / 2;
+  const y = 18;
+  ctx.save();
+  ctx.fillStyle = "rgba(8, 10, 9, 0.88)";
+  ctx.fillRect(x - 10, y - 10, width + 20, 42);
+  ctx.strokeStyle = boss.color;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x - 10, y - 10, width + 20, 42);
+  ctx.fillStyle = "#fff4df";
+  ctx.font = "800 13px sans-serif";
+  ctx.textAlign = "left";
+  ctx.fillText(`${boss.title}  ${boss.name}`, x, y + 4);
+  ctx.fillStyle = "rgba(255,255,255,0.12)";
+  ctx.fillRect(x, y + 12, width, 10);
+  ctx.fillStyle = boss.color;
+  ctx.fillRect(x, y + 12, width * clamp(boss.hp / boss.maxHp, 0, 1), 10);
+  ctx.restore();
+}
+
+function drawOutlinedEntity(drawEntity, px, py, color, radius) {
+  entityBufferCtx.clearRect(0, 0, TILE, TILE);
+  entityBufferCtx.imageSmoothingEnabled = false;
+  drawEntity(entityBufferCtx);
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = false;
+  stampEntitySilhouette(px, py, "rgba(3, 6, 5, 0.96)", radius + 2);
+  stampEntitySilhouette(px, py, color, radius);
+  ctx.drawImage(entityBuffer, px, py);
+  ctx.restore();
+}
+
+function stampEntitySilhouette(px, py, color, radius) {
+  entityTintCtx.clearRect(0, 0, TILE, TILE);
+  entityTintCtx.globalCompositeOperation = "source-over";
+  entityTintCtx.drawImage(entityBuffer, 0, 0);
+  entityTintCtx.globalCompositeOperation = "source-in";
+  entityTintCtx.fillStyle = color;
+  entityTintCtx.fillRect(0, 0, TILE, TILE);
+  entityTintCtx.globalCompositeOperation = "source-over";
+  for (let dy = -radius; dy <= radius; dy += 1) {
+    for (let dx = -radius; dx <= radius; dx += 1) {
+      if (dx === 0 && dy === 0) continue;
+      if (dx * dx + dy * dy > radius * radius + 1) continue;
+      ctx.drawImage(entityTint, px + dx, py + dy);
+    }
+  }
+}
+
+function drawEnemyHp(enemy, px, py) {
+  if (enemy.hp >= enemy.maxHp) return;
+  ctx.fillStyle = "rgba(0,0,0,0.5)";
+  ctx.fillRect(px + 8, py + 4, 32, 5);
+  ctx.fillStyle = palette.coral;
+  ctx.fillRect(px + 8, py + 4, Math.max(1, 32 * (enemy.hp / enemy.maxHp)), 5);
+}
+
+function drawEffect(effect, time) {
+  if (!inCamera(effect.x, effect.y)) return;
+  const age = time - effect.created;
+  const t = clamp(age / effect.life, 0, 1);
+  const { x: px, y: py } = toScreen(effect.x, effect.y);
+  ctx.save();
+  ctx.globalAlpha = 1 - t;
+  ctx.strokeStyle = effect.color;
+  ctx.fillStyle = effect.color;
+  if (effect.type === "hit") {
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(px + 12, py + 12);
+    ctx.lineTo(px + 36, py + 36);
+    ctx.moveTo(px + 36, py + 12);
+    ctx.lineTo(px + 12, py + 36);
+    ctx.stroke();
+  } else if (effect.type === "heal") {
+    ctx.beginPath();
+    ctx.arc(px + 24, py + 24, 8 + t * 26, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (effect.type === "burst") {
+    ctx.beginPath();
+    ctx.arc(px + 24, py + 24, 12 + t * 36, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (effect.type === "beam") {
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(px + 24, py + 24);
+    ctx.lineTo(px + 24 + effect.dx * TILE * 4, py + 24 + effect.dy * TILE * 4);
+    ctx.stroke();
+  } else if (effect.type === "slash") {
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(px + 10, py + 36);
+    ctx.lineTo(px + 38, py + 10);
+    ctx.moveTo(px + 19, py + 40);
+    ctx.lineTo(px + 41, py + 18);
+    ctx.stroke();
+  } else if (effect.type === "sleep") {
+    ctx.font = "900 19px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("Z", px + 31 + t * 6, py + 14 - t * 10);
+  } else if (effect.type === "face") {
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(px + 24, py + 24, 15 + t * 8, 0, Math.PI * 2);
+    ctx.stroke();
+  } else {
+    ctx.fillRect(px + 19, py + 19, 10, 10);
+  }
+  ctx.restore();
+}
+
+function drawFloatingText(text, time) {
+  if (!inCamera(text.x, text.y)) return;
+  const age = time - text.created;
+  const t = clamp(age / text.life, 0, 1);
+  const { x: px, y: py } = toScreen(text.x, text.y);
+  ctx.save();
+  ctx.globalAlpha = 1 - t;
+  ctx.fillStyle = text.color;
+  ctx.font = "800 15px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(text.value, px + 24, py + 12 - t * 18);
+  ctx.restore();
+}
+
+function drawFog() {
+  const startX = Math.max(0, Math.floor(renderCamera.x) - 1);
+  const endX = Math.min(MAP_W, Math.ceil(renderCamera.x + renderCamera.width) + 1);
+  const startY = Math.max(0, Math.floor(renderCamera.y) - 1);
+  const endY = Math.min(MAP_H, Math.ceil(renderCamera.y + renderCamera.height) + 1);
+  ctx.fillStyle = palette.fog;
+  for (let y = startY; y < endY; y += 1) {
+    for (let x = startX; x < endX; x += 1) {
+      if (!game.seen[y][x] || game.visible[y][x]) continue;
+      const { x: px, y: py } = toScreen(x, y);
+      ctx.fillRect(px, py, TILE, TILE);
+    }
+  }
+}
+
+function drawObjectivePointer(time) {
+  const target = game.mission?.complete ? game.stairs : game.mission;
+  if (!target || inCamera(target.x, target.y)) return;
+  const leader = getLeader();
+  const dx = target.x - leader.x;
+  const dy = target.y - leader.y;
+  const angle = Math.atan2(dy, dx);
+  const x = canvas.width / 2 + Math.cos(angle) * (canvas.width / 2 - 42);
+  const y = canvas.height / 2 + Math.sin(angle) * (canvas.height / 2 - 42);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(angle);
+  ctx.fillStyle = game.mission?.complete ? palette.brass : palette.teal;
+  ctx.beginPath();
+  ctx.moveTo(18 + Math.sin(time / 180) * 2, 0);
+  ctx.lineTo(-11, -10);
+  ctx.lineTo(-7, 0);
+  ctx.lineTo(-11, 10);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawAimIndicator() {
+  if (!game.aimDirection) return;
+  const leader = getLeader();
+  const x = leader.x + game.aimDirection.x;
+  const y = leader.y + game.aimDirection.y;
+  if (!inBounds(x, y) || !inCamera(x, y)) return;
+  const { x: px, y: py } = toScreen(x, y);
+  const hasEnemy = Boolean(enemyAt(x, y));
+  ctx.save();
+  ctx.strokeStyle = hasEnemy ? "#ff766c" : "rgba(255, 232, 175, 0.72)";
+  ctx.lineWidth = 3;
+  const edge = 10;
+  const inset = 5;
+  ctx.beginPath();
+  ctx.moveTo(px + inset, py + inset + edge);
+  ctx.lineTo(px + inset, py + inset);
+  ctx.lineTo(px + inset + edge, py + inset);
+  ctx.moveTo(px + TILE - inset - edge, py + inset);
+  ctx.lineTo(px + TILE - inset, py + inset);
+  ctx.lineTo(px + TILE - inset, py + inset + edge);
+  ctx.moveTo(px + inset, py + TILE - inset - edge);
+  ctx.lineTo(px + inset, py + TILE - inset);
+  ctx.lineTo(px + inset + edge, py + TILE - inset);
+  ctx.moveTo(px + TILE - inset - edge, py + TILE - inset);
+  ctx.lineTo(px + TILE - inset, py + TILE - inset);
+  ctx.lineTo(px + TILE - inset, py + TILE - inset - edge);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function directionFromPointer(event) {
+  const rect = canvas.getBoundingClientRect();
+  const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
+  const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+  const leader = getLeader();
+  const leaderScreen = toScreen(leader.x, leader.y);
+  const angle = Math.atan2(y - (leaderScreen.y + TILE / 2), x - (leaderScreen.x + TILE / 2));
+  const cosine = Math.cos(angle);
+  const sine = Math.sin(angle);
+  return {
+    x: Math.abs(cosine) < 0.38 ? 0 : Math.sign(cosine),
+    y: Math.abs(sine) < 0.38 ? 0 : Math.sign(sine),
+  };
+}
+
+function drawMiniMap() {
+  const sx = miniCanvas.width / MAP_W;
+  const sy = miniCanvas.height / MAP_H;
+  miniCtx.fillStyle = "#030708";
+  miniCtx.fillRect(0, 0, miniCanvas.width, miniCanvas.height);
+  for (let y = 0; y < MAP_H; y += 1) {
+    for (let x = 0; x < MAP_W; x += 1) {
+      if (!game.mapped[y][x] || game.map[y][x] === "wall") continue;
+      miniCtx.fillStyle = game.visible[y][x] ? "#69cbd0" : "#346f76";
+      miniCtx.fillRect(Math.floor(x * sx), Math.floor(y * sy), Math.ceil(sx), Math.ceil(sy));
+    }
+  }
+
+  for (const item of game.items) {
+    const mappedItem = game.mapped[item.y]?.[item.x];
+    if (!mappedItem) continue;
+    if (!isVisible(item.x, item.y) && !hasSkill("scout")) continue;
+    miniCtx.fillStyle = "#ffd45f";
+    miniCtx.fillRect(item.x * sx + 1, item.y * sy + 1, Math.max(3, sx - 2), Math.max(3, sy - 2));
+  }
+
+  if (game.mapped[game.stairs.y][game.stairs.x] || game.guidanceActive) {
+    miniCtx.fillStyle = game.mission.complete ? "#fff8de" : "#8a8e8d";
+    miniCtx.fillRect(game.stairs.x * sx, game.stairs.y * sy, sx + 1, sy + 1);
+  }
+  if (
+    game.mission &&
+    !game.mission.complete &&
+    (game.mapped[game.mission.y][game.mission.x] || game.guidanceActive)
+  ) {
+    miniCtx.fillStyle = "#df78ff";
+    miniCtx.fillRect(game.mission.x * sx, game.mission.y * sy, sx + 1, sy + 1);
+  }
+  for (const enemy of game.enemies) {
+    if (!isVisible(enemy.x, enemy.y) || !game.mapped[enemy.y]?.[enemy.x]) continue;
+    miniCtx.fillStyle = enemy.rare ? "#ffe45f" : "#ff625e";
+    miniCtx.fillRect(enemy.x * sx, enemy.y * sy, sx + 1, sy + 1);
+  }
+  for (let index = game.team.length - 1; index >= 0; index -= 1) {
+    const actor = game.team[index];
+    if (actor.down) continue;
+    miniCtx.fillStyle = actor.id === "leader" ? "#62efff" : "#8ed96c";
+    miniCtx.fillRect(actor.x * sx, actor.y * sy, sx + 1, sy + 1);
+  }
+
+  miniCtx.strokeStyle = "rgba(255,255,255,0.42)";
+  miniCtx.lineWidth = 1;
+  miniCtx.strokeRect(
+    renderCamera.x * sx,
+    renderCamera.y * sy,
+    renderCamera.width * sx,
+    renderCamera.height * sy,
+  );
+}
+
+function drawPortrait(targetCanvas, actor) {
+  const pctx = targetCanvas.getContext("2d");
+  pctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+  drawActorBody(pctx, actor, 0, 0, 1, performance.now());
+}
+
+function drawSprite(index, x, y, width = TILE, height = TILE) {
+  return drawSpriteOnContext(ctx, index, x, y, width, height);
+}
+
+function drawSpriteOnContext(targetCtx, index, x, y, width, height) {
+  if (!spriteSheet.complete || !spriteSheet.naturalWidth) return false;
+  const col = index % SPRITE_COLS;
+  const row = Math.floor(index / SPRITE_COLS);
+  const sx = SPRITE_MARGIN + col * (SPRITE_TILE + SPRITE_MARGIN);
+  const sy = SPRITE_MARGIN + row * (SPRITE_TILE + SPRITE_MARGIN);
+  targetCtx.drawImage(spriteSheet, sx, sy, SPRITE_TILE, SPRITE_TILE, x, y, width, height);
+  return true;
+}
+
+function moveActorToward(actor, target, allowEnemyTarget, delay = 0) {
+  const next = stepToward(actor, target, allowEnemyTarget);
+  if (!next) return false;
+  const from = { x: actor.x, y: actor.y };
+  actor.dx = Math.sign(next.x - actor.x);
+  actor.dy = Math.sign(next.y - actor.y);
+  actor.x = next.x;
+  actor.y = next.y;
+  startWalkMotion(actor, from.x, from.y, next.x, next.y, delay);
+  addEffect("step", actor.x, actor.y, actor.color);
+  applyStepTerrain(actor);
+  return true;
+}
+
+function moveEnemyToward(enemy, target) {
+  const next = stepToward(enemy, target, false);
+  if (!next) return false;
+  const from = { x: enemy.x, y: enemy.y };
+  enemy.dx = Math.sign(next.x - enemy.x);
+  enemy.dy = Math.sign(next.y - enemy.y);
+  enemy.x = next.x;
+  enemy.y = next.y;
+  startWalkMotion(enemy, from.x, from.y, next.x, next.y, 70);
+  addEffect("step", enemy.x, enemy.y, enemy.color);
+  return true;
+}
+
+function stepToward(actor, target, allowEnemyTarget) {
+  const queue = [{ x: actor.x, y: actor.y, first: null }];
+  const visited = makeGrid(false);
+  visited[actor.y][actor.x] = true;
+  const occupiedTarget = Boolean(actorAt(target.x, target.y) || enemyAt(target.x, target.y));
+
+  while (queue.length) {
+    const current = queue.shift();
+    const reached = occupiedTarget
+      ? gridDistance(current, target) <= 1
+      : current.x === target.x && current.y === target.y;
+    if (reached) return current.first;
+    for (const dir of dirs) {
+      const x = current.x + dir.x;
+      const y = current.y + dir.y;
+      if (!inBounds(x, y) || visited[y][x] || !canTakeStep(current.x, current.y, dir.x, dir.y)) continue;
+      const first = current.first || { x, y };
+      if (actor.kind || actor.id === "leader") {
+        if (allyAt(x, y) || enemyAt(x, y)) continue;
+      } else if (enemyAt(x, y) || allyAt(x, y)) {
+        continue;
+      }
+      visited[y][x] = true;
+      queue.push({ x, y, first });
+    }
+  }
+  return null;
 }
 
 function enemyWander(enemy) {
@@ -714,362 +4382,287 @@ function enemyWander(enemy) {
   for (const dir of shuffled) {
     const x = enemy.x + dir.x;
     const y = enemy.y + dir.y;
-    if (isWalkable(x, y) && !blockedByActor(x, y)) {
+    if (canTakeStep(enemy.x, enemy.y, dir.x, dir.y) && !actorAt(x, y) && !enemyAt(x, y)) {
+      const from = { x: enemy.x, y: enemy.y };
+      enemy.dx = dir.x;
+      enemy.dy = dir.y;
       enemy.x = x;
       enemy.y = y;
+      startWalkMotion(enemy, from.x, from.y, x, y, 70);
       return;
     }
   }
 }
 
-function stepToward(enemy, target) {
-  const queue = [{ x: enemy.x, y: enemy.y, first: null }];
-  const visited = makeGrid(false);
-  visited[enemy.y][enemy.x] = true;
+function startWalkMotion(actor, fromX, fromY, toX, toY, delay = 0) {
+  actor.motion = {
+    kind: "walk",
+    fromX,
+    fromY,
+    toX,
+    toY,
+    started: performance.now() + delay,
+    duration: 145,
+  };
+}
 
-  while (queue.length > 0) {
-    const current = queue.shift();
-    if (current.x === target.x && current.y === target.y) {
-      return current.first;
-    }
+function startBumpMotion(actor, dx, dy, strength = 0.2, delay = 0) {
+  actor.motion = {
+    kind: "bump",
+    fromX: actor.x,
+    fromY: actor.y,
+    toX: actor.x + dx * strength,
+    toY: actor.y + dy * strength,
+    started: performance.now() + delay,
+    duration: 170,
+  };
+}
 
-    for (const dir of dirs) {
-      const x = current.x + dir.x;
-      const y = current.y + dir.y;
-      if (!inBounds(x, y) || visited[y][x] || !isWalkable(x, y)) continue;
-      if (enemyAt(x, y) && !(x === target.x && y === target.y)) continue;
-      visited[y][x] = true;
-      queue.push({
-        x,
-        y,
-        first: current.first || { x, y },
-      });
-    }
+function getActorVisualPosition(actor, time) {
+  const motion = actor.motion;
+  if (!motion) return { x: actor.x, y: actor.y, walking: false, phase: 0 };
+  if (time < motion.started) {
+    return { x: motion.fromX, y: motion.fromY, walking: motion.kind === "walk", phase: 0 };
   }
-
-  return null;
-}
-
-function tryRescue(player) {
-  if (game.bells <= 0) return false;
-  const ally = game.players.find((target) => target.id !== player.id && target.down && distance(player, target) <= 1.5);
-  if (!ally) return false;
-  game.bells -= 1;
-  ally.down = false;
-  ally.hp = Math.ceil(ally.maxHp * 0.45);
-  ally.acted = true;
-  addRingEffect(ally.x, ally.y, palette.brass);
-  addLog(`${player.name}が救助ベルを鳴らした。${ally.name}が立ち上がった。`);
-  return true;
-}
-
-function pickupItems(player) {
-  const item = game.items.find((candidate) => candidate.x === player.x && candidate.y === player.y);
-  if (!item) return;
-
-  game.items = game.items.filter((candidate) => candidate.id !== item.id);
-
-  if (item.kind === "herb") {
-    const amount = healPlayer(player, 10 + game.floor, true);
-    addLog(`${player.name}は薬草で${amount}回復した。`);
-  } else if (item.kind === "stardust") {
-    const points = 35 + game.floor * 10;
-    game.score += points;
-    addFloatingText(player.x, player.y, `+${points}`, palette.brass);
-    addLog(`${player.name}は星くずを拾った。+${points}pt`);
-  } else if (item.kind === "guard") {
-    player.defense = Math.min(3, player.defense + 1);
-    addLog(`${player.name}の守りが上がった。`);
-  } else if (item.kind === "bell") {
-    game.bells += 1;
-    addLog("救助ベルを見つけた。");
+  const phase = clamp((time - motion.started) / motion.duration, 0, 1);
+  if (phase >= 1) return { x: actor.x, y: actor.y, walking: false, phase: 1 };
+  if (motion.kind === "bump") {
+    const pulse = Math.sin(phase * Math.PI);
+    return {
+      x: motion.fromX + (motion.toX - motion.fromX) * pulse,
+      y: motion.fromY + (motion.toY - motion.fromY) * pulse,
+      walking: false,
+      phase,
+    };
   }
-
-  addEffect("spark", player.x, player.y, itemColor(item.kind));
+  const eased = phase * phase * (3 - 2 * phase);
+  return {
+    x: motion.fromX + (motion.toX - motion.fromX) * eased,
+    y: motion.fromY + (motion.toY - motion.fromY) * eased,
+    walking: true,
+    phase,
+  };
 }
 
-function maybeDropItem(x, y) {
-  if (Math.random() > 0.18) return;
-  if (game.items.some((item) => item.x === x && item.y === y)) return;
-  const kind = Math.random() < 0.6 ? "stardust" : "herb";
-  game.items.push({
-    id: cryptoId(),
-    kind,
-    name: kind === "stardust" ? "星くず" : "薬草",
-    x,
-    y,
-    pulse: Math.random() * Math.PI * 2,
-  });
-}
-
-function healPlayer(player, amount, floating) {
-  if (player.down) return 0;
-  const before = player.hp;
-  player.hp = Math.min(player.maxHp, player.hp + amount);
-  const healed = player.hp - before;
-  if (healed > 0 && floating) {
-    addFloatingText(player.x, player.y, `+${healed}`, palette.teal);
-  }
-  return healed;
-}
-
-function checkStairs() {
-  if (game.gameOver || game.victory) return;
-  const alive = livingPlayers();
-  if (alive.length < 2) return;
-
-  if (!allSealsActive()) {
-    const someoneClose = alive.some((player) => manhattan(player.x, player.y, game.stairs.x, game.stairs.y) <= 1);
-    if (someoneClose) showToast("階段は封印中。二人で紋章を解除しよう。");
-    return;
-  }
-
-  const close = alive.every((player) => manhattan(player.x, player.y, game.stairs.x, game.stairs.y) <= 1);
-  ui.stairs.textContent = close ? "準備OK" : "探索中";
-
-  if (!close) {
-    const someoneClose = alive.some((player) => manhattan(player.x, player.y, game.stairs.x, game.stairs.y) <= 1);
-    if (someoneClose) showToast("もう一人も階段のそばへ。");
-    return;
-  }
-
-  if (game.floor >= TARGET_FLOOR) {
-    winGame();
-    return;
-  }
-
-  game.score += 120 + game.floor * 50;
-  game.floor += 1;
-  game.turn = 1;
-  for (const player of game.players) {
-    player.hp = Math.min(player.maxHp, player.hp + 6);
-    player.defense = Math.max(0, player.defense - 1);
-    player.cooldown = 0;
-    player.acted = false;
-  }
-  addLog(`二人は地下${game.floor}階へ降りた。`);
-  showToast(`B${game.floor}F`);
-  buildFloor();
-  updateAll();
-}
-
-function winGame() {
-  game.victory = true;
-  game.score += 1000;
-  saveBestScore();
-  ui.endTitle.textContent = "星核を見つけた";
-  ui.endText.textContent = `B${TARGET_FLOOR}Fを突破。スコア ${game.score} pt`;
-  ui.endOverlay.hidden = false;
-  addLog("二人は星核を抱えて帰還した。");
-  updateAll();
-}
-
-function checkGameEnd() {
-  if (game.players.every((player) => player.down)) {
-    game.gameOver = true;
-    saveBestScore();
-    ui.endTitle.textContent = "冒険終了";
-    ui.endText.textContent = `B${game.floor}Fで力尽きた。スコア ${game.score} pt`;
-    ui.endOverlay.hidden = false;
-  }
-}
-
-function everyoneReadyForEnemyTurn() {
-  return game.players.every((player) => player.down || player.acted);
-}
-
-function revealAroundPlayers() {
+function revealAroundTeam() {
   game.visible = makeGrid(false);
-  for (const player of game.players) {
-    if (player.down) continue;
-    for (let y = player.y - VISION_RADIUS; y <= player.y + VISION_RADIUS; y += 1) {
-      for (let x = player.x - VISION_RADIUS; x <= player.x + VISION_RADIUS; x += 1) {
+  for (const actor of livingTeam()) {
+    mapVisitedArea(actor);
+    for (let y = actor.y - VISION_RADIUS; y <= actor.y + VISION_RADIUS; y += 1) {
+      for (let x = actor.x - VISION_RADIUS; x <= actor.x + VISION_RADIUS; x += 1) {
         if (!inBounds(x, y)) continue;
-        if (distance(player, { x, y }) > VISION_RADIUS) continue;
-        if (!hasLineOfSight(player.x, player.y, x, y)) continue;
+        if (distance(actor, { x, y }) > VISION_RADIUS) continue;
         game.visible[y][x] = true;
         game.seen[y][x] = true;
       }
     }
   }
+  const rareEnemy = game.enemies.find(
+    (enemy) => enemy.rare && !enemy.rareNoticed && isVisible(enemy.x, enemy.y),
+  );
+  if (rareEnemy) {
+    rareEnemy.rareNoticed = true;
+    addLog(`珍しい気配を発見。レア敵「${rareEnemy.name}」が現れた。`);
+    announceEvent("RARE ENEMY", `${rareEnemy.name}を発見`, "★", "mystic");
+    setScreenFlash("#ffe16d", 300);
+  }
 }
 
-function hasLineOfSight(x1, y1, x2, y2) {
-  let x = x1;
-  let y = y1;
-  const dx = Math.abs(x2 - x1);
-  const dy = -Math.abs(y2 - y1);
-  const sx = x1 < x2 ? 1 : -1;
-  const sy = y1 < y2 ? 1 : -1;
-  let err = dx + dy;
-
-  while (true) {
-    if (!(x === x1 && y === y1) && !(x === x2 && y === y2) && !isWalkable(x, y)) {
-      return false;
-    }
-    if (x === x2 && y === y2) break;
-    const e2 = 2 * err;
-    if (e2 >= dy) {
-      err += dy;
-      x += sx;
-    }
-    if (e2 <= dx) {
-      err += dx;
-      y += sy;
+function mapVisitedArea(actor) {
+  if (!inBounds(actor.x, actor.y)) return;
+  game.mapped[actor.y][actor.x] = true;
+  const room = game.rooms.find((candidate) => pointInRoom(actor.x, actor.y, candidate));
+  if (!room) return;
+  for (let y = room.y; y < room.y + room.h; y += 1) {
+    for (let x = room.x; x < room.x + room.w; x += 1) {
+      if (isWalkable(x, y)) game.mapped[y][x] = true;
     }
   }
-
-  return true;
 }
 
-function updateAll() {
-  saveBestScore();
-  const activeSeals = game.seals.filter((seal) => seal.active).length;
-  ui.floor.textContent = `B${game.floor}F`;
-  ui.score.textContent = `${game.score} pt`;
-  ui.best.textContent = `Best ${bestScore}`;
-  ui.bell.textContent = `${game.bells}`;
-  ui.seal.textContent = `${activeSeals}/${game.seals.length || 2}`;
-  ui.bond.textContent = `${game.bond}`;
-  ui.turn.textContent = `${game.turn}`;
-  ui.stairs.textContent = !allSealsActive()
-    ? "封印中"
-    : livingPlayers().every((player) => manhattan(player.x, player.y, game.stairs.x, game.stairs.y) <= 1)
-      ? "準備OK"
-      : "集合";
-  ui.goal.textContent = getGoalText();
-  renderParty();
-  renderLogs();
+function pointInRoom(x, y, room) {
+  return x >= room.x && y >= room.y && x < room.x + room.w && y < room.y + room.h;
 }
 
-function getGoalText() {
-  const nextSeal = game.seals.find((seal) => !seal.active);
-  if (nextSeal) {
-    const owner = game.players[nextSeal.owner];
-    return `${owner.name}が${nextSeal.name}へ`;
-  }
-  return "階段へ二人で集合";
-}
-
-function renderParty() {
-  ui.party.innerHTML = "";
-  for (const player of game.players) {
-    const card = document.createElement("article");
-    card.className = "player-card";
-    if (player.acted && !player.down) card.classList.add("waiting");
-    if (player.down) card.classList.add("down");
-    card.style.borderLeftColor = player.color;
-
-    const hpRatio = player.maxHp === 0 ? 0 : player.hp / player.maxHp;
-    const actionLabel = player.down ? "DOWN" : player.acted ? "待機中" : "行動可";
-
-    card.innerHTML = `
-      <div class="portrait">
-        <canvas width="64" height="64" aria-hidden="true"></canvas>
-      </div>
-      <div class="player-info">
-        <div class="player-head">
-          <strong>${player.name}</strong>
-          <span>${actionLabel}</span>
-        </div>
-        <div class="bar" aria-label="${player.name} HP">
-          <div class="bar-fill" style="width:${Math.max(0, hpRatio * 100)}%; background:${player.color}"></div>
-        </div>
-        <div class="player-meta">
-          <span>HP ${player.hp}/${player.maxHp}</span>
-          <span>${sealStatusFor(player)}</span>
-          <span>${player.skillName} ${player.cooldown || player.skillHint}</span>
-        </div>
-      </div>
-    `;
-    ui.party.appendChild(card);
-    drawPortrait(card.querySelector("canvas"), player);
-  }
-}
-
-function sealStatusFor(player) {
-  const seal = game.seals.find((candidate) => candidate.owner === player.id);
-  if (!seal) return player.sealName;
-  return `${player.sealName} ${seal.active ? "済" : "未"}`;
-}
-
-function drawPortrait(targetCanvas, player) {
-  const pctx = targetCanvas.getContext("2d");
-  pctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
-  pctx.fillStyle = "rgba(0,0,0,0.18)";
-  pctx.fillRect(5, 50, 54, 7);
-  pctx.save();
-  pctx.translate(8, 8);
-  pctx.scale(1.5, 1.5);
-  drawPlayerBodyOnContext(pctx, 0, 0, player, 1, performance.now());
-  pctx.restore();
-}
-
-function renderLogs() {
-  ui.log.innerHTML = "";
-  for (const entry of game.logs.slice(-9)) {
-    const item = document.createElement("li");
-    item.textContent = entry;
-    ui.log.appendChild(item);
-  }
+function healActor(actor, amount) {
+  if (actor.down) return 0;
+  const before = actor.hp;
+  actor.hp = Math.min(actor.maxHp, actor.hp + amount);
+  if (actor.hp > before) addFloatingText(actor.x, actor.y, `+${actor.hp - before}`, palette.moss);
+  return actor.hp - before;
 }
 
 function addLog(message) {
   game.logs.push(message);
-  if (game.logs.length > 80) {
-    game.logs = game.logs.slice(-80);
-  }
+  if (game.logs.length > 80) game.logs.shift();
 }
 
 function showToast(message) {
-  game.lastMessage = message;
-  game.messageTimer = 110;
   ui.toast.textContent = message;
   ui.toast.hidden = false;
+  window.clearTimeout(showToast.timer);
+  showToast.timer = window.setTimeout(() => {
+    ui.toast.hidden = true;
+  }, 1800);
 }
 
-function draw(time) {
-  const dt = Math.min(40, time - lastFrame || 16);
-  lastFrame = time;
+function announceEvent(title, detail, icon = "!", tone = "good") {
+  ui.eventTitle.textContent = title;
+  ui.eventDetail.textContent = detail;
+  ui.eventIcon.textContent = icon;
+  ui.eventBanner.dataset.tone = tone;
+  ui.eventBanner.hidden = false;
+  window.clearTimeout(announceEvent.timer);
+  announceEvent.timer = window.setTimeout(() => {
+    ui.eventBanner.hidden = true;
+  }, 2100);
+}
 
-  updateEffects(dt);
-  drawDungeon(time);
-  drawMiniMap();
+function setScreenFlash(color, life = 240) {
+  game.screenFlash = { color, created: performance.now(), life };
+}
 
-  if (game.messageTimer > 0) {
-    game.messageTimer -= 1;
-    if (game.messageTimer <= 0) ui.toast.hidden = true;
+function triggerScreenShake(strength = 9, life = 240) {
+  const current = game.screenShake;
+  if (current && performance.now() - current.created < current.life && current.strength > strength) return;
+  game.screenShake = { strength, life, created: performance.now() };
+}
+
+function getScreenShakeOffset(time) {
+  if (!game.screenShake) return { x: 0, y: 0 };
+  const age = time - game.screenShake.created;
+  if (age >= game.screenShake.life) {
+    game.screenShake = null;
+    return { x: 0, y: 0 };
   }
-
-  requestAnimationFrame(draw);
-}
-
-function getCamera() {
-  const viewW = canvas.width / TILE;
-  const viewH = canvas.height / TILE;
-  const focus = game.players.reduce(
-    (sum, player) => {
-      sum.x += player.x;
-      sum.y += player.y;
-      return sum;
-    },
-    { x: 0, y: 0 },
-  );
-  focus.x /= game.players.length;
-  focus.y /= game.players.length;
+  const power = game.screenShake.strength * (1 - age / game.screenShake.life);
   return {
-    x: clamp(Math.floor(focus.x - viewW / 2), 0, Math.max(0, MAP_W - viewW)),
-    y: clamp(Math.floor(focus.y - viewH / 2), 0, Math.max(0, MAP_H - viewH)),
-    width: viewW,
-    height: viewH,
+    x: (Math.random() * 2 - 1) * power,
+    y: (Math.random() * 2 - 1) * power,
   };
 }
 
-function toScreen(x, y) {
-  return {
-    x: Math.round((x - renderCamera.x) * TILE),
-    y: Math.round((y - renderCamera.y) * TILE),
-  };
+function drawScreenFlash(time) {
+  if (!game.screenFlash) return;
+  const age = time - game.screenFlash.created;
+  if (age >= game.screenFlash.life) {
+    game.screenFlash = null;
+    return;
+  }
+  const alpha = (1 - age / game.screenFlash.life) * 0.28;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.strokeStyle = game.screenFlash.color;
+  ctx.lineWidth = 18;
+  ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+  ctx.restore();
+}
+
+function addEffect(type, x, y, color, dx = 0, dy = 0) {
+  game.effects.push({ type, x, y, color, dx, dy, created: performance.now(), life: type === "beam" ? 260 : 520 });
+}
+
+function addFloatingText(x, y, value, color) {
+  game.floating.push({ x, y, value, color, created: performance.now(), life: 820 });
+}
+
+function getLeader() {
+  return game.team[0];
+}
+
+function livingTeam() {
+  return game.team.filter((actor) => !actor.down && actor.hp > 0);
+}
+
+function adjacentEnemies(actor) {
+  return game.enemies.filter((enemy) => gridDistance(actor, enemy) === 1);
+}
+
+function nearestEnemy(actor, predicate = () => true) {
+  let best = null;
+  let bestDistance = Infinity;
+  for (const enemy of game.enemies) {
+    if (!predicate(enemy)) continue;
+    const d = manhattan(actor.x, actor.y, enemy.x, enemy.y);
+    if (d < bestDistance) {
+      best = enemy;
+      bestDistance = d;
+    }
+  }
+  return best;
+}
+
+function nearestLivingAlly(enemy) {
+  let best = null;
+  let bestDistance = Infinity;
+  for (const actor of livingTeam()) {
+    const d = manhattan(enemy.x, enemy.y, actor.x, actor.y);
+    if (d < bestDistance) {
+      best = actor;
+      bestDistance = d;
+    }
+  }
+  return best;
+}
+
+function actorAt(x, y) {
+  return allyAt(x, y);
+}
+
+function allyAt(x, y) {
+  return game.team.find((actor) => !actor.down && actor.x === x && actor.y === y);
+}
+
+function enemyAt(x, y) {
+  return game.enemies.find((enemy) => enemy.x === x && enemy.y === y);
+}
+
+function itemAt(x, y) {
+  return game.items.find((item) => item.x === x && item.y === y);
+}
+
+function randomOpenTile() {
+  for (let attempt = 0; attempt < 160; attempt += 1) {
+    const room = game.rooms[randInt(0, game.rooms.length - 1)];
+    const x = randInt(room.x, room.x + room.w - 1);
+    const y = randInt(room.y, room.y + room.h - 1);
+    if (!isWalkable(x, y)) continue;
+    if (actorAt(x, y) || enemyAt(x, y) || itemAt(x, y)) continue;
+    if (game.mission && x === game.mission.x && y === game.mission.y) continue;
+    if (game.stairs && x === game.stairs.x && y === game.stairs.y) continue;
+    return { x, y };
+  }
+  return null;
+}
+
+function nearestOpen(x, y, blockers = []) {
+  for (let radius = 0; radius < 12; radius += 1) {
+    for (let yy = y - radius; yy <= y + radius; yy += 1) {
+      for (let xx = x - radius; xx <= x + radius; xx += 1) {
+        if (!inBounds(xx, yy) || !isWalkable(xx, yy)) continue;
+        if (blockers.some((point) => point.x === xx && point.y === yy)) continue;
+        if (actorAt(xx, yy) || enemyAt(xx, yy)) continue;
+        return { x: xx, y: yy };
+      }
+    }
+  }
+  return { x, y };
+}
+
+function isWalkable(x, y) {
+  return inBounds(x, y) && game.map[y][x] !== "wall";
+}
+
+function canTakeStep(fromX, fromY, dx, dy) {
+  const x = fromX + dx;
+  const y = fromY + dy;
+  if (!isWalkable(x, y)) return false;
+  if (!dx || !dy) return true;
+  return isWalkable(fromX + dx, fromY) && isWalkable(fromX, fromY + dy);
+}
+
+function inBounds(x, y) {
+  return x >= 0 && y >= 0 && x < MAP_W && y < MAP_H;
 }
 
 function inCamera(x, y) {
@@ -1081,488 +4674,22 @@ function inCamera(x, y) {
   );
 }
 
-function drawDungeon(time) {
-  renderCamera = getCamera();
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = palette.void;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  const startX = Math.max(0, Math.floor(renderCamera.x) - 1);
-  const endX = Math.min(MAP_W - 1, Math.ceil(renderCamera.x + renderCamera.width) + 1);
-  const startY = Math.max(0, Math.floor(renderCamera.y) - 1);
-  const endY = Math.min(MAP_H - 1, Math.ceil(renderCamera.y + renderCamera.height) + 1);
-
-  for (let y = startY; y <= endY; y += 1) {
-    for (let x = startX; x <= endX; x += 1) {
-      if (!game.seen[y][x]) {
-        drawUnknownTile(x, y);
-        continue;
-      }
-      drawTile(x, y, game.map[y][x], game.visible[y][x]);
-    }
-  }
-
-  for (const seal of game.seals) {
-    if (game.seen[seal.y][seal.x] && inCamera(seal.x, seal.y)) drawSeal(seal, time);
-  }
-
-  if (isVisible(game.stairs.x, game.stairs.y) && inCamera(game.stairs.x, game.stairs.y)) {
-    drawStairs(game.stairs.x, game.stairs.y, time);
-  }
-
-  for (const item of game.items) {
-    if (isVisible(item.x, item.y) && inCamera(item.x, item.y)) drawItem(item, time);
-  }
-
-  for (const enemy of game.enemies) {
-    if (isVisible(enemy.x, enemy.y) && inCamera(enemy.x, enemy.y)) drawEnemy(enemy, time);
-  }
-
-  for (const player of game.players) {
-    if (game.seen[player.y][player.x] && inCamera(player.x, player.y)) drawPlayer(player, time);
-  }
-
-  for (const effect of game.effects) {
-    drawEffect(effect);
-  }
-
-  drawFog();
-  drawObjectivePointer(time);
+function isVisible(x, y) {
+  return inBounds(x, y) && game.visible[y][x];
 }
 
-function drawUnknownTile(x, y) {
-  const { x: px, y: py } = toScreen(x, y);
-  ctx.fillStyle = "#080a08";
-  ctx.fillRect(px, py, TILE, TILE);
-  const n = noise(x, y, 17);
-  if (n > 0.72) {
-    ctx.fillStyle = "rgba(255,255,255,0.035)";
-    ctx.fillRect(px + 21, py + 21, 6, 6);
-  }
-}
-
-function drawTile(x, y, type, visible) {
-  const { x: px, y: py } = toScreen(x, y);
-  if (type === "wall") {
-    const wall = pickSprite(spriteIds.walls, x, y, 31);
-    ctx.fillStyle = palette.wallDark;
-    ctx.fillRect(px, py, TILE, TILE);
-    if (!drawSprite(wall, px, py, TILE, TILE)) {
-      ctx.fillStyle = palette.wall;
-      ctx.fillRect(px + 3, py + 3, TILE - 6, TILE - 6);
-    }
-    ctx.fillStyle = "rgba(0,0,0,0.3)";
-    ctx.fillRect(px, py + TILE - 8, TILE, 8);
-    ctx.fillStyle = "rgba(255,255,255,0.08)";
-    if (noise(x, y, 7) > 0.58) ctx.fillRect(px + 7, py + 8, 19, 4);
-    return;
-  }
-
-  const floor = pickSprite(spriteIds.floors, x, y, 11);
-  ctx.fillStyle = type === "moss" ? "#425332" : type === "crack" ? "#44392f" : palette.floor;
-  ctx.fillRect(px, py, TILE, TILE);
-  drawSprite(floor, px, py, TILE, TILE);
-  ctx.fillStyle = "rgba(255,255,255,0.045)";
-  ctx.fillRect(px + 3, py + 3, TILE - 6, 2);
-  ctx.fillStyle = "rgba(0,0,0,0.18)";
-  ctx.fillRect(px + 3, py + TILE - 5, TILE - 6, 2);
-
-  if (type === "moss") {
-    drawMoss(px, py, visible, x, y);
-  } else if (type === "crack") {
-    drawCrack(px, py);
-  } else if (noise(x, y, 21) > 0.7) {
-    ctx.fillStyle = "rgba(247,239,227,0.08)";
-    ctx.fillRect(px + 9, py + 16, 5, 3);
-    ctx.fillRect(px + 31, py + 34, 7, 3);
-  }
-}
-
-function drawMoss(px, py, visible, tileX, tileY) {
-  ctx.fillStyle = visible ? "rgba(138,162,109,0.55)" : "rgba(138,162,109,0.25)";
-  ctx.fillRect(px + 6, py + 31, 17, 6);
-  ctx.fillRect(px + 26, py + 12, 15, 8);
-  ctx.fillStyle = "rgba(198,223,143,0.38)";
-  ctx.fillRect(px + 12, py + 28, 5, 5);
-  ctx.fillRect(px + 34, py + 10, 4, 4);
-  drawSprite(pickSprite(spriteIds.moss, tileX, tileY, 9), px + 8, py + 6, 28, 28);
-}
-
-function drawCrack(px, py) {
-  ctx.strokeStyle = "rgba(18,16,14,0.72)";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(px + 12, py + 10);
-  ctx.lineTo(px + 23, py + 21);
-  ctx.lineTo(px + 18, py + 32);
-  ctx.lineTo(px + 34, py + 41);
-  ctx.stroke();
-}
-
-function drawStairs(x, y, time) {
-  const { x: px, y: py } = toScreen(x, y);
-  const pulse = (Math.sin(time / 360) + 1) / 2;
-  ctx.fillStyle = `rgba(240,179,77,${0.2 + pulse * 0.18})`;
-  ctx.fillRect(px + 4, py + 4, TILE - 8, TILE - 8);
-  drawSprite(406, px + 8, py + 4, 32, 32);
-  ctx.fillStyle = "#2a2218";
-  ctx.fillRect(px + 8, py + 20, 32, 20);
-  ctx.fillStyle = "#7a5732";
-  ctx.fillRect(px + 14, py + 22, 24, 4);
-  ctx.fillRect(px + 11, py + 29, 24, 4);
-  ctx.fillRect(px + 8, py + 36, 24, 4);
-  ctx.fillStyle = "#fff0b4";
-  ctx.fillRect(px + 22, py + 10, 5, 5);
-}
-
-function drawSeal(seal, time) {
-  const { x: px, y: py } = toScreen(seal.x, seal.y);
-  const pulse = (Math.sin(time / 260 + seal.owner) + 1) / 2;
-  ctx.fillStyle = seal.active ? "rgba(255,245,223,0.12)" : `rgba(94,201,207,${0.1 + pulse * 0.13})`;
-  ctx.fillRect(px + 4, py + 4, TILE - 8, TILE - 8);
-  ctx.strokeStyle = seal.active ? "#fff5df" : seal.color;
-  ctx.lineWidth = 3;
-  ctx.strokeRect(px + 8, py + 8, TILE - 16, TILE - 16);
-  ctx.fillStyle = "rgba(0,0,0,0.34)";
-  ctx.fillRect(px + 14, py + 14, TILE - 28, TILE - 28);
-  drawSprite(seal.owner === 0 ? spriteIds.lampSeal : spriteIds.bladeSeal, px + 10, py + 10, 28, 28);
-  ctx.fillStyle = seal.active ? "#fff5df" : seal.color;
-  ctx.font = "bold 15px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(seal.active ? "済" : seal.owner === 0 ? "灯" : "剣", px + TILE / 2, py + TILE / 2);
-  ctx.textBaseline = "alphabetic";
-}
-
-function drawObjectivePointer(time) {
-  const target = getObjectivePoint();
-  if (!target) return;
-  if (inCamera(target.x, target.y)) return;
-
-  const centerX = canvas.width / 2;
-  const centerY = canvas.height / 2;
-  const targetScreen = {
-    x: (target.x + 0.5 - renderCamera.x) * TILE,
-    y: (target.y + 0.5 - renderCamera.y) * TILE,
+function toScreen(x, y) {
+  return {
+    x: Math.floor((x - renderCamera.x) * TILE),
+    y: Math.floor((y - renderCamera.y) * TILE),
   };
-  const dx = targetScreen.x - centerX;
-  const dy = targetScreen.y - centerY;
-  const scale = Math.min(
-    Math.abs(dx) > 0 ? (canvas.width / 2 - 34) / Math.abs(dx) : Infinity,
-    Math.abs(dy) > 0 ? (canvas.height / 2 - 34) / Math.abs(dy) : Infinity,
-  );
-  const x = centerX + dx * scale;
-  const y = centerY + dy * scale;
-  const pulse = (Math.sin(time / 220) + 1) / 2;
-
-  ctx.save();
-  ctx.translate(x, y);
-  ctx.rotate(Math.PI / 4);
-  ctx.fillStyle = target.color || palette.brass;
-  ctx.globalAlpha = 0.78 + pulse * 0.22;
-  ctx.fillRect(-13, -13, 26, 26);
-  ctx.strokeStyle = "#fff5df";
-  ctx.lineWidth = 3;
-  ctx.strokeRect(-13, -13, 26, 26);
-  ctx.restore();
-
-  ctx.fillStyle = "#10110f";
-  ctx.font = "bold 14px sans-serif";
-  ctx.textAlign = "center";
-  ctx.textBaseline = "middle";
-  ctx.fillText(target.label, x, y);
-  ctx.textBaseline = "alphabetic";
 }
 
-function getObjectivePoint() {
-  const seal = game.seals.find((candidate) => !candidate.active);
-  if (seal) {
-    return { x: seal.x, y: seal.y, color: seal.color, label: seal.owner === 0 ? "灯" : "剣" };
-  }
-  return { x: game.stairs.x, y: game.stairs.y, color: palette.brass, label: "階" };
+function centerOf(room) {
+  return { x: Math.floor(room.x + room.w / 2), y: Math.floor(room.y + room.h / 2) };
 }
 
-function drawItem(item, time) {
-  const { x: px, y: py } = toScreen(item.x, item.y);
-  const bob = Math.sin(time / 260 + item.pulse) * 3;
-  ctx.fillStyle = "rgba(0,0,0,0.28)";
-  ctx.fillRect(px + 12, py + 36, 24, 6);
-
-  if (item.kind === "herb") {
-    drawSprite(spriteIds.herb, px + 7, py + 4 + bob, 34, 34);
-  } else if (item.kind === "stardust") {
-    ctx.fillStyle = "rgba(240,179,77,0.2)";
-    ctx.fillRect(px + 10, py + 7 + bob, 28, 28);
-    drawSprite(spriteIds.stardust, px + 8, py + 4 + bob, 32, 32);
-  } else if (item.kind === "guard") {
-    drawSprite(spriteIds.guard, px + 7, py + 3 + bob, 34, 34);
-  } else {
-    drawSprite(spriteIds.bell, px + 8, py + 3 + bob, 32, 32);
-  }
-}
-
-function drawPlayer(player, time) {
-  const { x: px, y: py } = toScreen(player.x, player.y);
-  const bob = player.down ? 0 : Math.sin(time / 210 + player.id) * 2;
-  const waitingTint = player.acted ? 0.72 : 1;
-
-  ctx.save();
-  ctx.globalAlpha = player.down ? 0.66 : 1;
-  ctx.fillStyle = "rgba(0,0,0,0.34)";
-  ctx.fillRect(px + 9, py + 38, 30, 7);
-
-  if (player.down) {
-    ctx.translate(px + 24, py + 27);
-    ctx.rotate(-0.55);
-    ctx.scale(ACTOR_SCALE, ACTOR_SCALE);
-    drawPlayerBody(-16, -18, player, waitingTint, 0);
-  } else {
-    ctx.translate(px, py + bob);
-    ctx.scale(ACTOR_SCALE, ACTOR_SCALE);
-    drawPlayerBody(0, 0, player, waitingTint, time);
-    drawDirectionSpark(0, 0, player);
-  }
-
-  ctx.restore();
-}
-
-function drawPlayerBody(px, py, player, tint, time) {
-  drawPlayerBodyOnContext(ctx, px, py, player, tint, time);
-}
-
-function drawPlayerBodyOnContext(targetCtx, px, py, player, tint, time) {
-  const robe = shade(player.color, tint);
-  targetCtx.fillStyle = robe;
-  targetCtx.fillRect(px + 9, py + 13, 14, 13);
-  targetCtx.fillRect(px + 7, py + 17, 18, 7);
-  targetCtx.fillStyle = player.accent;
-  targetCtx.fillRect(px + 11, py + 15, 10, 3);
-  targetCtx.fillStyle = "#2a1c16";
-  targetCtx.fillRect(px + 10, py + 7, 12, 9);
-  targetCtx.fillStyle = "#f1c9a5";
-  targetCtx.fillRect(px + 11, py + 9, 10, 8);
-  targetCtx.fillStyle = "#201814";
-  targetCtx.fillRect(px + 13, py + 12, 2, 2);
-  targetCtx.fillRect(px + 18, py + 12, 2, 2);
-  targetCtx.fillStyle = robe;
-  targetCtx.fillRect(px + 8, py + 5, 16, 4);
-  targetCtx.fillRect(px + 12, py + 2, 8, 4);
-  targetCtx.fillStyle = "rgba(255,255,255,0.7)";
-  targetCtx.fillRect(px + 14, py + 3, 3, 2);
-
-  if (player.id === 1) {
-    targetCtx.fillStyle = "#d9dde0";
-    targetCtx.fillRect(px + 24, py + 9, 2, 16);
-    targetCtx.fillStyle = player.accent;
-    targetCtx.fillRect(px + 23, py + 8, 4, 3);
-  } else {
-    const glow = 0.45 + Math.sin(time / 240) * 0.22;
-    targetCtx.fillStyle = `rgba(105,185,195,${glow})`;
-    targetCtx.fillRect(px + 4, py + 11, 5, 8);
-    targetCtx.fillStyle = "#d7fbff";
-    targetCtx.fillRect(px + 5, py + 12, 3, 3);
-  }
-}
-
-function drawDirectionSpark(px, py, player) {
-  const sx = px + 15 + player.dx * 9;
-  const sy = py + 17 + player.dy * 9;
-  ctx.fillStyle = player.accent;
-  ctx.fillRect(sx, sy, 3, 3);
-}
-
-function drawEnemy(enemy, time) {
-  const { x: px, y: py } = toScreen(enemy.x, enemy.y);
-  const wobble = Math.sin(time / 240 + enemy.wobble) * 2.4;
-  ctx.fillStyle = "rgba(0,0,0,0.32)";
-  ctx.fillRect(px + 10, py + 38, 28, 7);
-
-  if (enemy.key === "ember") {
-    drawSprite(spriteIds.ember, px + 8, py + 5 + wobble, 32, 32);
-    ctx.fillStyle = enemy.color;
-    ctx.fillRect(px + 15, py + 19 + wobble, 19, 20);
-    ctx.fillRect(px + 20, py + 10 + wobble, 10, 12);
-    ctx.fillStyle = enemy.accent;
-    ctx.fillRect(px + 21, py + 21 + wobble, 8, 12);
-    ctx.fillStyle = "#2d1712";
-    ctx.fillRect(px + 20, py + 27 + wobble, 3, 3);
-    ctx.fillRect(px + 30, py + 27 + wobble, 3, 3);
-  } else if (enemy.key === "moss") {
-    drawSprite(spriteIds.mossEnemy, px + 7, py + 5 + wobble, 34, 34);
-    ctx.fillStyle = "#394832";
-    ctx.fillRect(px + 10, py + 22 + wobble, 26, 18);
-    ctx.fillStyle = enemy.color;
-    ctx.fillRect(px + 14, py + 15 + wobble, 22, 20);
-    ctx.fillStyle = enemy.accent;
-    ctx.fillRect(px + 18, py + 13 + wobble, 6, 4);
-    ctx.fillRect(px + 28, py + 20 + wobble, 5, 5);
-    ctx.fillStyle = "#20251d";
-    ctx.fillRect(px + 19, py + 25 + wobble, 3, 3);
-    ctx.fillRect(px + 29, py + 25 + wobble, 3, 3);
-  } else if (enemy.key === "crystal") {
-    drawSprite(spriteIds.crystalEnemy, px + 8, py + 2 + wobble, 32, 32);
-    ctx.fillStyle = "#34444c";
-    ctx.fillRect(px + 14, py + 24 + wobble, 21, 16);
-    ctx.fillStyle = enemy.color;
-    ctx.fillRect(px + 21, py + 8 + wobble, 10, 31);
-    ctx.fillRect(px + 13, py + 20 + wobble, 10, 15);
-    ctx.fillRect(px + 30, py + 17 + wobble, 9, 18);
-    ctx.fillStyle = enemy.accent;
-    ctx.fillRect(px + 24, py + 12 + wobble, 3, 10);
-  } else {
-    drawSprite(spriteIds.totemEnemy, px + 8, py + 7 + wobble, 32, 32);
-    ctx.fillStyle = "#5a554c";
-    ctx.fillRect(px + 11, py + 15 + wobble, 27, 25);
-    ctx.fillStyle = enemy.color;
-    ctx.fillRect(px + 15, py + 12 + wobble, 21, 19);
-    ctx.fillRect(px + 18, py + 31 + wobble, 8, 9);
-    ctx.fillRect(px + 30, py + 31 + wobble, 8, 9);
-    ctx.fillStyle = enemy.accent;
-    ctx.fillRect(px + 18, py + 18 + wobble, 5, 5);
-    ctx.fillRect(px + 29, py + 18 + wobble, 5, 5);
-  }
-
-  drawEnemyHp(enemy, px, py);
-}
-
-function drawEnemyHp(enemy, px, py) {
-  if (enemy.hp === enemy.maxHp) return;
-  ctx.fillStyle = "rgba(0,0,0,0.62)";
-  ctx.fillRect(px + 8, py + 4, 32, 5);
-  ctx.fillStyle = palette.coral;
-  ctx.fillRect(px + 8, py + 4, Math.max(1, 32 * (enemy.hp / enemy.maxHp)), 5);
-}
-
-function drawEffect(effect) {
-  if (!inCamera(effect.x, effect.y)) return;
-  const { x: px, y: py } = toScreen(effect.x, effect.y);
-  const t = 1 - effect.life / effect.maxLife;
-  ctx.save();
-  ctx.globalAlpha = Math.max(0, 1 - t);
-
-  if (effect.kind === "floating") {
-    ctx.font = "bold 18px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillStyle = effect.color;
-    ctx.fillText(effect.text, px + TILE / 2, py + 12 - t * 20);
-  } else if (effect.kind === "ring") {
-    ctx.strokeStyle = effect.color;
-    ctx.lineWidth = 4;
-    ctx.strokeRect(px + 8 - t * 9, py + 8 - t * 9, 32 + t * 18, 32 + t * 18);
-  } else if (effect.kind === "slash") {
-    ctx.strokeStyle = effect.color;
-    ctx.lineWidth = 6;
-    ctx.beginPath();
-    ctx.moveTo(px + 10, py + 38);
-    ctx.lineTo(px + 38, py + 10);
-    ctx.stroke();
-  } else if (effect.kind === "bump") {
-    ctx.fillStyle = effect.color;
-    ctx.fillRect(px + 15, py + 15, 18, 18);
-  } else {
-    ctx.fillStyle = effect.color;
-    ctx.fillRect(px + 18 - t * 6, py + 18 - t * 6, 12 + t * 12, 12 + t * 12);
-  }
-  ctx.restore();
-}
-
-function drawFog() {
-  const startX = Math.max(0, Math.floor(renderCamera.x) - 1);
-  const endX = Math.min(MAP_W - 1, Math.ceil(renderCamera.x + renderCamera.width) + 1);
-  const startY = Math.max(0, Math.floor(renderCamera.y) - 1);
-  const endY = Math.min(MAP_H - 1, Math.ceil(renderCamera.y + renderCamera.height) + 1);
-
-  for (let y = startY; y <= endY; y += 1) {
-    for (let x = startX; x <= endX; x += 1) {
-      if (!game.seen[y][x]) continue;
-      if (!game.visible[y][x]) {
-        const { x: px, y: py } = toScreen(x, y);
-        ctx.fillStyle = palette.fog;
-        ctx.fillRect(px, py, TILE, TILE);
-      }
-    }
-  }
-}
-
-function drawMiniMap() {
-  const sx = miniCanvas.width / MAP_W;
-  const sy = miniCanvas.height / MAP_H;
-  miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
-  miniCtx.fillStyle = "#070807";
-  miniCtx.fillRect(0, 0, miniCanvas.width, miniCanvas.height);
-
-  for (let y = 0; y < MAP_H; y += 1) {
-    for (let x = 0; x < MAP_W; x += 1) {
-      if (!game.seen[y][x]) continue;
-      if (game.map[y][x] === "wall") {
-        miniCtx.fillStyle = game.visible[y][x] ? "#3c4239" : "#20231f";
-      } else {
-        miniCtx.fillStyle = game.visible[y][x] ? "#82725b" : "#3b352d";
-      }
-      miniCtx.fillRect(Math.floor(x * sx), Math.floor(y * sy), Math.ceil(sx), Math.ceil(sy));
-    }
-  }
-
-  if (game.seen[game.stairs.y][game.stairs.x]) {
-    miniCtx.fillStyle = palette.brass;
-    miniCtx.fillRect(game.stairs.x * sx, game.stairs.y * sy, sx + 1, sy + 1);
-  }
-
-  for (const seal of game.seals) {
-    miniCtx.fillStyle = seal.active ? "#fff5df" : seal.color;
-    miniCtx.fillRect(seal.x * sx - 1, seal.y * sy - 1, sx + 3, sy + 3);
-  }
-
-  for (const enemy of game.enemies) {
-    if (!isVisible(enemy.x, enemy.y)) continue;
-    miniCtx.fillStyle = palette.coral;
-    miniCtx.fillRect(enemy.x * sx, enemy.y * sy, sx + 1, sy + 1);
-  }
-
-  for (const player of game.players) {
-    miniCtx.fillStyle = player.color;
-    miniCtx.fillRect(player.x * sx - 1, player.y * sy - 1, sx + 3, sy + 3);
-  }
-}
-
-function updateEffects(dt) {
-  for (const effect of game.effects) {
-    effect.life -= dt;
-  }
-  game.effects = game.effects.filter((effect) => effect.life > 0);
-}
-
-function drawSprite(index, x, y, width = TILE, height = TILE) {
-  if (!spriteSheet.complete || !spriteSheet.naturalWidth) return false;
-  const col = index % SPRITE_COLS;
-  const row = Math.floor(index / SPRITE_COLS);
-  const sx = col * (SPRITE_TILE + SPRITE_MARGIN);
-  const sy = row * (SPRITE_TILE + SPRITE_MARGIN);
-  ctx.drawImage(spriteSheet, sx, sy, SPRITE_TILE, SPRITE_TILE, x, y, width, height);
-  return true;
-}
-
-function pickSprite(list, x, y, salt) {
-  return list[Math.floor(noise(x, y, salt) * list.length) % list.length];
-}
-
-function addEffect(kind, x, y, color) {
-  game.effects.push({ kind, x, y, color, life: 260, maxLife: 260 });
-}
-
-function addRingEffect(x, y, color) {
-  game.effects.push({ kind: "ring", x, y, color, life: 520, maxLife: 520 });
-}
-
-function addFloatingText(x, y, text, color) {
-  game.effects.push({ kind: "floating", x, y, text, color, life: 760, maxLife: 760 });
-}
-
-function makeGrid(value) {
-  return Array.from({ length: MAP_H }, () => Array.from({ length: MAP_W }, () => value));
-}
-
-function rectsOverlap(a, b, padding) {
+function overlaps(a, b, padding = 0) {
   return !(
     a.x + a.w + padding < b.x ||
     b.x + b.w + padding < a.x ||
@@ -1571,105 +4698,27 @@ function rectsOverlap(a, b, padding) {
   );
 }
 
-function centerOf(room) {
-  return {
-    x: Math.floor(room.x + room.w / 2),
-    y: Math.floor(room.y + room.h / 2),
-  };
+function makeGrid(value) {
+  return Array.from({ length: MAP_H }, () => Array.from({ length: MAP_W }, () => value));
 }
 
-function farthestRoomFrom(point) {
-  let selected = game.rooms[0];
-  let best = -1;
-  for (const room of game.rooms) {
-    const center = centerOf(room);
-    const score = manhattan(point.x, point.y, center.x, center.y);
-    if (score > best) {
-      selected = room;
-      best = score;
-    }
-  }
-  return selected;
+function pickSprite(list, x, y, salt) {
+  return list[Math.floor(noise(x, y, salt) * list.length) % list.length];
 }
 
-function randomOpenSpot(minDistanceFromStart = 0) {
-  const start = game.players[0] || { x: 0, y: 0 };
-  for (let i = 0; i < 400; i += 1) {
-    const room = game.rooms[randInt(0, game.rooms.length - 1)];
-    const x = randInt(room.x, room.x + room.w - 1);
-    const y = randInt(room.y, room.y + room.h - 1);
-    if (!isWalkable(x, y)) continue;
-    if (manhattan(start.x, start.y, x, y) < minDistanceFromStart) continue;
-    if (blockedByActor(x, y)) continue;
-    if (game.items.some((item) => item.x === x && item.y === y)) continue;
-    if (game.seals?.some((seal) => seal.x === x && seal.y === y)) continue;
-    if (x === game.stairs.x && y === game.stairs.y) continue;
-    return { x, y };
-  }
-  return null;
-}
-
-function nearestOpen(x, y, blocked) {
-  const queue = [{ x, y }];
-  const visited = makeGrid(false);
-  if (inBounds(x, y)) visited[y][x] = true;
-  while (queue.length > 0) {
-    const point = queue.shift();
-    const blockedHere = blocked.some((candidate) => candidate.x === point.x && candidate.y === point.y);
-    if (isWalkable(point.x, point.y) && !blockedHere) return point;
-    for (const dir of dirs) {
-      const nx = point.x + dir.x;
-      const ny = point.y + dir.y;
-      if (!inBounds(nx, ny) || visited[ny][nx]) continue;
-      visited[ny][nx] = true;
-      queue.push({ x: nx, y: ny });
-    }
-  }
-  return { x, y };
-}
-
-function isWalkable(x, y) {
-  return inBounds(x, y) && game.map[y][x] !== "wall";
-}
-
-function inBounds(x, y) {
-  return x >= 0 && y >= 0 && x < MAP_W && y < MAP_H;
-}
-
-function enemyAt(x, y) {
-  return game.enemies.find((enemy) => enemy.x === x && enemy.y === y);
-}
-
-function blockedByActor(x, y) {
-  return Boolean(
-    enemyAt(x, y) ||
-      game.players.some((player) => player.x === x && player.y === y),
-  );
-}
-
-function livingPlayers() {
-  return game.players.filter((player) => !player.down);
-}
-
-function nearestLivingPlayer(source) {
-  let best = null;
-  let bestDistance = Infinity;
-  for (const player of livingPlayers()) {
-    const d = manhattan(source.x, source.y, player.x, player.y);
-    if (d < bestDistance) {
-      best = player;
-      bestDistance = d;
-    }
-  }
-  return best;
-}
-
-function isVisible(x, y) {
-  return inBounds(x, y) && game.visible[y][x];
+function itemColor(kind, item) {
+  if (kind === "gear") return item?.gear?.color || "#f2c76b";
+  if (itemCatalog[kind]) return itemCatalog[kind].color;
+  if (kind === "badge") return palette.violet;
+  return palette.white;
 }
 
 function distance(a, b) {
   return Math.hypot(a.x - b.x, a.y - b.y);
+}
+
+function gridDistance(a, b) {
+  return Math.max(Math.abs(a.x - b.x), Math.abs(a.y - b.y));
 }
 
 function manhattan(x1, y1, x2, y2) {
@@ -1689,29 +4738,14 @@ function weighted(items) {
   let roll = Math.random() * total;
   for (const item of items) {
     roll -= item.weight;
-    if (roll <= 0) return item;
+    if (roll <= 0) return item.value;
   }
-  return items[items.length - 1];
+  return items[items.length - 1].value;
 }
 
 function noise(x, y, salt) {
   const value = Math.sin((x * 127.1 + y * 311.7 + salt * 74.7) * 12.9898) * 43758.5453;
   return value - Math.floor(value);
-}
-
-function shade(hex, amount) {
-  const n = parseInt(hex.slice(1), 16);
-  const r = Math.max(0, Math.min(255, Math.floor(((n >> 16) & 255) * amount)));
-  const g = Math.max(0, Math.min(255, Math.floor(((n >> 8) & 255) * amount)));
-  const b = Math.max(0, Math.min(255, Math.floor((n & 255) * amount)));
-  return `rgb(${r},${g},${b})`;
-}
-
-function itemColor(kind) {
-  if (kind === "herb") return palette.moss;
-  if (kind === "guard") return palette.violet;
-  if (kind === "bell") return palette.brass;
-  return palette.brass;
 }
 
 function cryptoId() {
@@ -1727,67 +4761,401 @@ function readBestScore() {
   }
 }
 
+function readSoundSetting() {
+  try {
+    return localStorage.getItem(SOUND_KEY) !== "off";
+  } catch {
+    return true;
+  }
+}
+
+function ensureAudio() {
+  if (!soundEnabled) return null;
+  if (!audioContext) {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return null;
+    audioContext = new AudioContextClass();
+  }
+  if (audioContext.state === "suspended") audioContext.resume();
+  return audioContext;
+}
+
+function playTone(frequency, duration, type = "square", volume = 0.035, delay = 0) {
+  const audio = ensureAudio();
+  if (!audio) return;
+  const start = audio.currentTime + delay;
+  const oscillator = audio.createOscillator();
+  const gain = audio.createGain();
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(frequency, start);
+  gain.gain.setValueAtTime(0.0001, start);
+  gain.gain.exponentialRampToValueAtTime(volume, start + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+  oscillator.connect(gain);
+  gain.connect(audio.destination);
+  oscillator.start(start);
+  oscillator.stop(start + duration + 0.02);
+}
+
+function playSfx(name) {
+  if (!soundEnabled) return;
+  const patterns = {
+    attack: [[210, 0.07, "square", 0.035, 0], [150, 0.08, "square", 0.025, 0.05]],
+    miss: [[120, 0.06, "triangle", 0.018, 0]],
+    hit: [[95, 0.06, "sawtooth", 0.024, 0]],
+    hurt: [[82, 0.14, "sawtooth", 0.045, 0]],
+    move: [[360, 0.07, "triangle", 0.025, 0], [520, 0.1, "triangle", 0.02, 0.05]],
+    pickup: [[520, 0.07, "square", 0.02, 0], [700, 0.09, "square", 0.02, 0.06]],
+    gear: [[330, 0.08, "triangle", 0.025, 0], [495, 0.12, "triangle", 0.028, 0.07]],
+    item: [[440, 0.08, "sine", 0.03, 0], [660, 0.12, "sine", 0.025, 0.06]],
+    material: [[420, 0.08, "triangle", 0.025, 0], [620, 0.08, "triangle", 0.025, 0.07], [840, 0.14, "sine", 0.03, 0.14]],
+    warning: [[170, 0.12, "square", 0.03, 0], [170, 0.12, "square", 0.03, 0.16]],
+    karma: [[180, 0.18, "sawtooth", 0.04, 0], [115, 0.26, "sawtooth", 0.045, 0.14]],
+    rescue: [[440, 0.1, "triangle", 0.025, 0], [660, 0.1, "triangle", 0.028, 0.08], [880, 0.18, "sine", 0.03, 0.16]],
+    level: [[392, 0.08, "square", 0.025, 0], [523, 0.08, "square", 0.025, 0.08], [784, 0.2, "triangle", 0.03, 0.16]],
+    stairs: [[260, 0.1, "triangle", 0.025, 0], [390, 0.12, "triangle", 0.025, 0.08]],
+    depart: [[294, 0.1, "triangle", 0.025, 0], [440, 0.16, "triangle", 0.03, 0.1]],
+    upgrade: [[440, 0.08, "square", 0.02, 0], [554, 0.08, "square", 0.02, 0.07], [659, 0.15, "square", 0.025, 0.14]],
+    evolve: [[220, 0.18, "triangle", 0.03, 0], [330, 0.18, "triangle", 0.03, 0.12], [494, 0.22, "triangle", 0.035, 0.24], [740, 0.38, "sine", 0.04, 0.38]],
+    victory: [[392, 0.14, "square", 0.025, 0], [523, 0.14, "square", 0.025, 0.12], [659, 0.14, "square", 0.025, 0.24], [784, 0.32, "triangle", 0.035, 0.36]],
+  };
+  for (const tone of patterns[name] || []) playTone(...tone);
+}
+
+function toggleSound() {
+  soundEnabled = !soundEnabled;
+  try {
+    localStorage.setItem(SOUND_KEY, soundEnabled ? "on" : "off");
+  } catch {
+    // Private browsing can disable storage.
+  }
+  updateSoundButton();
+  if (soundEnabled) playSfx("pickup");
+}
+
+function updateSoundButton() {
+  if (!ui.soundButton) return;
+  ui.soundButton.classList.toggle("muted", !soundEnabled);
+  ui.soundButton.title = soundEnabled ? "音を消す" : "音を出す";
+  ui.soundButton.setAttribute("aria-label", ui.soundButton.title);
+}
+
 function saveBestScore() {
   if (!game || game.score <= bestScore) return;
   bestScore = game.score;
   try {
     localStorage.setItem(STORAGE_KEY, String(bestScore));
   } catch {
-    // Local storage can be disabled in private browsing.
+    // Private browsing can disable storage.
+  }
+}
+
+function saveSlotKey(slot) {
+  return `${SAVE_KEY}:${slot}`;
+}
+
+function readSaveSlot(slot) {
+  try {
+    const value = localStorage.getItem(saveSlotKey(slot));
+    return value ? JSON.parse(value) : null;
+  } catch {
+    return null;
+  }
+}
+
+function serializeGame() {
+  return {
+    version: 4,
+    savedAt: new Date().toISOString(),
+    completedDungeon: game.completedDungeon,
+    coins: game.coins,
+    rescuePoints: game.rescuePoints,
+    storage: { ...game.storage },
+    bag: { ...game.bag },
+    selectedTownMission: game.selectedTownMission,
+    selectedCharacter: game.selectedCharacter,
+    trainingLevel: game.trainingLevel,
+    bagCapacity: game.bagCapacity,
+    karma: game.karma,
+    gearBag: game.gearBag.map((gear) => ({ ...gear })),
+    equipment: { ...game.equipment },
+  };
+}
+
+function saveCurrentGame(silent = false) {
+  if (!game?.saveSlot) {
+    if (!silent) openSaveDialog(false);
+    return false;
+  }
+  if (game.mode !== "town" && !silent) {
+    showToast("セーブは町で行える");
+    return false;
+  }
+  try {
+    localStorage.setItem(saveSlotKey(game.saveSlot), JSON.stringify(serializeGame()));
+    if (!silent) {
+      showToast(`セーブ${game.saveSlot}に記録した`);
+      renderSaveSlots(false);
+    }
+    return true;
+  } catch {
+    if (!silent) showToast("セーブに失敗した");
+    return false;
+  }
+}
+
+function loadSaveSlot(slot) {
+  const saved = readSaveSlot(slot);
+  if (!saved) return false;
+  game.saveSlot = slot;
+  game.completedDungeon = clamp(Number(saved.completedDungeon ?? saved.completedChapter) || 0, 0, 5);
+  game.coins = Math.max(0, Number(saved.coins) || 0);
+  game.rescuePoints = Math.max(0, Number(saved.rescuePoints) || 0);
+  game.storage = { ...game.storage, ...(saved.storage || {}) };
+  game.bag = { ...game.bag, ...(saved.bag || {}) };
+  game.trainingLevel = clamp(Number(saved.trainingLevel) || 0, 0, 3);
+  game.bagCapacity = clamp(Number(saved.bagCapacity) || BASE_BAG_CAPACITY, BASE_BAG_CAPACITY, MAX_BAG_CAPACITY);
+  game.karma = Math.max(0, Number(saved.karma) || 0);
+  game.skillPoints = 1;
+  game.unlockedSkills = [];
+  game.runStats = createRunStats();
+  game.gearBag = Array.isArray(saved.gearBag) ? saved.gearBag.slice(0, 24) : [];
+  game.equipment = { weapon: null, armor: null, charm: null, ...(saved.equipment || {}) };
+  for (const slot of Object.keys(game.equipment)) {
+    if (!game.gearBag.some((gear) => gear.id === game.equipment[slot] && gear.slot === slot)) {
+      game.equipment[slot] = null;
+    }
+  }
+  const selectedKey = game.roster[saved.selectedCharacter] ? saved.selectedCharacter : "kohaku";
+  game.selectedCharacter = selectedKey;
+  const leader = createLeader(selectedKey);
+  leader.atk += game.trainingLevel;
+  for (const gearId of Object.values(game.equipment)) {
+    applyGearBonus(leader, game.gearBag.find((gear) => gear.id === gearId), 1);
+  }
+  game.roster[selectedKey] = leader;
+  game.team = [leader];
+  const maxMission = Math.min(townMissions.length - 1, game.completedDungeon);
+  game.selectedTownMission = clamp(Number(saved.selectedTownMission) || 0, 0, maxMission);
+  game.mode = "town";
+  game.gameOver = false;
+  game.victory = false;
+  ui.endOverlay.hidden = true;
+  updateAll();
+  if ((saved.version || 0) < 4) saveCurrentGame(true);
+  return true;
+}
+
+function openSaveDialog(initial = false) {
+  if (!initial && game.mode !== "town") {
+    showToast("セーブは町で行える");
+    return;
+  }
+  ui.saveDialog.dataset.initial = initial ? "true" : "false";
+  ui.saveDialogClose.hidden = initial;
+  ui.saveDialogNote.textContent = initial
+    ? "3つの記録から、遊ぶデータを選んでください。"
+    : `使用中: セーブ${game.saveSlot || "-"}。町の状態を記録できます。`;
+  renderSaveSlots(initial);
+  if (!ui.saveDialog.open) ui.saveDialog.showModal();
+}
+
+function renderSaveSlots(initial = ui.saveDialog.dataset.initial === "true") {
+  ui.saveSlotList.innerHTML = "";
+  for (let slot = 1; slot <= SAVE_SLOT_COUNT; slot += 1) {
+    const saved = readSaveSlot(slot);
+    const active = game.saveSlot === slot;
+    const entry = document.createElement("article");
+    entry.className = `save-slot ${active ? "active" : ""}`;
+    const date = saved?.savedAt
+      ? new Intl.DateTimeFormat("ja-JP", { dateStyle: "short", timeStyle: "short" }).format(new Date(saved.savedAt))
+      : "";
+    const leaderProfile = characterCatalog.find((profile) => profile.key === saved?.selectedCharacter);
+    const cleared = clamp(Number(saved?.completedDungeon ?? saved?.completedChapter) || 0, 0, 5);
+    const progressName = cleared >= 5 ? "全迷宮制覇" : `次は迷宮 ${cleared + 1}/5`;
+    entry.innerHTML = `
+      <span class="save-slot-number">${slot}</span>
+      <div class="save-slot-copy">
+        <strong>${saved ? `${progressName} / ${leaderProfile?.name || "コハク"}` : "新しい冒険"}</strong>
+        <span>${saved ? `制覇 ${cleared}/5　${saved.coins || 0}星貨　救助pt ${saved.rescuePoints || 0}` : "まだ記録はありません"}</span>
+        <small>${saved ? `${date}${active ? "　使用中" : ""}` : "この枠で迷宮攻略を始める"}</small>
+      </div>
+    `;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = initial
+      ? saved ? "続きから" : "ここで始める"
+      : active ? "上書き保存" : saved ? "この記録で遊ぶ" : "新しく始める";
+    button.addEventListener("click", () => {
+      if (!initial && active) {
+        saveCurrentGame(false);
+        return;
+      }
+      if (saved) {
+        loadSaveSlot(slot);
+      } else {
+        if (!initial) createGame();
+        game.saveSlot = slot;
+        saveCurrentGame(true);
+        updateAll();
+      }
+      ui.saveDialog.close();
+      showToast(saved ? `セーブ${slot}を読み込んだ` : `セーブ${slot}で冒険を始める`);
+    });
+    entry.appendChild(button);
+    ui.saveSlotList.appendChild(entry);
   }
 }
 
 function handleKey(event) {
-  if (event.repeat) return;
-  const key = event.key.toLowerCase();
   const activeTag = document.activeElement?.tagName;
-  if (activeTag === "BUTTON" && key === " ") return;
+  if (["INPUT", "TEXTAREA", "SELECT"].includes(activeTag)) return;
+  const key = event.key.toLowerCase();
+  const code = event.code;
+
+  if (ui.townDialog.open || ui.helpDialog.open || ui.saveDialog.open || ui.stairsDialog.open) return;
+  if (key === "q") {
+    if (event.repeat) return;
+    event.preventDefault();
+    toggleGameMenu("moves");
+    return;
+  }
+  if (ui.gameMenuDialog.open || game.mode !== "dungeon") return;
 
   const actions = {
-    w: { player: 0, type: "move", dx: 0, dy: -1 },
-    a: { player: 0, type: "move", dx: -1, dy: 0 },
-    s: { player: 0, type: "move", dx: 0, dy: 1 },
-    d: { player: 0, type: "move", dx: 1, dy: 0 },
-    e: { player: 0, type: "skill" },
-    " ": { player: 0, type: "wait" },
-    arrowup: { player: 1, type: "move", dx: 0, dy: -1 },
-    arrowleft: { player: 1, type: "move", dx: -1, dy: 0 },
-    arrowdown: { player: 1, type: "move", dx: 0, dy: 1 },
-    arrowright: { player: 1, type: "move", dx: 1, dy: 0 },
-    "/": { player: 1, type: "skill" },
-    enter: { player: 1, type: "wait" },
+    w: { type: "move", dx: 0, dy: -1 },
+    a: { type: "move", dx: -1, dy: 0 },
+    s: { type: "move", dx: 0, dy: 1 },
+    d: { type: "move", dx: 1, dy: 0 },
+    arrowup: { type: "move", dx: 0, dy: -1 },
+    arrowleft: { type: "move", dx: -1, dy: 0 },
+    arrowdown: { type: "move", dx: 0, dy: 1 },
+    arrowright: { type: "move", dx: 1, dy: 0 },
+    y: { type: "move", dx: -1, dy: -1 },
+    u: { type: "move", dx: 1, dy: -1 },
+    b: { type: "move", dx: -1, dy: 1 },
+    n: { type: "move", dx: 1, dy: 1 },
+    home: { type: "move", dx: -1, dy: -1 },
+    pageup: { type: "move", dx: 1, dy: -1 },
+    end: { type: "move", dx: -1, dy: 1 },
+    pagedown: { type: "move", dx: 1, dy: 1 },
+    " ": { type: "wait" },
+    ".": { type: "wait" },
+    f: { type: "basicAttack" },
+    j: { type: "useMove" },
+    r: { type: "eatApple" },
+    e: { type: "cycleMove" },
   };
 
-  const action = actions[key];
+  const numpadActions = {
+    Numpad8: { type: "move", dx: 0, dy: -1 },
+    Numpad9: { type: "move", dx: 1, dy: -1 },
+    Numpad6: { type: "move", dx: 1, dy: 0 },
+    Numpad3: { type: "move", dx: 1, dy: 1 },
+    Numpad2: { type: "move", dx: 0, dy: 1 },
+    Numpad1: { type: "move", dx: -1, dy: 1 },
+    Numpad4: { type: "move", dx: -1, dy: 0 },
+    Numpad7: { type: "move", dx: -1, dy: -1 },
+    Numpad5: { type: "wait" },
+  };
+
+  if (/^[1-4]$/.test(key) && !code.startsWith("Numpad")) {
+    if (event.repeat) return;
+    event.preventDefault();
+    performAction({ type: "selectMove", index: Number(key) - 1 });
+    return;
+  }
+
+  const action = numpadActions[code] || actions[key];
   if (!action) return;
+  if (event.repeat && action.type !== "move") return;
   event.preventDefault();
-  performAction(action.player, action);
+  if (action.type === "move" && event.shiftKey) {
+    performAction({ ...action, type: "face" });
+    return;
+  }
+  if (action.type === "move") {
+    const now = performance.now();
+    if (now < game.nextMoveAt) return;
+    game.nextMoveAt = now + 125;
+  }
+  performAction(action);
 }
 
 function bindEvents() {
   document.addEventListener("keydown", handleKey);
-  ui.restartButton.addEventListener("click", createGame);
+  ui.soundButton.addEventListener("click", toggleSound);
+  ui.restartButton.addEventListener("click", () => {
+    if (game.mode === "dungeon") returnToTown();
+    else openTownFacility("board");
+  });
   ui.endRestartButton.addEventListener("click", () => {
     ui.endOverlay.hidden = true;
-    createGame();
+    returnToTown();
   });
   ui.helpButton.addEventListener("click", () => ui.helpDialog.showModal());
+  ui.saveButton.addEventListener("click", () => openSaveDialog(false));
+  ui.saveDialog.addEventListener("cancel", (event) => {
+    if (!game.saveSlot) event.preventDefault();
+  });
+  ui.stairsStayButton.addEventListener("click", stayOnCurrentFloor);
+  ui.stairsProceedButton.addEventListener("click", proceedThroughStairs);
+  ui.stairsDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    stayOnCurrentFloor();
+  });
+  ui.gameMenuButton.addEventListener("click", () => toggleGameMenu("moves"));
+  ui.departButton.addEventListener("click", startExpedition);
+  canvas.addEventListener("mousemove", (event) => {
+    if (game.mode !== "dungeon") return;
+    game.aimDirection = directionFromPointer(event);
+  });
+  canvas.addEventListener("mouseleave", () => {
+    game.aimDirection = null;
+  });
+  canvas.addEventListener("click", (event) => {
+    if (event.button !== 0 || game.mode !== "dungeon") return;
+    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open) return;
+    const direction = directionFromPointer(event);
+    game.aimDirection = direction;
+    performAction({ type: "basicAttack", dx: direction.x, dy: direction.y });
+  });
+  canvas.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    if (game.mode !== "dungeon") return;
+    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open) return;
+    const direction = directionFromPointer(event);
+    game.aimDirection = direction;
+    const leader = getLeader();
+    leader.dx = direction.x;
+    leader.dy = direction.y;
+    performAction({ type: "useMove" });
+  });
+
+  document.querySelectorAll("[data-menu-view]").forEach((button) => {
+    button.addEventListener("click", () => renderGameMenu(button.dataset.menuView));
+  });
+
+  document.querySelectorAll("[data-town-action]").forEach((button) => {
+    button.addEventListener("click", () => openTownFacility(button.dataset.townAction));
+  });
 
   document.querySelectorAll("[data-action]").forEach((button) => {
     button.addEventListener("click", () => {
       const action = {
-        player: Number(button.dataset.player),
         type: button.dataset.action,
         dx: Number(button.dataset.dx || 0),
         dy: Number(button.dataset.dy || 0),
       };
-      performAction(action.player, action);
+      performAction(action);
     });
   });
 }
 
 bindEvents();
 createGame();
+updateSoundButton();
+window.setTimeout(() => openSaveDialog(true), 0);
 spriteSheet.addEventListener("load", () => {
   if (game) updateAll();
 });

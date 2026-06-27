@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>ふたりの星屑ダンジョン</title>
+    <title>星屑救助隊</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
@@ -14,25 +14,37 @@
             <span></span>
           </span>
           <div>
-            <h1>ふたりの星屑ダンジョン</h1>
-            <p>星核を探す協力ターン制ローグライク</p>
+            <h1>星屑救助隊</h1>
+            <p>5つの迷宮へ何度も挑む、ローグライク救助隊</p>
           </div>
         </div>
 
         <div class="run-strip" aria-live="polite">
           <span><b>階層</b><strong id="floorLabel">B1F</strong></span>
-          <span><b>スコア</b><strong id="scoreLabel">0 pt</strong></span>
-          <span><b>記録</b><strong id="bestLabel">Best 0</strong></span>
+          <span><b>救助pt</b><strong id="scoreLabel">0 pt</strong></span>
+          <span><b>最高記録</b><strong id="bestLabel">Best 0</strong></span>
         </div>
 
         <div class="top-actions">
-          <button id="helpButton" class="icon-button" type="button" title="操作" aria-label="操作">
+          <button id="soundButton" class="icon-button" type="button" title="音を切り替える" aria-label="音を切り替える">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 9v6h4l5 4V5L9 9z" />
+              <path class="sound-wave" d="M17 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12" />
+            </svg>
+          </button>
+          <button id="saveButton" class="icon-button" type="button" title="セーブデータ" aria-label="セーブデータ">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M5 4h12l2 2v14H5z" />
+              <path d="M8 4v6h8V4M8 20v-6h8v6" />
+            </svg>
+          </button>
+          <button id="helpButton" class="icon-button" type="button" title="遊び方" aria-label="遊び方">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M12 17h.01M9.2 9a3 3 0 1 1 5.2 2c-1.3 1-2.4 1.7-2.4 3" />
               <circle cx="12" cy="12" r="9" />
             </svg>
           </button>
-          <button id="restartButton" class="icon-button" type="button" title="新しい冒険" aria-label="新しい冒険">
+          <button id="restartButton" class="icon-button" type="button" title="新しい依頼" aria-label="新しい依頼">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M4 12a8 8 0 0 1 13.7-5.7L20 8" />
               <path d="M20 4v4h-4" />
@@ -43,51 +55,152 @@
         </div>
       </header>
 
-      <main class="game-layout">
+      <section id="townScreen" class="town-screen" aria-label="星見広場">
+        <canvas id="townCanvas" width="1152" height="690"></canvas>
+        <div class="town-title">
+          <span>救助隊の拠点</span>
+          <strong>星見広場</strong>
+          <small id="townMissionLabel">依頼を選んで出発しよう</small>
+        </div>
+        <div class="town-status" aria-live="polite">
+          <span><b>ランク</b><strong id="townRankLabel">見習い</strong></span>
+          <span><b>星貨</b><strong id="townCoinLabel">160</strong></span>
+        </div>
+        <button class="town-leader-select" type="button" data-town-action="characters">
+          <i id="townLeaderSwatch" aria-hidden="true"></i>
+          <span>
+            <small>唯一の探索者</small>
+            <strong id="townLeaderName">コハク</strong>
+            <em id="townLeaderType">星水タイプ</em>
+          </span>
+          <b>進化</b>
+        </button>
+        <button class="town-spot town-spot-board" type="button" data-town-action="board">
+          <strong>ダンジョン門</strong>
+          <span>次の挑戦を選ぶ</span>
+        </button>
+        <button class="town-spot town-spot-shop" type="button" data-town-action="shop">
+          <strong>星の商店</strong>
+          <span>道具をそろえる</span>
+        </button>
+        <button class="town-spot town-spot-storage" type="button" data-town-action="storage">
+          <strong>風見倉庫</strong>
+          <span>食料を預ける</span>
+        </button>
+        <button class="town-spot town-spot-training" type="button" data-town-action="training">
+          <strong>月影道場</strong>
+          <span>回復と訓練</span>
+        </button>
+        <button class="town-spot town-spot-guild" type="button" data-town-action="guild">
+          <strong>救助隊本部</strong>
+          <span>隊の記録を見る</span>
+        </button>
+        <button id="departButton" class="town-depart" type="button">
+          <span>選択中の依頼へ</span>
+          <strong>ダンジョンに出発</strong>
+        </button>
+      </section>
+
+      <main id="gameLayout" class="game-layout" hidden>
         <section class="stage-panel" aria-label="ダンジョン">
           <canvas id="gameCanvas" width="1152" height="768"></canvas>
           <div id="toast" class="toast" hidden></div>
+          <div id="eventBanner" class="event-banner" hidden aria-live="assertive">
+            <span id="eventIcon" class="event-icon">!</span>
+            <div>
+              <strong id="eventTitle">発見</strong>
+              <small id="eventDetail"></small>
+            </div>
+          </div>
+          <div class="attack-hint">
+            <span><b>左クリック</b>通常攻撃</span>
+            <span><b>右クリック</b>選択技</span>
+          </div>
+          <div class="terrain-legend" aria-label="地形の意味">
+            <span><i class="terrain-floor"></i>通路</span>
+            <span><i class="terrain-moss"></i>回復苔</span>
+            <span><i class="terrain-crack"></i>亀裂 -2HP</span>
+            <span><i class="terrain-wall"></i>壁</span>
+            <span><i class="terrain-stairs"></i>次の階</span>
+          </div>
         </section>
 
         <aside class="side-panel">
-          <section class="party-panel" aria-label="仲間">
+          <section class="mini-map-panel" aria-label="ミニマップ">
+            <div class="mini-map-title">
+              <strong>FLOOR MAP</strong>
+              <span>訪れた場所だけ記録</span>
+            </div>
+            <canvas id="miniMap" width="220" height="148"></canvas>
+            <div class="mini-map-key" aria-hidden="true">
+              <span><i class="map-leader"></i>自分</span>
+              <span><i class="map-enemy"></i>敵</span>
+              <span><i class="map-item"></i>道具</span>
+              <span><i class="map-target"></i>目的</span>
+              <span><i class="map-stairs"></i>階段</span>
+            </div>
+          </section>
+
+          <section class="party-panel" aria-label="救助隊">
             <div id="partyList" class="party-list"></div>
           </section>
 
-          <section class="guide-panel" aria-label="冒険メモ">
-            <h2>冒険メモ</h2>
+          <section class="guide-panel" aria-label="探索メモ">
+            <h2>探索メモ</h2>
             <div class="guide-grid">
-              <p><strong>目的</strong><span id="goalLabel">二つの紋章を解除</span></p>
-              <p><strong>分担</strong><span>ミナは灯紋、レンは剣紋</span></p>
-              <p><strong>合流</strong><span>近くで戦うと追撃</span></p>
+              <p><strong>目的</strong><span id="goalLabel">階の印を探す</span></p>
+              <p><strong>気質</strong><span id="tacticSummary">清廉</span></p>
+              <p><strong>階段</strong><span>依頼に決着をつけると使える</span></p>
             </div>
+          </section>
+
+          <section class="move-panel menu-launch-panel" aria-label="メニュー">
+            <button id="gameMenuButton" class="menu-launch-button" type="button">
+              <span><b>Q</b> 技を選ぶ</span>
+              <span class="menu-launch-copy">
+                <strong id="moveSummary">灯火弾 12/12</strong>
+                <small>J / 右クリックで発動</small>
+              </span>
+            </button>
           </section>
 
           <section class="run-panel" aria-label="冒険">
             <div class="meter-line">
-              <span>紋章</span>
-              <strong id="sealLabel">0/2</strong>
+              <span>探索先</span>
+              <strong id="chapterLabel">迷宮 1/5</strong>
             </div>
             <div class="meter-line">
-              <span>絆</span>
+              <span>フロア運勢</span>
+              <strong id="luckLabel">平穏</strong>
+            </div>
+            <div class="meter-line">
+              <span>カルマ</span>
+              <strong id="karmaLabel">0</strong>
+            </div>
+            <div class="meter-line">
+              <span>階の封印</span>
+              <strong id="sealLabel">探索中</strong>
+            </div>
+            <div class="meter-line">
+              <span>満腹度</span>
               <strong id="bondLabel">100</strong>
             </div>
             <div class="meter-line">
-              <span>救助ベル</span>
-              <strong id="bellLabel">1</strong>
+              <span>どうぐ</span>
+              <strong id="bellLabel">バッグ 3/20</strong>
             </div>
             <div class="meter-line">
-              <span>次の階段</span>
-              <strong id="stairsLabel">探索中</strong>
+              <span>装備</span>
+              <strong id="gearLabel">0 / 3</strong>
+            </div>
+            <div class="meter-line">
+              <span>階段</span>
+              <strong id="stairsLabel">封印中</strong>
             </div>
             <div class="meter-line">
               <span>ターン</span>
               <strong id="turnLabel">1</strong>
             </div>
-          </section>
-
-          <section class="mini-map-panel" aria-label="ミニマップ">
-            <canvas id="miniMap" width="220" height="148"></canvas>
           </section>
 
           <section class="log-panel" aria-label="ログ">
@@ -97,28 +210,99 @@
         </aside>
       </main>
 
-      <section class="touch-controls" aria-label="タッチ操作">
-        <div class="touch-pad touch-pad-a" aria-label="プレイヤー1">
-          <span>P1</span>
-          <button type="button" data-player="0" data-action="move" data-dx="0" data-dy="-1" aria-label="P1 上">↑</button>
-          <button type="button" data-player="0" data-action="move" data-dx="-1" data-dy="0" aria-label="P1 左">←</button>
-          <button type="button" data-player="0" data-action="wait" aria-label="P1 待機">•</button>
-          <button type="button" data-player="0" data-action="move" data-dx="1" data-dy="0" aria-label="P1 右">→</button>
-          <button type="button" data-player="0" data-action="skill" aria-label="P1 スキル">✦</button>
-          <button type="button" data-player="0" data-action="move" data-dx="0" data-dy="1" aria-label="P1 下">↓</button>
+      <section id="touchControls" class="touch-controls touch-controls-single" aria-label="タッチ操作" hidden>
+        <div class="touch-pad touch-pad-solo" aria-label="主人公操作">
+          <button type="button" data-action="move" data-dx="-1" data-dy="-1" aria-label="左上">↖</button>
+          <button type="button" data-action="move" data-dx="0" data-dy="-1" aria-label="上">↑</button>
+          <button type="button" data-action="move" data-dx="1" data-dy="-1" aria-label="右上">↗</button>
+          <button type="button" data-action="move" data-dx="-1" data-dy="0" aria-label="左">←</button>
+          <button type="button" data-action="wait" aria-label="待機">待</button>
+          <button type="button" data-action="move" data-dx="1" data-dy="0" aria-label="右">→</button>
+          <button type="button" data-action="move" data-dx="-1" data-dy="1" aria-label="左下">↙</button>
+          <button type="button" data-action="move" data-dx="0" data-dy="1" aria-label="下">↓</button>
+          <button type="button" data-action="move" data-dx="1" data-dy="1" aria-label="右下">↘</button>
         </div>
-
-        <div class="touch-pad touch-pad-b" aria-label="プレイヤー2">
-          <span>P2</span>
-          <button type="button" data-player="1" data-action="move" data-dx="0" data-dy="-1" aria-label="P2 上">↑</button>
-          <button type="button" data-player="1" data-action="move" data-dx="-1" data-dy="0" aria-label="P2 左">←</button>
-          <button type="button" data-player="1" data-action="wait" aria-label="P2 待機">•</button>
-          <button type="button" data-player="1" data-action="move" data-dx="1" data-dy="0" aria-label="P2 右">→</button>
-          <button type="button" data-player="1" data-action="skill" aria-label="P2 スキル">✦</button>
-          <button type="button" data-player="1" data-action="move" data-dx="0" data-dy="1" aria-label="P2 下">↓</button>
+        <div class="touch-actions" aria-label="冒険操作">
+          <button type="button" data-action="basicAttack" aria-label="通常攻撃">攻</button>
+          <button type="button" data-action="useMove" aria-label="技を使う">技</button>
+          <button type="button" data-action="eatApple" aria-label="月蜜の実を食べる">食</button>
+          <button type="button" data-action="openMenu" aria-label="メニューを開く">欄</button>
         </div>
       </section>
     </div>
+
+    <dialog id="townDialog" class="town-dialog">
+      <form method="dialog">
+        <header>
+          <div>
+            <span>星見広場</span>
+            <h2 id="townDialogTitle">施設</h2>
+          </div>
+          <button class="icon-button" type="submit" aria-label="閉じる">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </header>
+        <div id="townDialogBody" class="town-dialog-body"></div>
+      </form>
+    </dialog>
+
+    <dialog id="gameMenuDialog" class="game-menu-dialog">
+      <form method="dialog">
+        <header>
+          <div>
+            <span>救助隊メニュー</span>
+            <h2>冒険メニュー</h2>
+          </div>
+          <button class="icon-button" type="submit" aria-label="閉じる">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </header>
+        <nav class="game-menu-tabs" aria-label="メニュー切替">
+          <button type="button" data-menu-view="moves">技</button>
+          <button type="button" data-menu-view="bag">バッグ</button>
+          <button type="button" data-menu-view="gear">装備</button>
+          <button type="button" data-menu-view="evolution">進化</button>
+          <button type="button" data-menu-view="mission">探索</button>
+          <button type="button" data-menu-view="skills">成長</button>
+        </nav>
+        <div id="gameMenuBody" class="game-menu-body"></div>
+      </form>
+    </dialog>
+
+    <dialog id="saveDialog" class="save-dialog">
+      <form method="dialog">
+        <header>
+          <div>
+            <span>冒険の記録</span>
+            <h2>セーブデータ</h2>
+          </div>
+          <button id="saveDialogClose" class="icon-button" type="submit" aria-label="閉じる">
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </header>
+        <p id="saveDialogNote" class="town-note">3つの記録から、遊ぶデータを選んでください。</p>
+        <div id="saveSlotList" class="save-slot-list"></div>
+      </form>
+    </dialog>
+
+    <dialog id="stairsDialog" class="stairs-dialog">
+      <div class="stairs-dialog-mark" aria-hidden="true">↑</div>
+      <div>
+        <span id="stairsDialogKicker">階段を発見</span>
+        <h2 id="stairsDialogTitle">次の階へ進みますか？</h2>
+        <p id="stairsDialogText">この階へは戻れません。</p>
+      </div>
+      <div class="stairs-dialog-actions">
+        <button id="stairsStayButton" type="button">まだ探索する</button>
+        <button id="stairsProceedButton" class="primary-button" type="button">次の階へ</button>
+      </div>
+    </dialog>
 
     <dialog id="helpDialog" class="help-dialog">
       <form method="dialog">
@@ -132,22 +316,53 @@
         </header>
         <div class="control-grid">
           <div>
-            <strong>P1</strong>
-            <span>WASD / E / Space</span>
+            <strong>移動</strong>
+            <span>WASD / 矢印 / テンキーで8方向</span>
           </div>
           <div>
-            <strong>P2</strong>
-            <span>矢印 / スラッシュ / Enter</span>
+            <strong>向きだけ変える</strong>
+            <span>Shift + 移動キー</span>
+          </div>
+          <div>
+            <strong>通常攻撃</strong>
+            <span>盤面を左クリック / F</span>
+          </div>
+          <div>
+            <strong>技</strong>
+            <span>Qで選ぶ、右クリック / Jで発動</span>
+          </div>
+          <div>
+            <strong>待機</strong>
+            <span>Space / .</span>
+          </div>
+          <div>
+            <strong>どうぐ</strong>
+            <span>Rで月蜜の実を食べる</span>
           </div>
         </div>
         <ul class="help-list">
-          <li>二人とも行動すると敵のターンになります。</li>
-          <li>各階には二つの紋章があります。ミナは灯紋、レンは剣紋を踏むと封印を解除できます。</li>
-          <li>二つの紋章を解除するまで階段は使えません。</li>
-          <li>二人が近くで攻撃すると追撃が出ます。離れすぎると絆が下がります。</li>
-          <li>敵の隣へ移動すると攻撃。スキルはクールダウン後に再使用できます。</li>
-          <li>仲間が倒れたら、隣で行動すると救助ベルを使って復帰できます。</li>
-          <li>階段は二人が近くに集まると次の階へ進みます。</li>
+          <li>5つのダンジョンを順番に攻略します。すべての最深部に固有ボスがいます。</li>
+          <li>入るたびにマップ、敵、道具、装備、フロア運勢が変わります。</li>
+          <li>挑戦開始時にレベルと蜘蛛型スキル盤は初期化されます。装備とバッグ拡張は町へ持ち帰れます。</li>
+          <li>3つのセーブ枠に攻略状況、装備、カルマ、バッグ拡張を保存できます。迷宮制覇時は自動保存されます。</li>
+          <li>主人公は星の子コハク一体。行動、レベル、進化素材によって五系統へ進化します。</li>
+          <li>救済・闘争・禁忌の進化は二段階。智樹と星王は厳しい条件を満たす一段階の強力な進化です。</li>
+          <li>一歩動くたびに敵も1手ずつ動きます。</li>
+          <li>移動と通常攻撃は別操作です。敵の方向を左クリックすると攻撃します。</li>
+          <li>依頼人を救うとカルマが1減り、二度攻撃して倒すとカルマが3増えます。</li>
+          <li>ミニマップには訪れた部屋と、実際に歩いた通路だけが記録されます。</li>
+          <li>緑の回復苔は踏むとHPが2回復。赤い亀裂は踏むと2ダメージです。</li>
+          <li>先遣員を救うか、禁じられた決着を選ぶと階段が開きます。最深部ではボスを倒す必要があります。</li>
+          <li>開いた階段に乗ると、次へ進むか、この階の探索を続けるか選べます。</li>
+          <li>武器・防具・お守りは、最初の1個を自動装備します。装備は持ち越され、Qメニューで付け替えられます。</li>
+          <li>装備は星1コモンから星5レジェンドまで。星が多いほど補正が強くなります。</li>
+          <li>金色の輪郭とRARE表示を持つ敵は非常に珍しく、倒すと星3以上の装備を落とします。</li>
+          <li>各階の運勢によって、道具の数、敵の数、回復、増援、落とし物が変化します。</li>
+          <li>満腹度はゆっくり減ります。月蜜の実を拾ったら、Rで食べて回復できます。</li>
+          <li>敵の隣へ移動しても攻撃はしません。左クリックまたはFで通常攻撃、Jで選択中の技を使います。</li>
+          <li>敵タイプごとに進化素材が異なります。レア敵とボスは「覇星の核」を落とすことがあります。</li>
+          <li>バッグは初期20枠。町の商店で星貨を払うと、最大40枠まで永久に拡張できます。</li>
+          <li>主人公が倒れると冒険終了です。</li>
         </ul>
         <p class="credit-line">素材: Kenney Roguelike/RPG Pack (CC0)</p>
       </form>
