@@ -6289,9 +6289,16 @@ function saveCurrentGame(silent = false) {
 function loadSaveSlot(slot) {
   const saved = readSaveSlot(slot);
   if (!saved) return false;
+  const saveVersion = Number(saved.version) || 0;
   game.saveSlot = slot;
-  game.completedDungeon = clamp(Number(saved.completedDungeon ?? saved.completedChapter) || 0, 0, 1);
-  game.highestFloor = clamp(Number(saved.highestFloor) || (game.completedDungeon ? 100 : 1), 1, 100);
+  game.completedDungeon = saveVersion >= 6
+    ? clamp(Number(saved.completedDungeon ?? saved.completedChapter) || 0, 0, 1)
+    : 0;
+  game.highestFloor = clamp(
+    Number(saved.highestFloor) || (saveVersion >= 6 && game.completedDungeon ? 100 : 1),
+    1,
+    100,
+  );
   const savedEvolution = evolutionCatalog.find((entry) => entry.key === saved.persistentEvolutionKey);
   game.persistentEvolutionKey = savedEvolution?.key || "base";
   game.persistentEvolutionStage = savedEvolution?.stage || 0;
@@ -6370,7 +6377,12 @@ function renderSaveSlots(initial = ui.saveDialog.dataset.initial === "true") {
       ? new Intl.DateTimeFormat("ja-JP", { dateStyle: "short", timeStyle: "short" }).format(new Date(saved.savedAt))
       : "";
     const leaderProfile = characterCatalog.find((profile) => profile.key === saved?.selectedCharacter);
-    const highestFloor = clamp(Number(saved?.highestFloor) || ((saved?.completedDungeon || saved?.completedChapter) ? 100 : 1), 1, 100);
+    const savedVersion = Number(saved?.version) || 0;
+    const highestFloor = clamp(
+      Number(saved?.highestFloor) || (savedVersion >= 6 && (saved?.completedDungeon || saved?.completedChapter) ? 100 : 1),
+      1,
+      100,
+    );
     const evolution = evolutionCatalog.find((entry) => entry.key === saved?.persistentEvolutionKey);
     const progressName = highestFloor >= 100 ? "百階踏破" : `最高 B${highestFloor}F`;
     entry.innerHTML = `
