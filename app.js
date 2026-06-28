@@ -1,7 +1,7 @@
 const TILE = 48;
 const MAP_W = 36;
 const MAP_H = 24;
-const TARGET_FLOOR = 5;
+const TARGET_FLOOR = 100;
 const VISION_RADIUS = 7;
 const BASE_BAG_CAPACITY = 20;
 const MAX_BAG_CAPACITY = 40;
@@ -29,6 +29,11 @@ const townCanvas = document.querySelector("#townCanvas");
 const townCtx = townCanvas.getContext("2d");
 const spriteSheet = new Image();
 spriteSheet.src = "assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png";
+const mapTokenSheet = new Image();
+mapTokenSheet.src = "assets/tokens/map-token-atlas-v4.jpg?v=pwa4";
+const mapTokenCanvas = document.createElement("canvas");
+const mapTokenCtx = mapTokenCanvas.getContext("2d", { willReadFrequently: true });
+let mapTokenReady = false;
 
 const ui = {
   floor: document.querySelector("#floorLabel"),
@@ -40,6 +45,7 @@ const ui = {
   materials: document.querySelector("#materialLabel"),
   gear: document.querySelector("#gearLabel"),
   goal: document.querySelector("#goalLabel"),
+  rest: document.querySelector("#restLabel"),
   stairs: document.querySelector("#stairsLabel"),
   turn: document.querySelector("#turnLabel"),
   party: document.querySelector("#partyList"),
@@ -61,6 +67,11 @@ const ui = {
   stairsDialogText: document.querySelector("#stairsDialogText"),
   stairsStayButton: document.querySelector("#stairsStayButton"),
   stairsProceedButton: document.querySelector("#stairsProceedButton"),
+  restDialog: document.querySelector("#restDialog"),
+  restDialogKicker: document.querySelector("#restDialogKicker"),
+  restDialogTitle: document.querySelector("#restDialogTitle"),
+  restDialogText: document.querySelector("#restDialogText"),
+  restDialogChoices: document.querySelector("#restDialogChoices"),
   endOverlay: document.querySelector("#endOverlay"),
   endTitle: document.querySelector("#endTitle"),
   endText: document.querySelector("#endText"),
@@ -133,24 +144,28 @@ const moveCatalog = [
     name: "灯火弾",
     hint: "前方4マス",
     maxPp: 12,
+    style: "magic",
   },
   {
     key: "gust",
     name: "つむじ風",
     hint: "周囲1マス",
     maxPp: 8,
+    style: "physical",
   },
   {
     key: "heal",
     name: "星雫の癒し",
     hint: "自分を回復",
     maxPp: 6,
+    style: "magic",
   },
   {
     key: "guard",
     name: "星殻の構え",
     hint: "3ターン防御",
     maxPp: 5,
+    style: "physical",
   },
 ];
 
@@ -361,21 +376,43 @@ const gearQualities = [
   { name: "レジェンド", prefix: "星王の", stars: 5, color: "#ff8b71", scale: 4, weight: 4 },
 ];
 
+const relicCatalog = [
+  { key: "ironFang", name: "鉄星の牙", icon: "牙", rarity: "COMMON", color: "#d98d62", detail: "物理攻撃 +2。", bonus: { atk: 2 } },
+  { key: "moonLens", name: "月読のレンズ", icon: "月", rarity: "COMMON", color: "#7fdde6", detail: "魔力 +2。", bonus: { magic: 2 } },
+  { key: "shellSeed", name: "星殻の種", icon: "殻", rarity: "COMMON", color: "#7eb6c7", detail: "防御と魔防 +1。", bonus: { def: 1, res: 1 } },
+  { key: "heartMeteor", name: "心星の隕石", icon: "心", rarity: "COMMON", color: "#ef8c91", detail: "最大HP +12。", bonus: { hp: 12 } },
+  { key: "emberStep", name: "歩星の灯", icon: "歩", rarity: "UNCOMMON", color: "#f0b85d", detail: "歩行回復が1増える。", effect: "stepHeal" },
+  { key: "echoBell", name: "残響の鈴", icon: "響", rarity: "UNCOMMON", color: "#9f8ce0", detail: "敵撃破時、選択中の技PPを1回復。", effect: "ppOnKill" },
+  { key: "bossClaw", name: "門番の爪", icon: "門", rarity: "UNCOMMON", color: "#ed7768", detail: "ボスへの与ダメージ +25%。", effect: "bossDamage" },
+  { key: "trapEye", name: "罠見の瞳", icon: "眼", rarity: "UNCOMMON", color: "#74d4b4", detail: "2マス以内の隠し罠が見える。", effect: "trapSense" },
+  { key: "glassCannon", name: "硝子の彗星", icon: "砲", rarity: "RARE", color: "#ff7d8f", detail: "攻撃・魔力 +5、最大HP -10。", bonus: { atk: 5, magic: 5, hp: -10 } },
+  { key: "prismCore", name: "七彩星核", icon: "彩", rarity: "RARE", color: "#d5b4ff", detail: "物理技と魔法技を交互に使うと威力上昇。", effect: "alternating" },
+  { key: "secondMoon", name: "二度目の月", icon: "復", rarity: "RARE", color: "#f7da79", detail: "1回だけ、倒れた時にHP40%で復活。", effect: "secondLife" },
+  { key: "mutationSeal", name: "変異封じ", icon: "封", rarity: "RARE", color: "#5ed5c7", detail: "変異種への与ダメージ +35%。", effect: "mutantDamage" },
+  { key: "starCompass", name: "逆星羅針", icon: "針", rarity: "UNCOMMON", color: "#6fc6e9", detail: "階段を発見できる距離が2マス増える。", effect: "stairSense" },
+  { key: "hungryCrown", name: "飢王の冠", icon: "冠", rarity: "RARE", color: "#d76fe1", detail: "満腹度30以下で攻撃・魔力 +6。", effect: "desperation" },
+  { key: "luckyAsh", name: "幸運の灰", icon: "運", rarity: "UNCOMMON", color: "#d9ca66", detail: "変異種と珍しい道具の出現率が上がる。", effect: "luck" },
+  { key: "arcaneVein", name: "魔脈結晶", icon: "魔", rarity: "RARE", color: "#7dbbf2", detail: "魔法技の消費PPが時々0になる。", effect: "freeMagic" },
+  { key: "warDrum", name: "星戦の鼓", icon: "戦", rarity: "RARE", color: "#ef755b", detail: "物理技で敵を倒すとHPを5回復。", effect: "physicalLeech" },
+  { key: "zeroFragment", name: "零星の欠片", icon: "零", rarity: "BOSS", color: "#ffdd83", detail: "全能力 +2。最深部へ近づくほどさらに輝く。", bonus: { atk: 2, magic: 2, def: 2, res: 2 } },
+];
+
 const evolutionCatalog = [
   {
     key: "lumina",
     from: "base",
     stage: 1,
     name: "星護ルミナ",
+    path: "magic",
     type: "星光",
     color: "#61d8e6",
     accent: "#f2ffff",
     scarf: "#ffd96d",
     title: "救いを選んだ守護者",
-    materials: { moonShard: 2 },
-    level: 8,
-    requirement: (stats) => stats.helped >= 3 && game.karma === 0,
-    requirementText: (stats) => `依頼達成 ${stats.helped}/3・カルマ 0`,
+    materials: { moonShard: 4 },
+    level: 20,
+    requirement: (stats) => stats.magicUses >= 40 && stats.magicUses > stats.physicalUses,
+    requirementText: (stats) => `魔法行動 ${stats.magicUses}/40・物理より魔法優勢`,
     bonus: { hp: 12, atk: 1, def: 3 },
   },
   {
@@ -383,15 +420,16 @@ const evolutionCatalog = [
     from: "lumina",
     stage: 2,
     name: "星導セラフィ",
+    path: "magic",
     type: "聖星",
     color: "#d8f3f2",
     accent: "#ffffff",
     scarf: "#f3c44d",
     title: "救いの軌跡を束ねた導き手",
-    materials: { moonShard: 3, bossCore: 1 },
-    level: 15,
-    requirement: (stats) => stats.helped >= 7 && stats.floorsCleared >= 8 && game.karma === 0,
-    requirementText: (stats) => `依頼達成 ${stats.helped}/7・踏破階 ${stats.floorsCleared}/8・カルマ 0`,
+    materials: { moonShard: 7, bossCore: 3 },
+    level: 55,
+    requirement: (stats) => stats.magicUses >= 160 && stats.floorsCleared >= 45,
+    requirementText: (stats) => `魔法行動 ${stats.magicUses}/160・踏破階 ${stats.floorsCleared}/45`,
     bonus: { hp: 15, atk: 3, def: 4 },
   },
   {
@@ -399,15 +437,16 @@ const evolutionCatalog = [
     from: "base",
     stage: 1,
     name: "炎牙アグニ",
+    path: "physical",
     type: "火晶",
     color: "#ef6658",
     accent: "#ffd29f",
     scarf: "#fff078",
     title: "戦いを重ねた猛き牙",
-    materials: { emberCore: 2 },
-    level: 9,
-    requirement: (stats) => stats.kills >= 28,
-    requirementText: (stats) => `敵撃破 ${stats.kills}/28`,
+    materials: { emberCore: 4 },
+    level: 20,
+    requirement: (stats) => stats.physicalUses >= 55 && stats.physicalUses > stats.magicUses,
+    requirementText: (stats) => `物理行動 ${stats.physicalUses}/55・魔法より物理優勢`,
     bonus: { hp: 5, atk: 5, def: 1 },
   },
   {
@@ -415,15 +454,16 @@ const evolutionCatalog = [
     from: "agni",
     stage: 2,
     name: "焔王ヴァジュラ",
+    path: "physical",
     type: "獄炎",
     color: "#d9413f",
     accent: "#fff0a1",
     scarf: "#f9c953",
     title: "数多の戦いを越えた焔王",
-    materials: { emberCore: 3, bossCore: 1 },
-    level: 16,
-    requirement: (stats) => stats.kills >= 65 && stats.techniques >= 20,
-    requirementText: (stats) => `敵撃破 ${stats.kills}/65・技使用 ${stats.techniques}/20`,
+    materials: { emberCore: 7, bossCore: 3 },
+    level: 55,
+    requirement: (stats) => stats.physicalUses >= 200 && stats.kills >= 180,
+    requirementText: (stats) => `物理行動 ${stats.physicalUses}/200・敵撃破 ${stats.kills}/180`,
     bonus: { hp: 9, atk: 7, def: 2 },
   },
   {
@@ -431,15 +471,16 @@ const evolutionCatalog = [
     from: "base",
     stage: 1,
     name: "宵影ノクス",
+    path: "magic",
     type: "月影",
     color: "#9c6bd4",
     accent: "#f0dcff",
     scarf: "#55d0cc",
     title: "禁忌を力に変えた夜影",
-    materials: { shadowFang: 2 },
-    level: 9,
-    requirement: (stats) => stats.clientsKilled >= 1 && game.karma >= 3,
-    requirementText: (stats) => `依頼人撃破 ${stats.clientsKilled}/1・カルマ ${game.karma}/3`,
+    materials: { shadowFang: 4 },
+    level: 30,
+    requirement: (stats) => stats.mutants >= 8 && stats.trapsTriggered >= 5,
+    requirementText: (stats) => `変異種撃破 ${stats.mutants}/8・罠作動 ${stats.trapsTriggered}/5`,
     bonus: { hp: 4, atk: 4, def: 2 },
   },
   {
@@ -447,15 +488,16 @@ const evolutionCatalog = [
     from: "nox",
     stage: 2,
     name: "冥王アビス",
+    path: "magic",
     type: "冥影",
     color: "#663b92",
     accent: "#e6c6ff",
     scarf: "#e35b78",
     title: "禁忌を喰らい尽くした冥王",
-    materials: { shadowFang: 3, bossCore: 1 },
-    level: 16,
-    requirement: (stats) => stats.clientsKilled >= 2 && game.karma >= 8,
-    requirementText: (stats) => `依頼人撃破 ${stats.clientsKilled}/2・カルマ ${game.karma}/8`,
+    materials: { shadowFang: 8, bossCore: 4 },
+    level: 65,
+    requirement: (stats) => stats.mutants >= 28 && stats.magicUses >= 150,
+    requirementText: (stats) => `変異種撃破 ${stats.mutants}/28・魔法行動 ${stats.magicUses}/150`,
     bonus: { hp: 8, atk: 6, def: 3 },
   },
   {
@@ -463,15 +505,16 @@ const evolutionCatalog = [
     from: "base",
     stage: 1,
     name: "智樹セージ",
+    path: "magic",
     type: "森葉",
     color: "#70ad62",
     accent: "#e7f7ae",
     scarf: "#edc85e",
     title: "一度の変化で完成する叡智の賢者",
-    materials: { wisdomSeed: 3, bossCore: 1 },
-    level: 14,
-    requirement: (stats) => stats.itemUses >= 15 && game.unlockedSkills.length >= 5,
-    requirementText: (stats) => `道具使用 ${stats.itemUses}/15・スキル ${game.unlockedSkills.length}/5`,
+    materials: { wisdomSeed: 6, bossCore: 2 },
+    level: 45,
+    requirement: (stats) => stats.itemUses >= 25 && game.unlockedSkills.length >= 8 && stats.magicUses >= 90,
+    requirementText: (stats) => `道具 ${stats.itemUses}/25・スキル ${game.unlockedSkills.length}/8・魔法 ${stats.magicUses}/90`,
     bonus: { hp: 18, atk: 5, def: 4 },
   },
   {
@@ -479,15 +522,16 @@ const evolutionCatalog = [
     from: "base",
     stage: 1,
     name: "星王アステラ",
+    path: "hybrid",
     type: "天星",
     color: "#e3bb54",
     accent: "#fff7c4",
     scarf: "#ef786f",
     title: "長い未進化期を越え、一度で至る星の王",
-    materials: { moonShard: 1, emberCore: 1, wisdomSeed: 1, bossCore: 2 },
-    level: 18,
-    requirement: (stats) => stats.floorsCleared >= 16 && stats.helped >= 5 && game.karma <= 1,
-    requirementText: (stats) => `踏破階 ${stats.floorsCleared}/16・依頼達成 ${stats.helped}/5・カルマ 1以下`,
+    materials: { moonShard: 4, emberCore: 4, wisdomSeed: 4, bossCore: 5 },
+    level: 70,
+    requirement: (stats) => stats.floorsCleared >= 70 && stats.physicalUses >= 120 && stats.magicUses >= 120,
+    requirementText: (stats) => `踏破階 ${stats.floorsCleared}/70・物理 ${stats.physicalUses}/120・魔法 ${stats.magicUses}/120`,
     bonus: { hp: 20, atk: 7, def: 5 },
   },
 ];
@@ -526,26 +570,21 @@ const tacticCatalog = [
 ];
 
 const skillCatalog = [
-  { key: "tough", name: "鋼の節", detail: "最大HP +6", cost: 1, branch: "生命", icon: "HP", x: 292, y: 286 },
-  { key: "power", name: "狩牙の節", detail: "攻撃 +2", cost: 1, branch: "猛攻", icon: "攻", x: 478, y: 286 },
-  { key: "shell", name: "甲殻の節", detail: "防御 +1", cost: 1, branch: "守護", icon: "守", x: 292, y: 408, requires: ["tough"] },
-  { key: "scout", name: "複眼の節", detail: "探索済みの道具を地図に表示", cost: 1, branch: "探索", icon: "眼", x: 478, y: 408, requires: ["power"] },
-  { key: "ration", name: "貯糧の節", detail: "満腹度が減りにくくなる", cost: 1, branch: "生命", icon: "食", x: 166, y: 182, requires: ["tough"] },
-  { key: "technique", name: "糸技の節", detail: "すべての技の最大PP +2", cost: 2, branch: "猛攻", icon: "技", x: 604, y: 182, requires: ["power"] },
-  { key: "fortune", name: "吉兆の節", detail: "レア敵との遭遇率が上がる", cost: 1, branch: "守護", icon: "運", x: 166, y: 512, requires: ["shell"] },
-  { key: "predator", name: "収穫の節", detail: "敵が素材を落としやすくなる", cost: 2, branch: "探索", icon: "収", x: 604, y: 512, requires: ["scout"] },
-  { key: "vitality", name: "星脈の節", detail: "最大HP +10", cost: 2, branch: "生命", icon: "命", x: 40, y: 78, requires: ["ration"] },
-  { key: "blaze", name: "烈火の節", detail: "攻撃 +3", cost: 2, branch: "猛攻", icon: "烈", x: 730, y: 78, requires: ["technique"] },
-  { key: "ward", name: "堅界の節", detail: "防御 +2", cost: 2, branch: "守護", icon: "壁", x: 40, y: 616, requires: ["fortune"] },
-  { key: "hunter", name: "狩星の節", detail: "時々、通常攻撃が強撃になる", cost: 2, branch: "探索", icon: "狩", x: 730, y: 616, requires: ["predator"] },
-  { key: "salvage", name: "拾星の節", detail: "次の階から道具が1つ増える", cost: 2, branch: "交差", icon: "拾", x: 292, y: 64, requires: ["ration", "technique"] },
-  { key: "flow", name: "星流の節", detail: "すべての技の最大PP +2", cost: 2, branch: "交差", icon: "流", x: 478, y: 64, requires: ["ration", "technique"] },
-  { key: "feast", name: "豊穣の節", detail: "満腹度の消費をさらに半減", cost: 2, branch: "交差", icon: "豊", x: 292, y: 634, requires: ["fortune", "predator"] },
-  { key: "execution", name: "断星の節", detail: "瀕死の敵へのダメージ +3", cost: 2, branch: "交差", icon: "断", x: 478, y: 634, requires: ["fortune", "predator"] },
-  { key: "starcore", name: "星核共鳴", detail: "HP +8、攻撃・防御 +1", cost: 3, branch: "星核", icon: "核", x: 385, y: 164, requires: ["salvage", "flow"] },
-  { key: "fateweaver", name: "運命編み", detail: "次の階から運勢が2上がる", cost: 3, branch: "星核", icon: "編", x: 385, y: 536, requires: ["feast", "execution"] },
-  { key: "rebirth", name: "不屈星", detail: "最大HP +16", cost: 4, branch: "極星", icon: "不", x: 82, y: 347, requires: ["vitality", "ward"] },
-  { key: "sovereign", name: "覇星牙", detail: "攻撃 +4、防御 +1", cost: 4, branch: "極星", icon: "覇", x: 688, y: 347, requires: ["blaze", "hunter"] },
+  { key: "tough", name: "生命の灯", detail: "最大HP +8", cost: 1, branch: "生存", icon: "HP", lane: "core", tier: 0 },
+  { key: "ration", name: "星腹", detail: "満腹度の消費を軽減", cost: 1, branch: "生存", icon: "食", lane: "core", tier: 1, requires: ["tough"] },
+  { key: "scout", name: "罠見", detail: "近くの罠と道具を察知", cost: 2, branch: "生存", icon: "眼", lane: "core", tier: 2, requires: ["ration"] },
+  { key: "fortune", name: "運命偏向", detail: "変異種と珍品が少し増える", cost: 2, branch: "生存", icon: "運", lane: "core", tier: 3, requires: ["scout"] },
+  { key: "starcore", name: "星核共鳴", detail: "HP +10、全能力 +1", cost: 3, branch: "生存", icon: "核", lane: "core", tier: 4, requires: ["fortune"] },
+  { key: "power", name: "狩牙", detail: "物理攻撃 +2", cost: 1, branch: "物理", icon: "攻", lane: "physical", tier: 0 },
+  { key: "shell", name: "破城の構え", detail: "防御 +1、物理技威力上昇", cost: 1, branch: "物理", icon: "砕", lane: "physical", tier: 1, requires: ["power"] },
+  { key: "hunter", name: "急所狩り", detail: "通常攻撃が時々強撃になる", cost: 2, branch: "物理", icon: "狩", lane: "physical", tier: 2, requires: ["shell"] },
+  { key: "execution", name: "断星", detail: "瀕死の敵への物理ダメージ +4", cost: 2, branch: "物理", icon: "断", lane: "physical", tier: 3, requires: ["hunter"] },
+  { key: "sovereign", name: "覇星牙", detail: "物理攻撃 +5、防御 +2", cost: 4, branch: "物理", icon: "覇", lane: "physical", tier: 4, requires: ["execution"] },
+  { key: "arcana", name: "魔星脈", detail: "魔力 +2", cost: 1, branch: "魔法", icon: "魔", lane: "magic", tier: 0 },
+  { key: "technique", name: "星術循環", detail: "すべての技の最大PP +2", cost: 1, branch: "魔法", icon: "技", lane: "magic", tier: 1, requires: ["arcana"] },
+  { key: "flow", name: "魔力奔流", detail: "魔力 +3", cost: 2, branch: "魔法", icon: "流", lane: "magic", tier: 2, requires: ["technique"] },
+  { key: "spellEcho", name: "術式残響", detail: "魔法技が時々もう一度響く", cost: 2, branch: "魔法", icon: "響", lane: "magic", tier: 3, requires: ["flow"] },
+  { key: "oracle", name: "星界の託宣", detail: "魔力 +5、魔防 +2", cost: 4, branch: "魔法", icon: "星", lane: "magic", tier: 4, requires: ["spellEcho"] },
 ];
 
 const enemyTypes = [
@@ -554,6 +593,14 @@ const enemyTypes = [
   { key: "forestleaf", name: "森葉", prefix: "翠", color: "#76ad63", accent: "#e2f5ad", hp: 4, atk: 0, def: 0 },
   { key: "moonshade", name: "月影", prefix: "紫", color: "#9480d4", accent: "#eadfff", hp: 0, atk: 1, def: 1 },
   { key: "skywind", name: "天風", prefix: "碧", color: "#66aee8", accent: "#e0f4ff", hp: -1, atk: 2, def: 0 },
+];
+
+const mutationCatalog = [
+  { key: "armored", prefix: "甲殻変異", name: "重殻", color: "#8fc7a1", hpScale: 1.45, atk: 0, def: 3 },
+  { key: "arcane", prefix: "魔脈変異", name: "魔脈", color: "#a879e5", hpScale: 1.12, atk: 4, def: 0, magic: true },
+  { key: "swift", prefix: "疾走変異", name: "疾走", color: "#69c9e8", hpScale: 0.9, atk: 3, def: 0, swift: true },
+  { key: "vampiric", prefix: "吸星変異", name: "吸星", color: "#d96382", hpScale: 1.2, atk: 2, def: 1, vampiric: true },
+  { key: "volatile", prefix: "爆核変異", name: "爆核", color: "#f0a953", hpScale: 1.05, atk: 3, def: 0, volatile: true },
 ];
 
 const enemyFamilies = [
@@ -806,6 +853,31 @@ const townMissions = [
   },
 ];
 
+const towerContract = {
+  chapter: 1,
+  title: "星喰いの塔",
+  dungeon: "星喰いの塔",
+  theme: "forest",
+  client: "星見ギルド",
+  target: "百階の星喰皇",
+  description: "10の門番と休憩所を越え、100階の星核へ到達する一本勝負。",
+  floors: 100,
+  reward: 5000,
+};
+
+const towerBossCatalog = [
+  { name: "苔冠ゴルム", title: "九階の門番", sprite: 690, color: "#76a85d", accent: "#e6f4ad", hp: 92, atk: 10, def: 3, exp: 140, special: "岩星崩し" },
+  { name: "幻灯ミラージュ", title: "十九階の門番", sprite: 744, color: "#8d73d4", accent: "#f0e2ff", hp: 142, atk: 15, def: 4, exp: 230, special: "幻星波" },
+  { name: "炎角グレンガ", title: "二十九階の門番", sprite: 856, color: "#e56651", accent: "#ffd09b", hp: 205, atk: 20, def: 6, exp: 340, special: "灼星突進" },
+  { name: "氷鏡セレネ", title: "三十九階の門番", sprite: 801, color: "#69bfe4", accent: "#e8fbff", hp: 270, atk: 25, def: 7, exp: 470, special: "凍星鏡" },
+  { name: "変異王ヴェルド", title: "四十九階の門番", sprite: 857, color: "#4fd1b4", accent: "#d8fff6", hp: 355, atk: 31, def: 9, exp: 620, special: "変異連鎖" },
+  { name: "灰都機神ガルド", title: "五十九階の門番", sprite: 602, color: "#b87965", accent: "#f5d5b8", hp: 450, atk: 37, def: 11, exp: 800, special: "機星砲" },
+  { name: "月蝕ノクティス", title: "六十九階の門番", sprite: 556, color: "#925bc7", accent: "#eed6ff", hp: 565, atk: 44, def: 13, exp: 1010, special: "月蝕断" },
+  { name: "天嵐ヴァルグ", title: "七十九階の門番", sprite: 800, color: "#52afe8", accent: "#e2f7ff", hp: 700, atk: 51, def: 15, exp: 1280, special: "天星嵐" },
+  { name: "冥晶アビサル", title: "八十九階の門番", sprite: 857, color: "#5f3a91", accent: "#e9c9ff", hp: 870, atk: 59, def: 18, exp: 1600, special: "冥晶界" },
+  { name: "星喰皇ゼロム", title: "九十九階の最後の門番", sprite: 857, color: "#d34bc2", accent: "#fff0ff", hp: 1120, atk: 68, def: 21, exp: 2400, special: "終星落とし" },
+];
+
 const dungeonThemes = {
   forest: {
     unknown: "#07100b", wall: "#365449", wallDark: "#1c302b", wallLight: "#527765",
@@ -871,6 +943,10 @@ function createGame() {
     coins: 160,
     saveSlot: null,
     completedDungeon: 0,
+    highestFloor: 1,
+    persistentEvolutionKey: "base",
+    persistentEvolutionStage: 0,
+    towerCheckpoint: null,
     storage: { apple: 0 },
     selectedTownMission: 0,
     activeTownMission: null,
@@ -878,6 +954,7 @@ function createGame() {
     townView: "board",
     menuView: "moves",
     trainingLevel: 0,
+    magicTrainingLevel: 0,
     belly: 100,
     bag: {
       apple: 1,
@@ -902,6 +979,13 @@ function createGame() {
     focusTurns: 0,
     skillPoints: 1,
     unlockedSkills: [],
+    relics: [],
+    startingRelicKey: null,
+    secondMoonUsed: false,
+    lastActionStyle: null,
+    currentActionMultiplier: 1,
+    pendingRelicChoices: [],
+    rewardPending: false,
     gearBag: [],
     equipment: { weapon: null, armor: null, charm: null },
     gearViewSlot: "weapon",
@@ -918,6 +1002,10 @@ function createGame() {
     enemies: [],
     items: [],
     merchant: null,
+    traps: [],
+    stairsRevealed: false,
+    restChoiceTaken: false,
+    floorKind: "combat",
     mission: null,
     stairs: { x: 0, y: 0 },
     effects: [],
@@ -939,26 +1027,25 @@ function createGame() {
 }
 
 function startExpedition() {
-  const selected = townMissions[game.selectedTownMission];
-  if (!selected || selected.chapter > game.completedDungeon + 1) {
-    showToast("前のダンジョンを制覇すると挑戦できる");
-    return;
-  }
   if (ui.townDialog.open) ui.townDialog.close();
+  const checkpoint = game.towerCheckpoint ? structuredClone(game.towerCheckpoint) : null;
   prepareNewTry();
   game.mode = "dungeon";
-  game.activeTownMission = selected;
-  game.targetFloor = selected.floors;
-  game.floor = 1;
+  game.activeTownMission = towerContract;
+  game.targetFloor = 100;
+  game.floor = checkpoint?.floor || 1;
   game.turn = 1;
   game.score = 0;
   game.belly = 100;
   game.gameOver = false;
   game.victory = false;
   game.luck = randInt(-1, 1);
+  if (checkpoint) restoreTowerCheckpoint(checkpoint);
   buildFloor();
-  addLog(`新しい挑戦を開始。コハクは一人で${selected.dungeon}へ踏み込んだ。`);
-  announceEvent("TRY START", `${selected.dungeon} B1F`, "発", "mystic");
+  addLog(checkpoint
+    ? `休憩所の記録から、星喰い塔B${game.floor}Fの挑戦を再開した。`
+    : "新しい挑戦を開始。コハクは星喰い塔の100階を見上げた。");
+  announceEvent(checkpoint ? "TRY RESUME" : "TRY START", `星喰い塔 B${game.floor}F`, "発", "mystic");
   playSfx("depart");
   updateAll();
 }
@@ -966,19 +1053,24 @@ function startExpedition() {
 function prepareNewTry() {
   const leader = createLeader(game.selectedCharacter);
   leader.atk += game.trainingLevel;
-  for (const gearId of Object.values(game.equipment || {})) {
-    const gear = game.gearBag.find((entry) => entry.id === gearId);
-    applyGearBonus(leader, gear, 1);
-  }
+  leader.magic += game.magicTrainingLevel;
+  applyPersistentEvolution(leader);
   game.roster[game.selectedCharacter] = leader;
   game.team = [leader];
   game.selectedMove = 0;
   game.skillPoints = 1;
   game.unlockedSkills = [];
+  game.relics = [];
+  game.pendingRelicChoices = [];
+  game.rewardPending = false;
+  game.secondMoonUsed = false;
+  game.lastActionStyle = null;
+  game.currentActionMultiplier = 1;
   game.runStats = createRunStats();
   game.belly = 100;
   game.logs = [];
   game.screenShake = null;
+  if (game.startingRelicKey) addRelic(game.startingRelicKey, false);
 }
 
 function createRunStats() {
@@ -986,8 +1078,10 @@ function createRunStats() {
     kills: 0,
     itemUses: 0,
     techniques: 0,
-    helped: 0,
-    clientsKilled: 0,
+    physicalUses: 0,
+    magicUses: 0,
+    mutants: 0,
+    trapsTriggered: 0,
     floorsCleared: 0,
   };
 }
@@ -999,6 +1093,7 @@ function returnToTown() {
   ui.endOverlay.hidden = true;
   if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
   if (ui.stairsDialog.open) ui.stairsDialog.close();
+  if (ui.restDialog.open) ui.restDialog.close();
   prepareNewTry();
   updateAll();
 }
@@ -1021,7 +1116,9 @@ function createLeader(characterKey = "kohaku") {
     hp: profile.maxHp,
     maxHp: profile.maxHp,
     atk: profile.atk,
+    magic: profile.atk,
     def: profile.def,
+    res: profile.def,
     x: 0,
     y: 0,
     dx: 0,
@@ -1035,6 +1132,49 @@ function createLeader(characterKey = "kohaku") {
   };
 }
 
+function applyPersistentEvolution(actor) {
+  const key = game?.persistentEvolutionKey || "base";
+  if (key === "base") return;
+  const chain = [];
+  let cursor = evolutionCatalog.find((entry) => entry.key === key);
+  while (cursor) {
+    chain.unshift(cursor);
+    cursor = evolutionCatalog.find((entry) => entry.key === cursor.from);
+  }
+  for (const evolution of chain) applyEvolutionBonus(actor, evolution);
+  const final = chain[chain.length - 1];
+  if (!final) return;
+  actor.evolutionKey = final.key;
+  actor.evolutionStage = final.stage;
+  actor.name = final.name;
+  actor.type = final.type;
+  actor.role = `${final.type}タイプ`;
+  actor.color = final.color;
+  actor.accent = final.accent;
+  actor.scarf = final.scarf;
+  actor.hp = actor.maxHp;
+}
+
+function applyEvolutionBonus(actor, evolution) {
+  actor.maxHp += evolution.bonus.hp;
+  if (evolution.path === "magic") {
+    actor.magic += evolution.bonus.atk;
+    actor.res += evolution.bonus.def;
+    actor.atk += Math.floor(evolution.bonus.atk / 3);
+    actor.def += Math.floor(evolution.bonus.def / 2);
+  } else if (evolution.path === "hybrid") {
+    actor.atk += evolution.bonus.atk;
+    actor.magic += evolution.bonus.atk;
+    actor.def += evolution.bonus.def;
+    actor.res += evolution.bonus.def;
+  } else {
+    actor.atk += evolution.bonus.atk;
+    actor.def += evolution.bonus.def;
+    actor.magic += Math.floor(evolution.bonus.atk / 3);
+    actor.res += Math.floor(evolution.bonus.def / 2);
+  }
+}
+
 function buildFloor() {
   const dungeon = generateDungeon();
   game.map = dungeon.map;
@@ -1045,6 +1185,7 @@ function buildFloor() {
   game.enemies = [];
   game.items = [];
   game.merchant = null;
+  game.traps = [];
   game.effects = [];
   game.floating = [];
   game.focusTurns = 0;
@@ -1052,6 +1193,8 @@ function buildFloor() {
   game.screenFlash = null;
   game.screenShake = null;
   game.guidanceActive = false;
+  game.stairsRevealed = false;
+  game.restChoiceTaken = false;
   game.leaderTrail = [];
 
   const start = centerOf(game.rooms[0]);
@@ -1079,50 +1222,73 @@ function buildFloor() {
     .map((room) => ({ room, distance: manhattan(start.x, start.y, centerOf(room).x, centerOf(room).y) }))
     .sort((a, b) => b.distance - a.distance);
 
-  const missionRoom = roomsByDistance[0]?.room || game.rooms[game.rooms.length - 1];
-  const stairRoom = roomsByDistance.find((entry) => entry.room !== missionRoom)?.room || missionRoom;
-  const missionPoint = nearestOpen(centerOf(missionRoom).x, centerOf(missionRoom).y, blockers);
-  const stairPoint = nearestOpen(centerOf(stairRoom).x, centerOf(stairRoom).y, [...blockers, missionPoint]);
-  const contract =
-    game.activeTownMission ||
-    missionTemplates[(game.floor - 1 + randInt(0, missionTemplates.length - 1)) % missionTemplates.length];
-  const bossFloor = Boolean(contract.boss && game.floor === game.targetFloor);
-  const explorerNames = ["リオ", "ミナ", "トワ", "ハル", "ナギ", "ユラ", "セナ"];
-  const explorerName = explorerNames[(game.floor + contract.chapter) % explorerNames.length];
-  const template = bossFloor || !contract.clue
-    ? contract
-    : {
-        client: contract.client,
-        target: `先遣員${explorerName}`,
-        message: `${contract.clue.message} 先に入った${explorerName}とも合流しよう。`,
-        done: `先遣員${explorerName}を救助した。${contract.clue.done}`,
-      };
-
+  const farRoom = roomsByDistance[0]?.room || game.rooms[game.rooms.length - 1];
+  const secondRoom = roomsByDistance.find((entry) => entry.room !== farRoom)?.room || farRoom;
+  const bossPoint = nearestOpen(centerOf(farRoom).x, centerOf(farRoom).y, blockers);
+  const stairPoint = nearestOpen(centerOf(secondRoom).x, centerOf(secondRoom).y, [...blockers, bossPoint]);
+  const bossProfile = towerBossForFloor(game.floor);
+  const bossFloor = Boolean(bossProfile);
+  const restFloor = isRestFloor(game.floor);
+  game.floorKind = restFloor ? (isMajorRestFloor(game.floor) ? "major-rest" : "rest") : bossFloor ? "boss" : "combat";
   game.mission = {
-    ...template,
-    x: missionPoint.x,
-    y: missionPoint.y,
-    complete: false,
-    reward: 70 + game.floor * 28,
+    target: bossProfile?.name || "隠し階段",
+    x: bossPoint.x,
+    y: bossPoint.y,
+    complete: !bossFloor,
+    reward: 120 + game.floor * 18,
     boss: bossFloor,
   };
   game.stairs = stairPoint;
-  game.floorEvent = rollFloorEvent();
-  game.luck = game.floorEvent.luck + (hasSkill("fateweaver") ? 2 : 0);
+  game.stairsRevealed = restFloor;
+  game.floorEvent = restFloor
+    ? { key: "rest", name: isMajorRestFloor(game.floor) ? "大休憩" : "休憩", detail: "敵も罠も現れない", luck: 0 }
+    : rollFloorEvent();
+  game.luck = game.floorEvent.luck + (hasSkill("fortune") ? 1 : 0) + (hasRelic("luckyAsh") ? 1 : 0);
+
+  if (restFloor) {
+    restoreAllPp();
+    revealAroundTeam();
+    addLog(`B${game.floor}F: ${isMajorRestFloor(game.floor) ? "星核の大休憩所" : "星火の休憩所"}へ到着した。技PPが全回復した。`);
+    setTimeout(openRestSite, 80);
+    return;
+  }
 
   spawnItems();
-  spawnEnemies();
-  spawnDungeonMerchant(bossFloor);
-  if (bossFloor) spawnBoss(contract.boss, missionPoint);
+  spawnHiddenTraps();
+  if (bossFloor) {
+    spawnBoss(bossProfile, bossPoint);
+  } else {
+    spawnEnemies();
+    spawnDungeonMerchant(false);
+  }
   applyFloorEvent();
   revealAroundTeam();
   if (bossFloor) {
-    addLog(`最深部: ${contract.boss.name}が行く手を塞いだ。`);
-    announceEvent("ボス出現", `${contract.boss.title} ${contract.boss.name}`, "敵", "danger");
+    addLog(`B${game.floor}F: 休憩所を守る門番 ${bossProfile.name}が現れた。`);
+    announceEvent("GATE BOSS", `${bossProfile.title} ${bossProfile.name}`, "冠", "danger");
   } else {
-    addLog(`B${game.floor}F: ${template.client}からの依頼。${template.message}`);
+    addLog(`B${game.floor}F: 隠し階段を探し、罠と変異種を見極めて進もう。`);
   }
-  addLog(`フロア運勢「${game.floorEvent.name}」: ${game.floorEvent.detail}。`);
+  addLog(`階層運勢「${game.floorEvent.name}」: ${game.floorEvent.detail}。`);
+}
+
+function isRestFloor(floor) {
+  return floor > 0 && floor % 10 === 0;
+}
+
+function isMajorRestFloor(floor) {
+  return floor > 0 && floor % 20 === 0;
+}
+
+function towerBossForFloor(floor) {
+  if (floor % 10 !== 9) return null;
+  return towerBossCatalog[Math.floor(floor / 10)] || null;
+}
+
+function restoreAllPp() {
+  for (const actor of game.team) {
+    for (const move of actor.moves || []) move.pp = move.maxPp;
+  }
 }
 
 function rollFloorEvent() {
@@ -1144,16 +1310,15 @@ function applyFloorEvent() {
     const point = randomOpenTile();
     if (point) {
       const kind = weighted([
-        { value: "gear", weight: 5 },
         { value: "reviver", weight: 4 },
         { value: "guidingOrb", weight: 4 },
         { value: "bigApple", weight: 3 },
         { value: "elixir", weight: 3 },
+        { value: "fortuneOrb", weight: 2 },
       ]);
       game.items.push({
         id: cryptoId(),
         kind,
-        gear: kind === "gear" ? generateGear(2, 2) : undefined,
         x: point.x,
         y: point.y,
       });
@@ -1223,13 +1388,23 @@ function carveVertical(map, y1, y2, x) {
 }
 
 function scatterTerrain(map) {
-  for (let y = 1; y < MAP_H - 1; y += 1) {
-    for (let x = 1; x < MAP_W - 1; x += 1) {
-      if (map[y][x] !== "floor") continue;
-      const n = noise(x, y, game?.floor || 1);
-      if (n > 0.972) map[y][x] = "moss";
-      else if (n < 0.018) map[y][x] = "crack";
-    }
+  return map;
+}
+
+function spawnHiddenTraps() {
+  const count = clamp(1 + Math.floor(game.floor / 30) + (game.floorEvent?.key === "ambush" ? 1 : 0), 1, 5);
+  const trapKinds = ["spike", "sleep", "warp", "silence"];
+  for (let index = 0; index < count; index += 1) {
+    const point = randomOpenTile();
+    if (!point) continue;
+    game.traps.push({
+      id: cryptoId(),
+      kind: trapKinds[randInt(0, trapKinds.length - 1)],
+      x: point.x,
+      y: point.y,
+      revealed: false,
+      used: false,
+    });
   }
 }
 
@@ -1260,12 +1435,6 @@ function spawnItems() {
     const point = randomOpenTile();
     if (!point) continue;
     game.items.push({ id: cryptoId(), kind, x: point.x, y: point.y });
-  }
-  const gearCount = game.floor >= 4 ? 2 : 1;
-  for (let i = 0; i < gearCount; i += 1) {
-    const point = randomOpenTile();
-    if (!point) continue;
-    game.items.push({ id: cryptoId(), kind: "gear", gear: generateGear(), x: point.x, y: point.y });
   }
 }
 
@@ -1303,13 +1472,11 @@ function generateGear(qualityBoost = 0, minimumStars = 1, preferredSlot = null, 
 }
 
 function spawnEnemies() {
-  const chapter = game.activeTownMission?.chapter || 1;
-  const count = clamp(7 + chapter + Math.ceil(game.floor * 1.2) + (game.floorEvent?.enemyBonus || 0), 6, 26);
+  const count = clamp(6 + Math.floor(game.floor / 12) + (game.floorEvent?.enemyBonus || 0), 5, 14);
   const rareChance =
-    0.012 +
-    (game.activeTownMission?.chapter || 1) * 0.002 +
-    Math.max(0, game.luck) * 0.002 +
-    (hasSkill("fortune") ? 0.009 : 0);
+    0.006 +
+    game.floor * 0.00008 +
+    Math.max(0, game.luck) * 0.001;
   let rareSpawned = false;
   for (let i = 0; i < count; i += 1) {
     const spawnRare = !rareSpawned && Math.random() < rareChance;
@@ -1335,21 +1502,20 @@ function spawnDungeonMerchant(bossFloor = false) {
       { id: cryptoId(), kind: "apple", price: 55, sold: false },
       { id: cryptoId(), kind: Math.random() < 0.5 ? "oran" : "elixir", price: 85, sold: false },
       { id: cryptoId(), kind: materialKind, price: 145, sold: false, material: true },
-      { id: cryptoId(), kind: "gear", gear: generateGear(1, 2), price: 210 + game.floor * 25, sold: false },
+      { id: cryptoId(), kind: Math.random() < 0.5 ? "reviver" : "fortuneOrb", price: 180 + game.floor * 2, sold: false },
     ],
   };
   addLog("この階のどこかに、星渡りの行商人が店を開いた。");
 }
 
 function randomRareEnemyProfile() {
-  const dungeon = game.activeTownMission?.chapter || 1;
+  const dungeon = Math.min(5, 1 + Math.floor(game.floor / 20));
   const pool = rareEnemyCatalog.filter((enemy) => enemy.minDungeon <= dungeon);
   return pool[randInt(0, pool.length - 1)] || rareEnemyCatalog[0];
 }
 
 function randomEnemyProfile() {
-  const chapter = game.activeTownMission?.chapter || 1;
-  const maxTier = Math.min(3, chapter + (game.floor >= 5 ? 1 : 0));
+  const maxTier = Math.min(3, 1 + Math.floor(game.floor / 25));
   const families = enemyFamilies.filter((family) => family.tier <= maxTier);
   const family = families[randInt(0, families.length - 1)];
   const type = enemyTypes[randInt(0, enemyTypes.length - 1)];
@@ -1357,32 +1523,43 @@ function randomEnemyProfile() {
 }
 
 function createEnemy(catalog, point, alerted = false) {
-  const chapter = game.activeTownMission?.chapter || 1;
-  const scale = (chapter - 1) * 3 + Math.floor((game.floor - 1) * 0.9);
+  const scale = Math.floor((game.floor - 1) * 0.32);
   const expMultiplier = 1 + (game.floorEvent?.expBonus || 0);
-  const hp = Math.ceil((catalog.hp + 3 + scale * 4) * (1.08 + chapter * 0.025));
-  return {
+  const mutationChance = clamp(0.055 + game.floor * 0.0012 + Math.max(0, game.luck) * 0.005, 0.05, 0.22);
+  const mutation = !catalog.rare && Math.random() < mutationChance
+    ? mutationCatalog[randInt(0, mutationCatalog.length - 1)]
+    : null;
+  const baseHp = Math.ceil((catalog.hp + 3 + scale * 3.2) * 1.08);
+  const hp = Math.ceil(baseHp * (mutation?.hpScale || 1));
+  const enemy = {
     id: cryptoId(),
     ...catalog,
+    name: mutation ? `${mutation.prefix}${catalog.name}` : catalog.name,
     hp,
     maxHp: hp,
-    atk: catalog.atk + 1 + Math.floor(scale * 1.25),
-    def: catalog.def + Math.floor(scale / 4),
+    atk: catalog.atk + 1 + Math.floor(scale * 0.9) + (mutation?.atk || 0),
+    def: catalog.def + Math.floor(scale / 7) + (mutation?.def || 0),
+    res: catalog.def + Math.floor(scale / 8) + (mutation?.magic ? 2 : 0),
     exp: Math.round((catalog.exp + scale * 5) * expMultiplier),
+    attackStyle: mutation?.magic || ["starwater", "moonshade", "skywind"].includes(catalog.typeKey) ? "magic" : "physical",
+    mutation,
+    mutated: Boolean(mutation),
     x: point.x,
     y: point.y,
     wobble: Math.random() * Math.PI * 2,
     alerted,
   };
+  return enemy;
 }
 
 function spawnBoss(profile, point) {
-  const bossType = enemyTypes[(game.activeTownMission.chapter - 1) % enemyTypes.length];
+  const bossIndex = Math.floor(game.floor / 10);
+  const bossType = enemyTypes[bossIndex % enemyTypes.length];
   const bossHp = Math.ceil(profile.hp * 1.18);
   game.enemies.push({
     id: cryptoId(),
     ...profile,
-    key: `boss-${game.activeTownMission.chapter}`,
+    key: `boss-${game.floor}`,
     familyKey: "boss",
     type: bossType.name,
     typeKey: bossType.key,
@@ -1390,6 +1567,8 @@ function spawnBoss(profile, point) {
     hp: bossHp,
     maxHp: bossHp,
     atk: profile.atk + 2,
+    res: profile.def,
+    attackStyle: bossIndex % 2 ? "magic" : "physical",
     recruit: 0,
     x: point.x,
     y: point.y,
@@ -1493,8 +1672,8 @@ function tryMoveLeader(dx, dy) {
     game.leaderTrail.length = Math.min(game.leaderTrail.length, Math.max(12, game.team.length + 5));
     addEffect("step", leader.x, leader.y, leader.color);
     addEffect("step", ally.x, ally.y, ally.color);
-    applyStepTerrain(leader);
-    if (!ally.down) applyStepTerrain(ally);
+    resolveStepEffects(leader);
+    if (!ally.down) resolveStepEffects(ally);
     if (!leader.down) pickUpItem();
     addLog(`${leader.name}と${ally.name}が場所を入れ替えた。`);
     showToast(`${ally.name}と場所を交代`);
@@ -1508,7 +1687,7 @@ function tryMoveLeader(dx, dy) {
   game.leaderTrail.unshift(from);
   game.leaderTrail.length = Math.min(game.leaderTrail.length, Math.max(12, game.team.length + 5));
   addEffect("step", tx, ty, leader.color);
-  applyStepTerrain(leader);
+  resolveStepEffects(leader);
   if (!leader.down) pickUpItem();
   return true;
 }
@@ -1520,6 +1699,9 @@ function basicAttack(dx = 0, dy = 0) {
   if (!attackDx && !attackDy) return false;
   leader.dx = attackDx;
   leader.dy = attackDy;
+  game.lastActionStyle = "physical";
+  game.currentActionMultiplier = 1;
+  game.runStats.physicalUses += 1;
 
   const tx = leader.x + attackDx;
   const ty = leader.y + attackDy;
@@ -1586,16 +1768,38 @@ function useSelectedMove() {
     return false;
   }
 
-  announceEvent(move.name, `${move.hint}　PP ${move.pp - 1}/${move.maxPp}`, "技", "mystic");
+  const previousStyle = game.lastActionStyle;
+  const alternated = hasRelic("prismCore") && previousStyle && previousStyle !== move.style;
+  const echoed = move.style === "magic" && hasSkill("spellEcho") && Math.random() < 0.24;
+  const freeCast = move.style === "magic" && hasRelic("arcaneVein") && Math.random() < 0.28;
+  game.lastActionStyle = move.style;
+  game.currentActionMultiplier = (alternated ? 1.35 : 1)
+    * (echoed ? 1.55 : 1)
+    * (move.style === "physical" && hasSkill("shell") ? 1.12 : 1);
+  game.runStats[move.style === "magic" ? "magicUses" : "physicalUses"] += 1;
+  announceEvent(
+    move.name,
+    `${move.hint}　PP ${move.pp - (freeCast ? 0 : 1)}/${move.maxPp}${alternated ? "　七彩共鳴" : ""}${echoed ? "　術式残響" : ""}`,
+    "技",
+    "mystic",
+  );
   setScreenFlash(leader.color, 220);
-  move.pp -= 1;
+  if (!freeCast) move.pp -= 1;
   game.runStats.techniques += 1;
+  gainExp(4 + Math.floor(game.floor / 12));
+  if (freeCast) addFloatingText(leader.x, leader.y, "PP 0", "#8ee7ff");
+  if (alternated || echoed) {
+    addEffect("runes", leader.x, leader.y, alternated ? "#ffe27d" : "#bba4ff");
+    triggerScreenShake(alternated ? 7 : 5, 220);
+  }
   playSfx("move");
-  if (move.key === "spark") return useSpark(leader, move);
-  if (move.key === "gust") return useGust(leader, move);
-  if (move.key === "heal") return useHeal(leader, move);
-  if (move.key === "guard") return useGuard(leader, move);
-  return false;
+  let used = false;
+  if (move.key === "spark") used = useSpark(leader, move);
+  if (move.key === "gust") used = useGust(leader, move);
+  if (move.key === "heal") used = useHeal(leader, move);
+  if (move.key === "guard") used = useGuard(leader, move);
+  game.currentActionMultiplier = 1;
+  return used;
 }
 
 function useSpark(actor, move) {
@@ -1609,38 +1813,43 @@ function useSpark(actor, move) {
 
   const target = ray.map((point) => enemyAt(point.x, point.y)).find(Boolean);
   addEffect("beam", actor.x, actor.y, actor.color, actor.dx, actor.dy);
+  addEffect("runes", actor.x, actor.y, "#bcefff");
   if (!target) {
     addLog(`${move.name}を放ったが、敵には届かなかった。`);
     return true;
   }
-  damageEnemy(target, actor.atk + 7 + actor.level, actor, move.name);
+  const power = Math.ceil((actor.magic + 8 + actor.level) * game.currentActionMultiplier);
+  damageEnemy(target, power, actor, move.name);
+  addEffect("nova", target.x, target.y, actor.color);
+  triggerScreenShake(8, 230);
   return true;
 }
 
 function useGust(actor, move) {
   const targets = game.enemies.filter((enemy) => gridDistance(actor, enemy) <= 1);
-  addEffect("burst", actor.x, actor.y, actor.color);
+  addEffect("vortex", actor.x, actor.y, actor.color);
   if (!targets.length) {
     addLog(`${move.name}が周囲のほこりを巻き上げた。`);
     return true;
   }
   for (const enemy of targets) {
-    damageEnemy(enemy, actor.atk + 4, actor, move.name);
+    damageEnemy(enemy, Math.ceil((actor.atk + 5) * game.currentActionMultiplier), actor, move.name);
     pushEnemy(enemy, Math.sign(enemy.x - actor.x), Math.sign(enemy.y - actor.y));
   }
   return true;
 }
 
 function useHeal(actor, move) {
-  const total = healActor(actor, 12 + actor.level * 2);
-  addEffect("heal", actor.x, actor.y, actor.color);
+  const total = healActor(actor, Math.ceil((12 + actor.level * 2 + actor.magic) * game.currentActionMultiplier));
+  addEffect("runes", actor.x, actor.y, actor.color);
+  addEffect("heal", actor.x, actor.y, "#bffff1");
   addLog(`${move.name}。HPを${total}回復した。`);
   return true;
 }
 
 function useGuard(actor, move) {
   actor.guardTurns = 3;
-  addEffect("heal", actor.x, actor.y, "#8dcbd9");
+  addEffect("shield", actor.x, actor.y, "#8dcbd9");
   addLog(`${move.name}。3ターンの間、受けるダメージを半減する。`);
   return true;
 }
@@ -1665,6 +1874,7 @@ function resolveWorldTurn() {
   revealAroundTeam();
   checkGameOver();
   updateAll();
+  if (game.rewardPending && !game.gameOver) window.setTimeout(openRelicReward, 80);
 }
 
 function companionTurns() {
@@ -1781,6 +1991,11 @@ function enemyTurn() {
       }
     }
 
+    if (enemy.attackStyle === "magic" && gridDistance(enemy, target) <= 3 && isVisible(enemy.x, enemy.y)) {
+      enemyAttack(enemy, target, true);
+      continue;
+    }
+
     if (gridDistance(enemy, target) === 1) {
       startBumpMotion(enemy, Math.sign(target.x - enemy.x), Math.sign(target.y - enemy.y), 0.3, 70);
       enemyAttack(enemy, target);
@@ -1790,7 +2005,10 @@ function enemyTurn() {
     const aware = enemy.alerted || distance(enemy, target) <= 9 || isVisible(enemy.x, enemy.y);
     if (aware) {
       enemy.alerted = true;
-      moveEnemyToward(enemy, target);
+      const moved = moveEnemyToward(enemy, target);
+      if (moved && enemy.mutation?.swift && Math.random() < 0.45 && gridDistance(enemy, target) > 1) {
+        moveEnemyToward(enemy, target);
+      }
     } else {
       enemyWander(enemy);
     }
@@ -1808,8 +2026,9 @@ function enemyTurn() {
 }
 
 function bossSpecialAttack(enemy, target) {
-  const base = 5 + (game.activeTownMission?.chapter || 1) * 3;
-  const rawDamage = Math.max(2, base + randInt(-2, 3) - target.def);
+  const base = 7 + Math.floor(game.floor / 5);
+  const defense = enemy.attackStyle === "magic" ? target.res : target.def;
+  const rawDamage = Math.max(2, base + randInt(-2, 3) - defense);
   const damage = target.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
   target.hp = Math.max(0, target.hp - damage);
   addEffect("burst", enemy.x, enemy.y, enemy.color);
@@ -1839,6 +2058,10 @@ function actorStrikeEnemy(actor, enemy, label) {
 
 function damageEnemy(enemy, amount, source, label) {
   if (!game.enemies.includes(enemy)) return;
+  amount = Math.max(1, Math.ceil(amount));
+  if (enemy.boss && hasRelic("bossClaw")) amount = Math.ceil(amount * 1.25);
+  if (enemy.mutated && hasRelic("mutationSeal")) amount = Math.ceil(amount * 1.35);
+  if (hasRelic("hungryCrown") && game.belly <= 30) amount += 6;
   enemy.hp -= amount;
   enemy.alerted = true;
   addEffect("hit", enemy.x, enemy.y, source.color || palette.brass);
@@ -1849,8 +2072,15 @@ function damageEnemy(enemy, amount, source, label) {
     game.enemies = game.enemies.filter((target) => target.id !== enemy.id);
     game.score += enemy.exp;
     game.runStats.kills += 1;
+    if (enemy.mutated) game.runStats.mutants += 1;
     addLog(`${label}。${enemy.name}を倒した。+${enemy.exp}pt`);
     gainExp(enemy.exp);
+    if (hasRelic("echoBell")) {
+      const move = getLeader().moves[game.selectedMove];
+      if (move) move.pp = Math.min(move.maxPp, move.pp + 1);
+    }
+    if (hasRelic("warDrum") && game.lastActionStyle === "physical") healActor(getLeader(), 5);
+    if (enemy.mutation?.volatile && gridDistance(enemy, getLeader()) <= 1) triggerMutationExplosion(enemy);
     if (enemy.boss) {
       dropEvolutionMaterial("bossCore", enemy.x, enemy.y, true);
       completeBossMission(enemy);
@@ -1859,6 +2089,8 @@ function damageEnemy(enemy, amount, source, label) {
       if (enemy.rare) {
         dropRareEnemyLoot(enemy.x, enemy.y);
         if (Math.random() < 0.55) dropEvolutionMaterial("bossCore", enemy.x, enemy.y);
+      } else if (enemy.mutated) {
+        dropEvolutionMaterial(materialForEnemy(enemy), enemy.x, enemy.y);
       } else {
         maybeDropItem(enemy.x, enemy.y);
       }
@@ -1869,34 +2101,64 @@ function damageEnemy(enemy, amount, source, label) {
 }
 
 function dropRareEnemyLoot(x, y) {
-  const gear = generateGear(2, 3);
   const point = findDropTile(x, y);
-  game.items.push({ id: cryptoId(), kind: "gear", gear, x: point.x, y: point.y });
-  addLog(`レア敵の戦利品。${gearRarityLabel(gear)}「${gear.name}」が落ちた。`);
-  announceEvent("レアドロップ", `${gearRarityLabel(gear)} ${gear.name}`, "★", "good");
+  const kind = Math.random() < 0.5 ? "reviver" : "fortuneOrb";
+  game.items.push({ id: cryptoId(), kind, x: point.x, y: point.y });
+  game.score += 120 + game.floor * 4;
+  addLog(`レア敵の戦利品。${itemCatalog[kind].name}と星屑を得た。`);
+  announceEvent("RARE REWARD", `${itemCatalog[kind].name}・救助pt獲得`, "★", "good");
 }
 
 function completeBossMission(enemy) {
   game.mission.complete = true;
+  game.stairsRevealed = true;
   game.score += game.mission.reward;
   game.rescuePoints += game.mission.reward;
   const point = { x: enemy.x, y: enemy.y };
-  const dropPoint = findDropTile(point.x, point.y);
-  game.items.push({ id: cryptoId(), kind: "gear", gear: generateGear(3, 4), x: dropPoint.x, y: dropPoint.y });
   addEffect("burst", point.x, point.y, palette.brass);
-  addLog(`${enemy.name}を撃破。最深部の封印が解けた。`);
-  announceEvent("ボス撃破", "階段の封印が解けた", "冠", "good");
+  game.pendingRelicChoices = rollRelicChoices(3, game.floor >= 79 ? "RARE" : "UNCOMMON");
+  game.rewardPending = true;
+  game.coins += 100 + game.floor * 4;
+  addLog(`${enemy.name}を撃破。隠し階段と、門番のレリックが現れた。`);
+  announceEvent("BOSS REWARD", "3つのレリックから1つを選べる", "冠", "good");
   setScreenFlash("#ffe08a", 700);
 }
 
-function enemyAttack(enemy, actor) {
-  const rawDamage = Math.max(1, enemy.atk + randInt(-1, 2) - actor.def);
+function materialForEnemy(enemy) {
+  return {
+    starwater: "moonShard",
+    firecrystal: "emberCore",
+    forestleaf: "wisdomSeed",
+    moonshade: "shadowFang",
+    skywind: Math.random() < 0.5 ? "moonShard" : "wisdomSeed",
+  }[enemy.typeKey] || "shadowFang";
+}
+
+function triggerMutationExplosion(enemy) {
+  const leader = getLeader();
+  const damage = Math.max(3, 5 + Math.floor(game.floor / 20) - leader.res);
+  leader.hp = Math.max(0, leader.hp - damage);
+  addEffect("nova", enemy.x, enemy.y, "#ff9b58");
+  addFloatingText(leader.x, leader.y, `-${damage}`, "#ff8c65");
+  triggerScreenShake(12, 320);
+  addLog(`${enemy.name}の爆核が砕け、${damage}ダメージ。`);
+}
+
+function enemyAttack(enemy, actor, ranged = false) {
+  const defense = enemy.attackStyle === "magic" ? actor.res : actor.def;
+  const attackPower = ranged ? Math.ceil(enemy.atk * 0.72) : enemy.atk;
+  const rawDamage = Math.max(1, attackPower + randInt(-1, 2) - defense);
   const damage = actor.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
   actor.hp = Math.max(0, actor.hp - damage);
   enemy.alerted = true;
-  addEffect("hit", actor.x, actor.y, enemy.color);
+  addEffect(ranged ? "comet" : "hit", actor.x, actor.y, enemy.color);
   addFloatingText(actor.x, actor.y, `-${damage}`, palette.coral);
-  addLog(`${enemy.name}の攻撃。${actor.name}に${damage}ダメージ。`);
+  addLog(`${enemy.name}の${ranged ? "魔弾" : "攻撃"}。${actor.name}に${damage}ダメージ。`);
+  if (enemy.mutation?.vampiric) {
+    const healed = Math.min(enemy.maxHp - enemy.hp, Math.max(1, Math.floor(damage / 2)));
+    enemy.hp += healed;
+    if (healed) addFloatingText(enemy.x, enemy.y, `+${healed}`, "#e477a1");
+  }
   if (actor.id === "leader") {
     setScreenFlash("#ef6b64", 260);
     triggerScreenShake(enemy.boss ? 15 : 9, enemy.boss ? 360 : 240);
@@ -1925,8 +2187,13 @@ function gainExp(amount) {
       actor.nextExp = Math.floor(actor.nextExp * 1.34 + 12);
       actor.maxHp += 4;
       actor.hp = actor.maxHp;
-      actor.atk += 1;
-      if (actor.level % 2 === 0) actor.def += 1;
+      const magicBuild = actor.id === "leader" && game.runStats.magicUses > game.runStats.physicalUses;
+      if (magicBuild) actor.magic += 1;
+      else actor.atk += 1;
+      if (actor.level % 2 === 0) {
+        if (magicBuild) actor.res += 1;
+        else actor.def += 1;
+      }
       if (actor.id === "leader") game.skillPoints += 1;
       addEffect("heal", actor.x, actor.y, actor.color);
       addLog(`${actor.name}はLv.${actor.level}になった。`);
@@ -1948,7 +2215,7 @@ function maybeDropEvolutionMaterial(enemy) {
   if (!kind && enemy.typeKey === "skywind") {
     kind = ["moonShard", "emberCore", "wisdomSeed", "shadowFang"][randInt(0, 3)];
   }
-  const chance = clamp(0.09 + game.luck * 0.012 + (hasSkill("predator") ? 0.06 : 0), 0.04, 0.28);
+  const chance = clamp(0.07 + game.luck * 0.01 + (enemy.mutated ? 0.12 : 0), 0.03, 0.24);
   if (kind && Math.random() < chance) dropEvolutionMaterial(kind, enemy.x, enemy.y);
 }
 
@@ -1974,7 +2241,7 @@ function findDropTile(x, y) {
 }
 
 function maybeDropItem(x, y) {
-  const chance = clamp(0.14 + game.luck * 0.025 + (hasSkill("predator") ? 0.05 : 0), 0.05, 0.34);
+  const chance = clamp(0.1 + game.luck * 0.018, 0.04, 0.22);
   if (Math.random() > chance || itemAt(x, y)) return;
   const kind = weighted([
     { value: "oran", weight: 22 },
@@ -1984,9 +2251,8 @@ function maybeDropItem(x, y) {
     { value: "apple", weight: 14 },
     { value: "reviver", weight: 4 },
     { value: "stardust", weight: 12 },
-    { value: "gear", weight: 5 },
   ]);
-  game.items.push({ id: cryptoId(), kind, gear: kind === "gear" ? generateGear() : undefined, x, y });
+  game.items.push({ id: cryptoId(), kind, x, y });
 }
 
 function pushEnemy(enemy, dx, dy) {
@@ -2001,28 +2267,48 @@ function pushEnemy(enemy, dx, dy) {
   startWalkMotion(enemy, from.x, from.y, x, y);
 }
 
-function applyStepTerrain(actor) {
-  const terrain = game.map[actor.y]?.[actor.x];
-  if (terrain === "moss") {
-    const healed = healActor(actor, 2);
-    if (healed > 0 && actor.id === "leader") addLog("回復苔の力でHPが2回復した。");
-    if (healed > 0) addEffect("heal", actor.x, actor.y, "#91e27b");
-    return;
-  }
+function resolveStepEffects(actor) {
+  const trap = game.traps.find((entry) => !entry.used && entry.x === actor.x && entry.y === actor.y);
+  if (trap) triggerHiddenTrap(actor, trap);
+  if (actor.down || actor.hp <= 0) return;
+  const healed = healActor(actor, 1 + (hasRelic("emberStep") ? 1 : 0));
+  if (healed > 0) addFloatingText(actor.x, actor.y, `+${healed}`, "#83e3ad");
+}
 
-  if (terrain !== "crack") return;
-  actor.hp = Math.max(0, actor.hp - 3);
-  addFloatingText(actor.x, actor.y, "-3", "#ff8a68");
-  addEffect("hit", actor.x, actor.y, "#ff8a68");
-  addLog(`${actor.name}は亀裂を踏み、3ダメージ。`);
-  if (actor.id === "leader") {
-    setScreenFlash("#ff6e55", 240);
-    triggerScreenShake(6, 180);
+function triggerHiddenTrap(actor, trap) {
+  trap.revealed = true;
+  trap.used = true;
+  game.runStats.trapsTriggered += 1;
+  let detail = "";
+  if (trap.kind === "spike") {
+    const damage = Math.max(3, 7 + Math.floor(game.floor / 12) - actor.def);
+    actor.hp = Math.max(0, actor.hp - damage);
+    addFloatingText(actor.x, actor.y, `-${damage}`, "#ff806c");
+    detail = `星針が突き上がり ${damage}ダメージ`;
+  } else if (trap.kind === "sleep") {
+    actor.guardTurns = 0;
+    actor.hp = Math.max(1, actor.hp - 3);
+    detail = "眠り粉で無防備になった";
+  } else if (trap.kind === "warp") {
+    warpTeamToSafeRoom();
+    detail = "別の部屋へ飛ばされた";
+  } else {
+    const move = actor.moves[game.selectedMove];
+    if (move) move.pp = Math.max(0, move.pp - 2);
+    detail = `${move?.name || "技"}のPPを2失った`;
   }
+  addEffect("trap", trap.x, trap.y, "#ff7065");
+  addLog(`隠し罠「${trapName(trap.kind)}」が作動。${detail}。`);
+  announceEvent("HIDDEN TRAP", `${trapName(trap.kind)}　${detail}`, "罠", "danger");
+  setScreenFlash("#ff675c", 360);
+  triggerScreenShake(9, 260);
   if (actor.hp > 0) return;
   if (tryReviveActor(actor)) return;
   actor.down = true;
-  if (actor.id !== "leader") addLog(`${actor.name}は倒れた。次の階で復帰する。`);
+}
+
+function trapName(kind) {
+  return { spike: "星針", sleep: "眠り粉", warp: "転移陣", silence: "封技印" }[kind] || "未知の罠";
 }
 
 function pickUpItem() {
@@ -2154,6 +2440,45 @@ function evolutionMaterialTotal() {
   return evolutionMaterialKeys.reduce((sum, kind) => sum + (game.evolutionBag[kind] || 0), 0);
 }
 
+function hasRelic(key) {
+  return game.relics.includes(key);
+}
+
+function addRelic(key, announce = true) {
+  const relic = relicCatalog.find((entry) => entry.key === key);
+  if (!relic || hasRelic(key)) return false;
+  game.relics.push(key);
+  const leader = getLeader();
+  const bonus = relic.bonus || {};
+  leader.maxHp = Math.max(12, leader.maxHp + (bonus.hp || 0));
+  leader.hp = clamp(leader.hp + Math.max(0, bonus.hp || 0), 1, leader.maxHp);
+  leader.atk += bonus.atk || 0;
+  leader.magic += bonus.magic || 0;
+  leader.def += bonus.def || 0;
+  leader.res += bonus.res || 0;
+  if (announce) {
+    addLog(`レリック「${relic.name}」を獲得。${relic.detail}`);
+    announceEvent("RELIC ACQUIRED", `${relic.name}　${relic.detail}`, relic.icon, "good");
+    playSfx("upgrade");
+  }
+  return true;
+}
+
+function rollRelicChoices(count = 3, minimumRarity = "COMMON") {
+  const rarityRank = { COMMON: 0, UNCOMMON: 1, RARE: 2, BOSS: 3 };
+  const minimum = rarityRank[minimumRarity] ?? 0;
+  const pool = relicCatalog.filter(
+    (relic) => !hasRelic(relic.key) && rarityRank[relic.rarity] >= minimum && relic.rarity !== "BOSS",
+  );
+  const choices = [];
+  while (choices.length < count && pool.length) {
+    const index = randInt(0, pool.length - 1);
+    choices.push(pool.splice(index, 1)[0].key);
+  }
+  if (choices.length < count && !hasRelic("zeroFragment")) choices.push("zeroFragment");
+  return choices.slice(0, count);
+}
+
 function useItem(kind) {
   const catalog = itemCatalog[kind];
   if (!catalog || (game.bag[kind] || 0) <= 0) {
@@ -2223,7 +2548,8 @@ function useItem(kind) {
     detail = "別の安全な部屋へ移動";
   } else if (kind === "guidingOrb") {
     game.guidanceActive = true;
-    detail = "目的地がミニマップに表示された";
+    game.stairsRevealed = true;
+    detail = "隠し階段がミニマップに表示された";
   } else if (kind === "guardBerry") {
     leader.def += 1;
     detail = "この挑戦中、防御 +1";
@@ -2295,6 +2621,16 @@ function tickHunger() {
 }
 
 function tryReviveActor(actor) {
+  if (actor.id === "leader" && hasRelic("secondMoon") && !game.secondMoonUsed) {
+    game.secondMoonUsed = true;
+    actor.down = false;
+    actor.hp = Math.max(1, Math.ceil(actor.maxHp * 0.4));
+    addEffect("nova", actor.x, actor.y, "#fff0a2");
+    addFloatingText(actor.x, actor.y, "SECOND MOON", "#fff0a2");
+    announceEvent("二度目の月", `${actor.name}がHP ${actor.hp}で復活`, "月", "good");
+    setScreenFlash("#fff0a2", 520);
+    return true;
+  }
   if ((game.bag.reviver || 0) <= 0) return false;
   game.bag.reviver -= 1;
   actor.down = false;
@@ -2327,22 +2663,33 @@ function checkMission() {
 function tryUseStairs() {
   const leader = getLeader();
   if (leader.x !== game.stairs.x || leader.y !== game.stairs.y) return false;
+  if (!game.stairsRevealed) {
+    game.stairsRevealed = true;
+    announceEvent("SECRET STAIRS", "足元に隠し階段が現れた", "階", "good");
+  }
   if (!game.mission.complete) {
-    addLog("この階の依頼に決着をつけるまで、階段は動かない。");
+    addLog("休憩所を守る門番を倒すまで、階段は開かない。");
     return false;
+  }
+  if (game.rewardPending) {
+    openRelicReward();
+    return true;
+  }
+  if (isRestFloor(game.floor) && !game.restChoiceTaken) {
+    openRestSite();
+    return true;
   }
   if (!ui.stairsDialog.open) openStairsDialog();
   return true;
 }
 
 function openStairsDialog() {
-  const finalFloor = game.floor >= game.targetFloor;
-  ui.stairsDialogKicker.textContent = finalFloor ? "ボス撃破" : `B${game.floor}F 踏破`;
-  ui.stairsDialogTitle.textContent = finalFloor ? "町へ帰還しますか？" : "次の階へ進みますか？";
-  ui.stairsDialogText.textContent = finalFloor
-    ? "戦利品を確定し、ダンジョン制覇の報告へ戻ります。"
-    : "次へ進むと、この階には戻れません。残った道具を探すこともできます。";
-  ui.stairsProceedButton.textContent = finalFloor ? "町へ帰還" : `B${game.floor + 1}Fへ進む`;
+  ui.stairsDialogKicker.textContent = game.floorKind === "boss" ? "門番撃破" : `B${game.floor}F 踏破`;
+  ui.stairsDialogTitle.textContent = "次の階へ進みますか？";
+  ui.stairsDialogText.textContent = isRestFloor(game.floor + 1)
+    ? `次はB${game.floor + 1}Fの${isMajorRestFloor(game.floor + 1) ? "大休憩所" : "休憩所"}です。技PPが回復します。`
+    : "次へ進むと、この階には戻れません。";
+  ui.stairsProceedButton.textContent = `B${game.floor + 1}Fへ進む`;
   ui.stairsDialog.showModal();
 }
 
@@ -2356,49 +2703,193 @@ function proceedThroughStairs() {
   if (ui.stairsDialog.open) ui.stairsDialog.close();
 
   if (game.floor >= game.targetFloor) {
-    game.runStats.floorsCleared += 1;
-    game.victory = true;
-    const dungeonNo = game.activeTownMission?.chapter || 1;
-    game.completedDungeon = Math.max(game.completedDungeon, dungeonNo);
-    const contractReward = game.activeTownMission?.reward || 500;
-    game.score += contractReward;
-    game.coins += contractReward;
-    game.rescuePoints += contractReward;
-    const nextMission = townMissions.findIndex((mission) => mission.chapter === dungeonNo + 1);
-    if (nextMission >= 0) game.selectedTownMission = nextMission;
-    saveBestScore();
-    saveCurrentGame(true);
-    ui.endTitle.textContent = `${game.activeTownMission?.dungeon || "ダンジョン"} 制覇`;
-    const next = townMissions.find((mission) => mission.chapter === dungeonNo + 1);
-    const continuation = next
-      ? `次の探索先「${next.dungeon}」が解放された。`
-      : "5つのダンジョンをすべて制覇した。";
-    ui.endText.textContent = `ボスを倒して町へ帰還。報酬 ${contractReward}星貨。${continuation}`;
-    ui.endRestartButton.textContent = "町へ戻る";
-    ui.endOverlay.hidden = false;
-    playSfx("victory");
-    updateAll();
+    completeTower();
     return;
   }
 
   game.runStats.floorsCleared += 1;
   game.floor += 1;
+  game.highestFloor = Math.max(game.highestFloor, game.floor);
   game.turn = 1;
-  game.belly = clamp(game.belly + 14, 0, 100);
   for (const actor of game.team) {
-    actor.hp = Math.min(actor.maxHp, actor.hp + 8);
     actor.down = false;
   }
   buildFloor();
-  announceEvent("次の階へ", `B${game.floor}F　新しい地形を探索`, "階", "mystic");
+  announceEvent("次の階へ", `B${game.floor}F　${game.floorKind === "boss" ? "門番戦" : game.floorKind.includes("rest") ? "休憩所" : "探索開始"}`, "階", "mystic");
   playSfx("stairs");
   updateAll();
+}
+
+function completeTower() {
+  game.victory = true;
+  game.completedDungeon = 1;
+  game.highestFloor = 100;
+  game.towerCheckpoint = null;
+  game.score += 5000;
+  game.coins += 5000;
+  game.rescuePoints += 5000;
+  saveBestScore();
+  saveCurrentGame(true);
+  ui.endTitle.textContent = "星喰い塔 100F踏破";
+  ui.endText.textContent = "10の門番を越え、星核へ到達した。報酬 5000星貨。永続進化は次の挑戦にも残る。";
+  ui.endRestartButton.textContent = "町へ凱旋";
+  ui.endOverlay.hidden = false;
+  playSfx("victory");
+  updateAll();
+}
+
+function openRestSite() {
+  if (!isRestFloor(game.floor) || game.restChoiceTaken || ui.restDialog.open) return;
+  const major = isMajorRestFloor(game.floor);
+  restoreAllPp();
+  if (major) {
+    const leader = getLeader();
+    leader.hp = leader.maxHp;
+    game.belly = 100;
+  }
+  ui.restDialogKicker.textContent = `B${game.floor}F ${major ? "大休憩所" : "休憩所"}`;
+  ui.restDialogTitle.textContent = game.floor >= 100 ? "百階の星核" : major ? "星核の大休憩所" : "星火の休憩所";
+  ui.restDialogText.textContent = game.floor >= 100
+    ? "最後の門番を越えた。星核へ触れれば、100階踏破となる。"
+    : major
+      ? "HP・満腹度・すべての技PPが全回復した。さらにひとつ選べる。"
+      : "すべての技PPが全回復した。次へ進む前に、ひとつだけ選べる。";
+  const choices = game.floor >= 100
+    ? [{ key: "complete", title: "星核へ触れる", detail: "100階踏破を確定する", icon: "冠" }]
+    : major
+      ? [
+          { key: "fortify", title: "星火で鍛える", detail: "最大HP +10、HPを全回復", icon: "HP" },
+          { key: "skill", title: "星網を編み直す", detail: "スキルポイント +2", icon: "網" },
+          { key: "relic", title: "深層遺物を調べる", detail: "レアを含むレリック3択", icon: "遺" },
+        ]
+      : [
+          { key: "heal", title: "傷を癒やす", detail: "最大HPの45%を回復", icon: "癒" },
+          { key: "physical", title: "牙を研ぐ", detail: "物理攻撃 +1、物理行動 +15", icon: "攻" },
+          { key: "magic", title: "術式を磨く", detail: "魔力 +1、魔法行動 +15", icon: "魔" },
+        ];
+  ui.restDialogChoices.innerHTML = choices.map((choice) => `
+    <button type="button" data-rest-choice="${choice.key}">
+      <b>${choice.icon}</b><span><strong>${choice.title}</strong><small>${choice.detail}</small></span>
+    </button>
+  `).join("");
+  ui.restDialogChoices.querySelectorAll("[data-rest-choice]").forEach((button) => {
+    button.addEventListener("click", () => chooseRestAction(button.dataset.restChoice));
+  });
+  ui.restDialog.showModal();
+}
+
+function chooseRestAction(action) {
+  if (action === "complete") {
+    game.restChoiceTaken = true;
+    ui.restDialog.close();
+    completeTower();
+    return;
+  }
+  const leader = getLeader();
+  if (action === "heal") leader.hp = Math.min(leader.maxHp, leader.hp + Math.ceil(leader.maxHp * 0.45));
+  if (action === "physical") {
+    leader.atk += 1;
+    game.runStats.physicalUses += 15;
+  }
+  if (action === "magic") {
+    leader.magic += 1;
+    game.runStats.magicUses += 15;
+  }
+  if (action === "fortify") {
+    leader.maxHp += 10;
+    leader.hp = leader.maxHp;
+  }
+  if (action === "skill") game.skillPoints += 2;
+  if (action === "relic") {
+    game.pendingRelicChoices = rollRelicChoices(3, "UNCOMMON");
+    game.rewardPending = true;
+  }
+  game.restChoiceTaken = true;
+  ui.restDialog.close();
+  captureTowerCheckpoint(game.floor + 1);
+  saveCurrentGame(true);
+  announceEvent("REST COMPLETE", `${action === "relic" ? "深層遺物が反応した" : "次の10階へ備えた"}`, "休", "good");
+  updateAll();
+  if (game.rewardPending) setTimeout(openRelicReward, 60);
+}
+
+function captureTowerCheckpoint(resumeFloor) {
+  const leader = getLeader();
+  game.towerCheckpoint = {
+    floor: clamp(resumeFloor, 1, 100),
+    leader: {
+      level: leader.level,
+      exp: leader.exp,
+      nextExp: leader.nextExp,
+      hp: leader.hp,
+      maxHp: leader.maxHp,
+      atk: leader.atk,
+      magic: leader.magic,
+      def: leader.def,
+      res: leader.res,
+      moves: leader.moves.map((move) => ({ ...move })),
+      evolutionKey: leader.evolutionKey,
+      evolutionStage: leader.evolutionStage,
+      appliedSkills: [...(leader.appliedSkills || [])],
+    },
+    relics: [...game.relics],
+    unlockedSkills: [...game.unlockedSkills],
+    skillPoints: game.skillPoints,
+    runStats: { ...game.runStats },
+    belly: game.belly,
+    score: game.score,
+    selectedMove: game.selectedMove,
+    secondMoonUsed: game.secondMoonUsed,
+    lastActionStyle: game.lastActionStyle,
+  };
+}
+
+function restoreTowerCheckpoint(checkpoint) {
+  const leader = getLeader();
+  Object.assign(leader, checkpoint.leader || {});
+  if (Array.isArray(checkpoint.leader?.moves)) leader.moves = checkpoint.leader.moves.map((move) => ({ ...move }));
+  const checkpointEvolutionKey = leader.evolutionKey || "base";
+  if (game.persistentEvolutionKey !== checkpointEvolutionKey) {
+    const missing = [];
+    let cursor = evolutionCatalog.find((entry) => entry.key === game.persistentEvolutionKey);
+    while (cursor && cursor.key !== checkpointEvolutionKey) {
+      missing.unshift(cursor);
+      cursor = evolutionCatalog.find((entry) => entry.key === cursor.from);
+    }
+    if (cursor?.key === checkpointEvolutionKey || checkpointEvolutionKey === "base") {
+      const hpBonus = missing.reduce((sum, entry) => sum + entry.bonus.hp, 0);
+      for (const evolution of missing) applyEvolutionBonus(leader, evolution);
+      leader.hp = Math.min(leader.maxHp, leader.hp + hpBonus);
+      leader.evolutionKey = game.persistentEvolutionKey;
+      leader.evolutionStage = game.persistentEvolutionStage;
+    }
+  }
+  const evolution = evolutionCatalog.find((entry) => entry.key === leader.evolutionKey);
+  if (evolution) {
+    leader.name = evolution.name;
+    leader.type = evolution.type;
+    leader.role = `${evolution.type}タイプ`;
+    leader.color = evolution.color;
+    leader.accent = evolution.accent;
+    leader.scarf = evolution.scarf;
+  }
+  game.relics = Array.isArray(checkpoint.relics) ? [...checkpoint.relics] : [];
+  game.unlockedSkills = Array.isArray(checkpoint.unlockedSkills) ? [...checkpoint.unlockedSkills] : [];
+  game.skillPoints = Math.max(0, Number(checkpoint.skillPoints) || 0);
+  game.runStats = { ...createRunStats(), ...(checkpoint.runStats || {}) };
+  game.belly = clamp(Number(checkpoint.belly) || 100, 0, 100);
+  game.score = Math.max(0, Number(checkpoint.score) || 0);
+  game.selectedMove = clamp(Number(checkpoint.selectedMove) || 0, 0, leader.moves.length - 1);
+  game.secondMoonUsed = Boolean(checkpoint.secondMoonUsed);
+  game.lastActionStyle = checkpoint.lastActionStyle === "magic" ? "magic" : checkpoint.lastActionStyle === "physical" ? "physical" : null;
 }
 
 function checkGameOver() {
   const leader = getLeader();
   if (!leader.down && leader.hp > 0) return;
   game.gameOver = true;
+  game.towerCheckpoint = null;
+  saveCurrentGame(true);
   saveBestScore();
   ui.endTitle.textContent = "救助失敗";
   ui.endText.textContent = `B${game.floor}Fで力尽きた。救助pt ${game.score}。`;
@@ -2416,43 +2907,56 @@ function updateAll() {
   ui.touchControls.hidden = inTown;
 
   if (inTown) {
-    const mission = townMissions[game.selectedTownMission];
     const leader = getLeader();
+    const checkpoint = game.towerCheckpoint?.floor;
+    const evolution = evolutionCatalog.find((entry) => entry.key === game.persistentEvolutionKey);
     ui.floor.textContent = "町";
     ui.score.textContent = `${game.coins} 星貨`;
     ui.best.textContent = rank.name;
-    ui.townMission.textContent = `迷宮 ${mission.chapter}/5　${mission.dungeon} / 全${mission.floors}階`;
+    ui.townMission.textContent = `星喰いの塔 / 最高 B${game.highestFloor}F / 全100階`;
     ui.townRank.textContent = rank.name;
     ui.townCoin.textContent = `${game.coins}`;
     ui.townLeaderName.textContent = leader.name;
-    ui.townLeaderType.textContent = `${leader.type}タイプ`;
+    ui.townLeaderType.textContent = `${leader.type}タイプ${evolution ? ` / ${evolution.path === "magic" ? "魔法型" : evolution.path === "physical" ? "物理型" : "複合型"}` : ""}`;
     ui.townLeaderSwatch.style.background = leader.color;
-    ui.departButton.querySelector("span").textContent = `迷宮 ${mission.chapter}/5　${mission.dungeon} / 報酬 ${mission.reward}星貨`;
+    ui.departButton.querySelector("span").textContent = checkpoint
+      ? `B${checkpoint}Fの休憩所から再開`
+      : "B1Fから100階踏破へ挑む";
     return;
   }
 
+  const nextRest = Math.min(100, Math.ceil((game.floor + (isRestFloor(game.floor) ? 1 : 0)) / 10) * 10);
+  const physicalLead = game.runStats.physicalUses - game.runStats.magicUses;
+  const buildName = physicalLead >= 8 ? "物理型" : physicalLead <= -8 ? "魔法型" : "均衡型";
   ui.floor.textContent = `B${game.floor}F`;
   ui.score.textContent = `${game.score} pt`;
   ui.best.textContent = `Best ${bestScore}`;
-  ui.mission.textContent = game.mission?.complete ? "解除" : game.mission?.boss ? "ボス戦" : "探索中";
+  ui.mission.textContent = game.floorKind.includes("rest")
+    ? (game.restChoiceTaken ? "休息済" : "休憩所")
+    : game.mission?.boss
+      ? (game.mission.complete ? "門番撃破" : "門番戦")
+      : game.stairsRevealed ? "階段発見" : "探索中";
   ui.belly.textContent = `${Math.ceil(game.belly)}`;
   ui.bag.textContent = `バッグ ${bagTotal()}/${game.bagCapacity}`;
   ui.materials.textContent = `素材袋 ${evolutionMaterialTotal()}`;
-  ui.gear.textContent = `${Object.values(game.equipment).filter(Boolean).length} / 3`;
+  ui.gear.textContent = `${game.relics.length}個`;
   ui.turn.textContent = `${game.turn}`;
-  ui.stairs.textContent = game.mission?.complete ? "使用可" : "封印中";
-  ui.goal.textContent = game.mission?.complete
-    ? "階段へ向かう"
-    : game.mission?.boss
+  ui.stairs.textContent = !game.mission?.complete ? "封印中" : game.stairsRevealed ? "発見済" : "未発見";
+  ui.goal.textContent = game.floorKind.includes("rest")
+    ? game.restChoiceTaken ? "階段から次の区画へ" : "休憩の恩恵を1つ選ぶ"
+    : !game.mission?.complete
       ? `${game.mission.target}を倒す`
-      : `${game.mission?.target || "階の印"}を探す`;
-  ui.chapter.textContent = `${game.activeTownMission?.dungeon || "ダンジョン"}`;
+      : game.stairsRevealed
+        ? "階段へ向かう"
+        : "隠し階段を探す";
+  ui.rest.textContent = game.floor >= 100 ? "最深部" : `次は B${nextRest}F`;
+  ui.chapter.textContent = "星喰いの塔";
   ui.luck.textContent = game.floorEvent?.name || "平穏";
   ui.luck.style.color = game.luck > 0 ? "#9ee88c" : game.luck < 0 ? "#ff9b87" : "";
   ui.mapLeaderDot.style.background = getLeader().color;
-  ui.tacticSummary.textContent = game.karma === 0 ? "清廉" : game.karma < 5 ? "影が差す" : "深い業";
-  ui.karma.textContent = `${game.karma}`;
-  ui.karma.style.color = game.karma === 0 ? "#8ee3d5" : game.karma < 5 ? "#d9a0e8" : "#ff776c";
+  ui.tacticSummary.textContent = `${buildName} / 物${game.runStats.physicalUses} 魔${game.runStats.magicUses}`;
+  ui.karma.textContent = buildName;
+  ui.karma.style.color = buildName === "物理型" ? "#ff9274" : buildName === "魔法型" ? "#79d7f0" : "#f0cf78";
   renderParty(rank);
   renderMoves();
   renderLog();
@@ -2568,8 +3072,13 @@ function renderGameMenu(view = "moves") {
     return;
   }
 
-  if (view === "gear") {
-    renderGearMenu();
+  if (view === "relics") {
+    renderRelicMenu();
+    return;
+  }
+
+  if (view === "relicReward") {
+    renderRelicReward();
     return;
   }
 
@@ -2588,14 +3097,15 @@ function renderGameMenu(view = "moves") {
     return;
   }
 
-  const mission = game.activeTownMission;
+  const nextGateIndex = Math.min(9, Math.floor(game.floor / 10));
+  const nextBoss = towerBossCatalog[nextGateIndex];
   ui.gameMenuBody.innerHTML = `
-    <p class="town-note">${mission?.description || "探索情報がありません。"}</p>
+    <p class="town-note">10の門番と休憩所を越え、B100Fの星核を目指します。通常階の階段と罠は隠されています。</p>
     <div class="menu-stat-grid">
       <div class="menu-stat"><span>現在地</span><strong>B${game.floor}F / B${game.targetFloor}F</strong></div>
-      <div class="menu-stat"><span>階の目的</span><strong>${game.mission?.complete ? "達成" : game.mission?.boss ? "ボス戦" : "先遣員の捜索"}</strong></div>
-      <div class="menu-stat"><span>案内人</span><strong>${mission?.client || "-"}</strong></div>
-      <div class="menu-stat"><span>最深部ボス</span><strong>${mission?.target || "-"}</strong></div>
+      <div class="menu-stat"><span>階の目的</span><strong>${game.mission?.boss && !game.mission.complete ? "門番を倒す" : game.stairsRevealed ? "階段へ進む" : "隠し階段を探す"}</strong></div>
+      <div class="menu-stat"><span>次の門番</span><strong>${nextBoss?.name || "星喰皇ゼロム"}</strong></div>
+      <div class="menu-stat"><span>次の休憩</span><strong>B${Math.min(100, Math.ceil((game.floor + 1) / 10) * 10)}F</strong></div>
       <div class="menu-stat"><span>フロア運勢</span><strong>${game.floorEvent?.name || "平穏"}</strong></div>
       <div class="menu-stat"><span>運勢の効果</span><strong>${game.floorEvent?.detail || "-"}</strong></div>
     </div>
@@ -2625,6 +3135,70 @@ function renderEvolutionMaterialBag() {
       iconKind: kind,
     });
   }
+}
+
+function renderRelicMenu() {
+  ui.gameMenuBody.innerHTML = `
+    <div class="relic-head">
+      <div class="relic-head-mark">遺</div>
+      <div><span>この挑戦だけの力</span><strong>所持レリック ${game.relics.length}</strong><small>装備枠はありません。獲得した効果はすべて同時に働きます。</small></div>
+    </div>
+    <div class="relic-grid"></div>
+  `;
+  const grid = ui.gameMenuBody.querySelector(".relic-grid");
+  if (!game.relics.length) {
+    grid.innerHTML = '<p class="town-note">まだレリックはありません。休憩所前の門番を倒すと、3つから1つ選べます。</p>';
+    return;
+  }
+  for (const key of game.relics) {
+    const relic = relicCatalog.find((entry) => entry.key === key);
+    if (!relic) continue;
+    grid.insertAdjacentHTML("beforeend", relicCardMarkup(relic));
+  }
+}
+
+function renderRelicReward() {
+  ui.gameMenuBody.innerHTML = `
+    <div class="relic-reward-head">
+      <span>門番撃破報酬</span>
+      <strong>レリックを1つ選ぶ</strong>
+      <small>どれを取るかで、この先の物理・魔法・生存戦略が変わります。</small>
+    </div>
+    <div class="relic-choice-grid"></div>
+  `;
+  const grid = ui.gameMenuBody.querySelector(".relic-choice-grid");
+  for (const key of game.pendingRelicChoices) {
+    const relic = relicCatalog.find((entry) => entry.key === key);
+    if (!relic) continue;
+    const card = document.createElement("button");
+    card.type = "button";
+    card.className = "relic-choice";
+    card.innerHTML = relicCardMarkup(relic);
+    card.addEventListener("click", () => {
+      addRelic(relic.key);
+      game.pendingRelicChoices = [];
+      game.rewardPending = false;
+      if (isRestFloor(game.floor) && game.restChoiceTaken) {
+        captureTowerCheckpoint(Math.min(100, game.floor + 1));
+        saveCurrentGame(true);
+      }
+      if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
+      updateAll();
+    });
+    grid.appendChild(card);
+  }
+}
+
+function relicCardMarkup(relic) {
+  return `<article class="relic-card" style="--relic-color:${relic.color}">
+    <b>${relic.icon}</b>
+    <div><span>${relic.rarity}</span><strong>${relic.name}</strong><small>${relic.detail}</small></div>
+  </article>`;
+}
+
+function openRelicReward() {
+  if (!game.rewardPending || !game.pendingRelicChoices.length) return;
+  openGameMenu("relicReward");
 }
 
 function renderDungeonMerchant() {
@@ -2754,12 +3328,13 @@ function renderEvolutionBoard() {
       </div>
       <div class="evolution-head-stats">
         <b>Lv.${leader.level}</b>
-        <b>カルマ ${game.karma}</b>
-        <b>撃破 ${stats.kills}</b>
-        <b>救助 ${stats.helped}</b>
+        <b>物理 ${stats.physicalUses}</b>
+        <b>魔法 ${stats.magicUses}</b>
+        <b>到達 B${game.highestFloor}F</b>
+        <b>変異種 ${stats.mutants}</b>
       </div>
     </div>
-    <p class="town-note">進化は急がなくて大丈夫です。コハクのまま積み重ねた行動、レベル、素材が新しい道を開きます。</p>
+    <p class="town-note">進化した姿は次の挑戦にも引き継がれます。物理・魔法の使い方、到達階、変異種の撃破、進化素材が新しい道を開きます。</p>
     <div class="evolution-grid"></div>
   `;
   const grid = ui.gameMenuBody.querySelector(".evolution-grid");
@@ -2825,74 +3400,61 @@ function evolveTo(key) {
   leader.color = evolution.color;
   leader.accent = evolution.accent;
   leader.scarf = evolution.scarf;
-  leader.maxHp += evolution.bonus.hp;
+  applyEvolutionBonus(leader, evolution);
   leader.hp = leader.maxHp;
-  leader.atk += evolution.bonus.atk;
-  leader.def += evolution.bonus.def;
+  game.persistentEvolutionKey = evolution.key;
+  game.persistentEvolutionStage = evolution.stage;
   addEffect("burst", leader.x, leader.y, evolution.color);
   addLog(`コハクは${evolution.name}へ進化した。${evolution.title}。`);
   announceEvent("進化", `${evolution.name}　${evolution.type}タイプ`, "進", "good");
   setScreenFlash(evolution.color, 900);
   triggerScreenShake(10, 520);
   playSfx("evolve");
+  saveCurrentGame(true);
   updateAll();
   renderGameMenu("evolution");
 }
 
 function renderSkillBoard() {
+  const laneInfo = {
+    physical: { title: "物理の牙", detail: "近接火力と防御", color: "#ef755b" },
+    core: { title: "生存の星", detail: "探索と立て直し", color: "#e6bd5d" },
+    magic: { title: "魔法の環", detail: "技火力とPP運用", color: "#77cce8" },
+  };
   ui.gameMenuBody.innerHTML = `
     <div class="skill-board-head">
       <div><span>使用できるポイント</span><strong>${game.skillPoints}</strong></div>
-      <p>この挑戦だけの星網盤です。中心から枝をつなぎ、複数の節が交わる先に強力な極星があります。</p>
+      <p>この挑戦だけの星網盤です。下から上へつなぎ、物理・生存・魔法のどこへ寄せるかを選びます。</p>
     </div>
-    <div class="skill-board-viewport">
-      <div class="skill-board">
-        <svg class="skill-links" width="900" height="740" viewBox="0 0 900 740" aria-hidden="true"></svg>
-        <div class="skill-core" aria-hidden="true"><i></i><b>星網</b></div>
-      </div>
-    </div>
+    <div class="skill-board-compact"></div>
   `;
-  const board = ui.gameMenuBody.querySelector(".skill-board");
-  const links = board.querySelector(".skill-links");
-  for (const skill of skillCatalog) {
-    for (const requirement of skill.requires || []) {
-      const parent = skillCatalog.find((entry) => entry.key === requirement);
-      if (!parent) continue;
-      const active = hasSkill(requirement) && hasSkill(skill.key);
-      links.insertAdjacentHTML(
-        "beforeend",
-        `<line class="${active ? "unlocked" : hasSkill(requirement) ? "reachable" : ""}"
-          x1="${parent.x + 65}" y1="${parent.y + 39}" x2="${skill.x + 65}" y2="${skill.y + 39}" />`,
-      );
+  const board = ui.gameMenuBody.querySelector(".skill-board-compact");
+  for (const laneKey of ["physical", "core", "magic"]) {
+    const info = laneInfo[laneKey];
+    const lane = document.createElement("section");
+    lane.className = `skill-lane skill-lane-${laneKey}`;
+    lane.style.setProperty("--lane-color", info.color);
+    lane.innerHTML = `<header><b>${info.title}</b><small>${info.detail}</small></header><div class="skill-lane-nodes"></div>`;
+    const nodes = lane.querySelector(".skill-lane-nodes");
+    const skills = skillCatalog.filter((skill) => skill.lane === laneKey).sort((a, b) => a.tier - b.tier);
+    for (const skill of skills) {
+      const unlocked = hasSkill(skill.key);
+      const requirementMet = skillRequirementsMet(skill);
+      const affordable = game.skillPoints >= skill.cost;
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `skill-node-compact ${unlocked ? "unlocked" : ""} ${requirementMet && affordable && !unlocked ? "available" : ""}`;
+      button.disabled = unlocked || !requirementMet || !affordable;
+      button.innerHTML = `
+        <span class="skill-node-icon">${skill.icon}</span>
+        <span class="skill-node-copy"><b>TIER ${skill.tier + 1}</b><strong>${skill.name}</strong><small>${skill.detail}</small></span>
+        <span class="skill-cost">${unlocked ? "習得済" : `${skill.cost} pt`}</span>
+      `;
+      button.addEventListener("click", () => unlockSkill(skill.key));
+      nodes.appendChild(button);
     }
+    board.appendChild(lane);
   }
-  skillCatalog.forEach((skill) => {
-    const unlocked = hasSkill(skill.key);
-    const requirementMet = skillRequirementsMet(skill);
-    const affordable = game.skillPoints >= skill.cost;
-    const button = document.createElement("button");
-    button.type = "button";
-    button.className = `skill-node ${unlocked ? "unlocked" : ""} ${requirementMet && affordable && !unlocked ? "available" : ""}`;
-    button.style.left = `${skill.x}px`;
-    button.style.top = `${skill.y}px`;
-    button.disabled = unlocked || !requirementMet || !affordable;
-    button.innerHTML = `
-      <span class="skill-node-icon">${skill.icon}</span>
-      <span class="skill-node-copy">
-        <b>${skill.branch}</b>
-        <strong>${skill.name}</strong>
-        <small>${skill.detail}</small>
-      </span>
-      <span class="skill-cost">${unlocked ? "習得済" : `${skill.cost} pt`}</span>
-    `;
-    button.addEventListener("click", () => unlockSkill(skill.key));
-    board.appendChild(button);
-  });
-  const viewport = ui.gameMenuBody.querySelector(".skill-board-viewport");
-  requestAnimationFrame(() => {
-    viewport.scrollLeft = Math.max(0, (viewport.scrollWidth - viewport.clientWidth) / 2);
-    viewport.scrollTop = Math.max(0, (viewport.scrollHeight - viewport.clientHeight) / 2);
-  });
 }
 
 function unlockSkill(key) {
@@ -2903,7 +3465,7 @@ function unlockSkill(key) {
   game.skillPoints -= skill.cost;
   game.unlockedSkills.push(key);
 
-  if (["tough", "power", "shell", "technique", "vitality", "blaze", "ward", "flow", "starcore", "rebirth", "sovereign"].includes(key)) {
+  if (["tough", "power", "shell", "arcana", "technique", "flow", "starcore", "sovereign", "oracle"].includes(key)) {
     applyUnlockedSkillsToLeader(getLeader());
   }
 
@@ -2925,8 +3487,8 @@ function skillRequirementsMet(skill) {
 function applyUnlockedSkillsToLeader(leader) {
   leader.appliedSkills ||= [];
   if (hasSkill("tough") && !leader.appliedSkills.includes("tough")) {
-    leader.maxHp += 6;
-    leader.hp += 6;
+    leader.maxHp += 8;
+    leader.hp += 8;
     leader.appliedSkills.push("tough");
   }
   if (hasSkill("power") && !leader.appliedSkills.includes("power")) {
@@ -2944,45 +3506,41 @@ function applyUnlockedSkillsToLeader(leader) {
     }
     leader.appliedSkills.push("technique");
   }
+  if (hasSkill("arcana") && !leader.appliedSkills.includes("arcana")) {
+    leader.magic += 2;
+    leader.appliedSkills.push("arcana");
+  }
   const statSkills = [
-    ["vitality", { hp: 10 }],
-    ["blaze", { atk: 3 }],
-    ["ward", { def: 2 }],
-    ["starcore", { hp: 8, atk: 1, def: 1 }],
-    ["rebirth", { hp: 16 }],
-    ["sovereign", { atk: 4, def: 1 }],
+    ["flow", { magic: 3 }],
+    ["starcore", { hp: 10, atk: 1, magic: 1, def: 1, res: 1 }],
+    ["sovereign", { atk: 5, def: 2 }],
+    ["oracle", { magic: 5, res: 2 }],
   ];
   for (const [key, bonus] of statSkills) {
     if (!hasSkill(key) || leader.appliedSkills.includes(key)) continue;
     leader.maxHp += bonus.hp || 0;
     leader.hp += bonus.hp || 0;
     leader.atk += bonus.atk || 0;
+    leader.magic += bonus.magic || 0;
     leader.def += bonus.def || 0;
+    leader.res += bonus.res || 0;
     leader.appliedSkills.push(key);
-  }
-  if (hasSkill("flow") && !leader.appliedSkills.includes("flow")) {
-    for (const move of leader.moves) {
-      move.maxPp += 2;
-      move.pp += 2;
-    }
-    leader.appliedSkills.push("flow");
   }
 }
 
 function openTownFacility(view) {
   game.townView = view;
-  if (view === "shop" && !["goods", "gear", "forge"].includes(game.shopView)) game.shopView = "goods";
+  if (view === "shop" && !["goods", "starter"].includes(game.shopView)) game.shopView = "goods";
   renderTownFacility();
   if (!ui.townDialog.open) ui.townDialog.showModal();
 }
 
 function renderTownShop() {
-  ui.townDialogTitle.textContent = "星の商店・星炉工房";
+  ui.townDialogTitle.textContent = "星の商店";
   ui.townDialogBody.innerHTML = `
     <div class="town-shop-tabs" role="tablist" aria-label="商店メニュー">
       <button type="button" data-shop-view="goods" class="${game.shopView === "goods" ? "active" : ""}">道具</button>
-      <button type="button" data-shop-view="gear" class="${game.shopView === "gear" ? "active" : ""}">装備変更</button>
-      <button type="button" data-shop-view="forge" class="${game.shopView === "forge" ? "active" : ""}">星炉合成</button>
+      <button type="button" data-shop-view="starter" class="${game.shopView === "starter" ? "active" : ""}">初期レリック</button>
     </div>
     <div class="town-shop-content"></div>
   `;
@@ -2994,16 +3552,32 @@ function renderTownShop() {
   });
   const content = ui.townDialogBody.querySelector(".town-shop-content");
 
-  if (game.shopView === "gear") {
-    renderGearMenu(content, renderTownShop);
-    return;
-  }
-  if (game.shopView === "forge") {
-    renderForgeMenu(content);
+  if (game.shopView === "starter") {
+    const starterKeys = ["ironFang", "moonLens", "shellSeed", "heartMeteor"];
+    content.innerHTML = `
+      <p class="town-note">次にB1Fから始める挑戦へ、1つだけ持ち込めます。休憩所からの再開データには影響しません。</p>
+      <div class="relic-choice-grid starter-relic-grid"></div>
+    `;
+    const grid = content.querySelector(".starter-relic-grid");
+    for (const key of starterKeys) {
+      const relic = relicCatalog.find((entry) => entry.key === key);
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = `relic-choice ${game.startingRelicKey === key ? "selected" : ""}`;
+      button.innerHTML = `${relicCardMarkup(relic)}<em>${game.startingRelicKey === key ? "選択中" : "これを持つ"}</em>`;
+      button.addEventListener("click", () => {
+        game.startingRelicKey = key;
+        if (!game.towerCheckpoint) prepareNewTry();
+        saveCurrentGame(true);
+        updateAll();
+        renderTownShop();
+      });
+      grid.appendChild(button);
+    }
     return;
   }
 
-  content.innerHTML = `<p class="town-note">現在の所持金: ${game.coins}星貨。迷宮内の行商人より安く準備できます。</p>`;
+  content.innerHTML = `<p class="town-note">現在の所持金: ${game.coins}星貨。装備品はなく、拾ったレリックがその挑戦中の能力になります。</p>`;
   const offers = [
     { kind: "apple", price: 35 },
     { kind: "oran", price: 45 },
@@ -3151,41 +3725,28 @@ function renderTownFacility() {
   }
 
   if (view === "board") {
-    ui.townDialogTitle.textContent = "5つのダンジョン";
-    ui.townDialogBody.innerHTML = '<p class="town-note">町で準備してから挑戦します。マップ、道具、装備、スキル構成は毎回変わり、最深部のボスを倒すと次の迷宮が解放されます。</p>';
-    townMissions.forEach((mission, index) => {
-      const unlocked = mission.chapter <= game.completedDungeon + 1;
-      const cleared = mission.chapter <= game.completedDungeon;
+    ui.townDialogTitle.textContent = "星喰いの塔・百階踏破路";
+    ui.townDialogBody.innerHTML = `
+      <p class="town-note">マップ・道具・変異種は挑戦ごとに変化します。各区画の9階目に門番、10階目に休憩所。20階ごとの大休憩所ではHPと満腹度も全回復します。</p>
+      <div class="tower-route-summary">
+        <strong>最高到達 B${game.highestFloor}F</strong>
+        <span>${game.towerCheckpoint ? `B${game.towerCheckpoint.floor}Fから再開可能` : "次の挑戦はB1Fから"}</span>
+      </div>
+    `;
+    towerBossCatalog.forEach((boss, index) => {
+      const restFloor = (index + 1) * 10;
+      const gateFloor = restFloor - 1;
+      const cleared = game.highestFloor >= restFloor;
+      const reached = game.highestFloor >= gateFloor;
       appendTownEntry(ui.townDialogBody, {
-        title: `迷宮 ${mission.chapter}/5　${mission.dungeon}`,
-        detail: mission.description,
-        meta: `全${mission.floors}階　ボス ${mission.target}　報酬 ${mission.reward}星貨`,
-        buttonLabel: cleared ? "再挑戦" : !unlocked ? "未解放" : index === game.selectedTownMission ? "選択中" : "選ぶ",
-        selected: index === game.selectedTownMission,
-        disabled: !unlocked || (index === game.selectedTownMission && !cleared),
-        onClick: () => {
-          game.selectedTownMission = index;
-          updateAll();
-          renderTownFacility();
-        },
+        title: `区画 ${index + 1}/10　B${index * 10 + 1}F - B${restFloor}F`,
+        detail: `B${gateFloor}F 門番「${boss.name}」`,
+        meta: `${restFloor % 20 === 0 ? "大休憩所" : "休憩所"}　${cleared ? "踏破済み" : reached ? "門番へ到達" : "未踏区画"}`,
+        buttonLabel: cleared ? "踏破" : reached ? "現在地" : "未到達",
+        selected: reached && !cleared,
+        disabled: true,
       });
     });
-    const roadmap = document.createElement("section");
-    roadmap.className = "chapter-roadmap";
-    roadmap.innerHTML = "<h3>攻略ルート</h3>";
-    for (const chapter of storyChapters) {
-      const cleared = chapter.chapter <= game.completedDungeon;
-      const current = chapter.chapter === Math.min(5, game.completedDungeon + 1);
-      roadmap.insertAdjacentHTML(
-        "beforeend",
-        `<div class="chapter-roadmap-row ${cleared ? "cleared" : current ? "current" : ""}">
-          <b>${chapter.chapter}/5</b>
-          <span>${chapter.dungeon}</span>
-          <em>${cleared ? "制覇" : chapter.status}</em>
-        </div>`,
-      );
-    }
-    ui.townDialogBody.appendChild(roadmap);
     return;
   }
 
@@ -3350,28 +3911,45 @@ function renderTownFacility() {
         renderTownFacility();
       },
     });
+    const magicCost = 120 + game.magicTrainingLevel * 80;
+    appendTownEntry(ui.townDialogBody, {
+      title: `星術鍛錬 Lv.${game.magicTrainingLevel + 1}`,
+      detail: "コハクの基礎魔力を永久に1上げる。",
+      meta: `${magicCost}星貨`,
+      buttonLabel: "鍛える",
+      disabled: game.coins < magicCost || game.magicTrainingLevel >= 3,
+      onClick: () => {
+        game.coins -= magicCost;
+        game.magicTrainingLevel += 1;
+        game.team[0].magic += 1;
+        playSfx("upgrade");
+        updateAll();
+        renderTownFacility();
+      },
+    });
     return;
   }
 
   ui.townDialogTitle.textContent = "救助隊本部";
   const rank = currentRank();
+  const evolution = evolutionCatalog.find((entry) => entry.key === game.persistentEvolutionKey);
   ui.townDialogBody.innerHTML = `
     <div class="menu-stat-grid">
       <div class="menu-stat"><span>救助隊ランク</span><strong>${rank.name}</strong></div>
       <div class="menu-stat"><span>累計救助pt</span><strong>${game.rescuePoints}</strong></div>
-      <div class="menu-stat"><span>迷宮制覇</span><strong>${game.completedDungeon} / 5</strong></div>
-      <div class="menu-stat"><span>敵図鑑</span><strong>${enemyCatalog.length + rareEnemyCatalog.length}種</strong></div>
-      <div class="menu-stat"><span>カルマ</span><strong>${game.karma}</strong></div>
-      <div class="menu-stat"><span>装備保管</span><strong>${game.gearBag.length} / 24</strong></div>
+      <div class="menu-stat"><span>最高到達</span><strong>B${game.highestFloor}F / B100F</strong></div>
+      <div class="menu-stat"><span>敵図鑑</span><strong>${enemyCatalog.length + rareEnemyCatalog.length + towerBossCatalog.length}種</strong></div>
+      <div class="menu-stat"><span>永続進化</span><strong>${evolution?.name || "未進化 コハク"}</strong></div>
+      <div class="menu-stat"><span>進化素材</span><strong>${evolutionMaterialTotal()}個</strong></div>
     </div>
-    <p class="town-note">救助はカルマを1清め、依頼人を倒すとカルマが3増えます。善悪どちらの履歴も、コハクの進化先を変えます。</p>
+    <p class="town-note">休憩所前の門番を倒すとレリックを3つから選べます。物理・魔法・生存の組み合わせと、その挑戦で引いた道具が100階踏破の鍵です。</p>
   `;
 }
 
 function renderCharacterSelection() {
   ui.townDialogTitle.textContent = "星の子 コハク";
   ui.townDialogBody.innerHTML = `
-    <p class="town-note">最初の姿はコハク一体だけです。長く未進化で旅をし、戦い方、救助、カルマ、素材、レベルによって五系統の進化へ分かれます。</p>
+    <p class="town-note">最初の姿はコハク一体だけです。物理と魔法の使い方、到達階、変異種撃破、素材、レベルによって進化先が分かれます。進化した姿は次の挑戦にも残ります。</p>
     <div class="character-grid"></div>
   `;
   const grid = ui.townDialogBody.querySelector(".character-grid");
@@ -3383,6 +3961,7 @@ function renderCharacterSelection() {
       maxHp: profile.maxHp,
       hp: profile.maxHp,
       atk: profile.atk + game.trainingLevel,
+      magic: profile.atk + game.magicTrainingLevel,
       def: profile.def,
     };
     const selected = profile.key === game.selectedCharacter;
@@ -3401,6 +3980,7 @@ function renderCharacterSelection() {
       <div class="character-stats">
         <span>HP <b>${preview.maxHp}</b></span>
         <span>攻撃 <b>${preview.atk}</b></span>
+        <span>魔力 <b>${preview.magic}</b></span>
         <span>防御 <b>${preview.def}</b></span>
       </div>
       <div class="character-moves">${preview.moves.map((move) => `<span>${move.name}</span>`).join("")}</div>
@@ -3863,9 +4443,12 @@ function drawDungeon(time) {
     }
   }
 
-  if (game.seen[game.stairs.y][game.stairs.x] && inCamera(game.stairs.x, game.stairs.y)) drawStairs(time);
+  if (game.stairsRevealed && game.seen[game.stairs.y][game.stairs.x] && inCamera(game.stairs.x, game.stairs.y)) drawStairs(time);
   if (game.mission && game.seen[game.mission.y][game.mission.x] && inCamera(game.mission.x, game.mission.y)) {
     drawMission(time);
+  }
+  for (const trap of game.traps) {
+    if (trap.revealed && game.seen[trap.y]?.[trap.x] && inCamera(trap.x, trap.y)) drawTrap(trap, time);
   }
 
   for (const item of game.items) {
@@ -3984,7 +4567,11 @@ function drawTile(x, y, type, visible) {
 }
 
 function currentDungeonTheme() {
-  return dungeonThemes[game.activeTownMission?.theme] || dungeonThemes.forest;
+  if (game.floor <= 20) return dungeonThemes.forest;
+  if (game.floor <= 40) return dungeonThemes.tower;
+  if (game.floor <= 60) return dungeonThemes.dream;
+  if (game.floor <= 80) return dungeonThemes.ruins;
+  return dungeonThemes.void;
 }
 
 function drawStairs(time) {
@@ -4056,6 +4643,28 @@ function drawMission(time) {
   ctx.font = "700 10px sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(game.mission.threatened ? "WARN" : "HELP", px + 24, py + 43 + bob);
+}
+
+function drawTrap(trap, time) {
+  const { x: px, y: py } = toScreen(trap.x, trap.y);
+  const pulse = 0.72 + Math.sin(time / 180 + trap.x) * 0.2;
+  ctx.save();
+  ctx.globalAlpha = trap.used ? 0.55 : pulse;
+  ctx.strokeStyle = trap.used ? "#8c6964" : "#ff7669";
+  ctx.fillStyle = "rgba(71, 18, 20, 0.56)";
+  ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.arc(px + 24, py + 24, 15, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.stroke();
+  ctx.beginPath();
+  for (let index = 0; index < 6; index += 1) {
+    const angle = (Math.PI * 2 * index) / 6;
+    ctx.moveTo(px + 24, py + 24);
+    ctx.lineTo(px + 24 + Math.cos(angle) * 12, py + 24 + Math.sin(angle) * 12);
+  }
+  ctx.stroke();
+  ctx.restore();
 }
 
 function drawItem(item, time) {
@@ -4413,6 +5022,10 @@ function drawActorBody(targetCtx, actor, px, py, scale, time) {
   targetCtx.save();
   targetCtx.translate(px, py);
   targetCtx.scale(s, s);
+  if (drawMapTokenCell(targetCtx, actorTokenCell(actor))) {
+    targetCtx.restore();
+    return;
+  }
   targetCtx.fillStyle = "rgba(0,0,0,0.28)";
   targetCtx.beginPath();
   targetCtx.ellipse(24, 39, 16, 6, 0, 0, Math.PI * 2);
@@ -4570,6 +5183,7 @@ function drawEnemy(enemy, time) {
   const { x: px, y: py } = toScreen(visual.x, visual.y);
   const wobble = Math.sin(time / 240 + enemy.wobble) * 2.4;
   drawOutlinedEntity((targetCtx) => {
+    if (drawMapTokenCell(targetCtx, enemyTokenCell(enemy))) return;
     const spriteInset = enemy.boss ? 3 : 8;
     const spriteSize = enemy.boss ? 42 : 32;
     drawSpriteOnContext(targetCtx, enemy.sprite, spriteInset, enemy.boss ? 0 : 5, spriteSize, spriteSize);
@@ -4600,6 +5214,13 @@ function drawEnemy(enemy, time) {
     ctx.font = "900 7px sans-serif";
     ctx.textAlign = "center";
     ctx.fillText("RARE", px + 24, py + 3 + wobble);
+  } else if (enemy.mutated) {
+    ctx.fillStyle = "rgba(10, 20, 20, 0.92)";
+    ctx.fillRect(px + 3, py - 4 + wobble, 42, 9);
+    ctx.fillStyle = enemy.mutation?.color || "#62e1cf";
+    ctx.font = "900 7px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`MUTANT ${enemy.mutation?.name || ""}`, px + 24, py + 3 + wobble);
   }
   if ((enemy.sleepTurns || 0) > 0) {
     ctx.fillStyle = "#d8c9ff";
@@ -4608,6 +5229,64 @@ function drawEnemy(enemy, time) {
     ctx.fillText("Z", px + 37, py + 10 + wobble);
   }
   drawEnemyHp(enemy, px, py);
+}
+
+function prepareMapTokenAtlas() {
+  mapTokenCanvas.width = mapTokenSheet.naturalWidth;
+  mapTokenCanvas.height = mapTokenSheet.naturalHeight;
+  mapTokenCtx.clearRect(0, 0, mapTokenCanvas.width, mapTokenCanvas.height);
+  mapTokenCtx.drawImage(mapTokenSheet, 0, 0);
+  try {
+    const image = mapTokenCtx.getImageData(0, 0, mapTokenCanvas.width, mapTokenCanvas.height);
+    for (let index = 0; index < image.data.length; index += 4) {
+      const red = image.data[index];
+      const green = image.data[index + 1];
+      const blue = image.data[index + 2];
+      const maximum = Math.max(red, green, blue);
+      const minimum = Math.min(red, green, blue);
+      if (minimum >= 194 && maximum - minimum <= 24) image.data[index + 3] = 0;
+    }
+    mapTokenCtx.putImageData(image, 0, 0);
+    mapTokenReady = true;
+  } catch {
+    mapTokenReady = false;
+  }
+}
+
+function actorTokenCell(actor) {
+  if (actor.kind !== "leader") return null;
+  const evolution = evolutionCatalog.find((entry) => entry.key === actor.evolutionKey);
+  if (evolution?.path === "physical") return [1, 0];
+  if (evolution?.path === "magic") return [2, 0];
+  if (evolution?.path === "hybrid") return [3, 0];
+  return [0, 0];
+}
+
+function enemyTokenCell(enemy) {
+  if (enemy.boss) return [3, 1];
+  if (enemy.mutated) return [2, 1];
+  return enemy.attackStyle === "magic" ? [1, 1] : [0, 1];
+}
+
+function drawMapTokenCell(targetCtx, cell) {
+  if (!mapTokenReady || !cell) return false;
+  const [column, row] = cell;
+  const cellWidth = mapTokenCanvas.width / 4;
+  const cellHeight = mapTokenCanvas.height / 2;
+  const cropX = cellWidth * 0.035;
+  const cropY = cellHeight * 0.025;
+  targetCtx.drawImage(
+    mapTokenCanvas,
+    column * cellWidth + cropX,
+    row * cellHeight + cropY,
+    cellWidth - cropX * 2,
+    cellHeight - cropY * 2,
+    0,
+    0,
+    TILE,
+    TILE,
+  );
+  return true;
 }
 
 function drawBossHud() {
@@ -4697,11 +5376,93 @@ function drawEffect(effect, time) {
     ctx.arc(px + 24, py + 24, 12 + t * 36, 0, Math.PI * 2);
     ctx.stroke();
   } else if (effect.type === "beam") {
-    ctx.lineWidth = 6;
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = 9 - t * 4;
     ctx.beginPath();
     ctx.moveTo(px + 24, py + 24);
     ctx.lineTo(px + 24 + effect.dx * TILE * 4, py + 24 + effect.dy * TILE * 4);
     ctx.stroke();
+    ctx.globalAlpha = (1 - t) * 0.9;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  } else if (effect.type === "nova") {
+    ctx.translate(px + 24, py + 24);
+    ctx.rotate(t * Math.PI);
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 16;
+    ctx.lineWidth = 4;
+    for (let index = 0; index < 10; index += 1) {
+      ctx.rotate(Math.PI / 5);
+      ctx.beginPath();
+      ctx.moveTo(8 + t * 5, 0);
+      ctx.lineTo(20 + t * 34, 0);
+      ctx.stroke();
+    }
+    ctx.beginPath();
+    ctx.arc(0, 0, 7 + t * 30, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (effect.type === "vortex") {
+    ctx.translate(px + 24, py + 24);
+    ctx.rotate(-t * Math.PI * 2);
+    ctx.lineWidth = 4;
+    for (let ring = 0; ring < 3; ring += 1) {
+      ctx.beginPath();
+      ctx.arc(0, 0, 12 + ring * 9 + t * 12, ring * 1.8, ring * 1.8 + Math.PI * 1.25);
+      ctx.stroke();
+    }
+  } else if (effect.type === "runes") {
+    ctx.translate(px + 24, py + 24);
+    ctx.rotate(t * Math.PI * 1.5);
+    ctx.lineWidth = 3;
+    const radius = 14 + t * 24;
+    ctx.beginPath();
+    for (let index = 0; index < 6; index += 1) {
+      const angle = (Math.PI * 2 * index) / 6;
+      const x = Math.cos(angle) * radius;
+      const y = Math.sin(angle) * radius;
+      if (index === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.stroke();
+    for (let index = 0; index < 6; index += 1) {
+      const angle = (Math.PI * 2 * index) / 6;
+      ctx.fillRect(Math.cos(angle) * radius - 2, Math.sin(angle) * radius - 2, 4, 4);
+    }
+  } else if (effect.type === "shield") {
+    ctx.lineWidth = 5;
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 12;
+    ctx.beginPath();
+    ctx.arc(px + 24, py + 25, 15 + t * 10, Math.PI * 0.85, Math.PI * 2.15);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(px + 14, py + 15);
+    ctx.lineTo(px + 24, py + 8 - t * 4);
+    ctx.lineTo(px + 34, py + 15);
+    ctx.stroke();
+  } else if (effect.type === "comet") {
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 14;
+    ctx.lineWidth = 5;
+    ctx.beginPath();
+    ctx.moveTo(px - 18 + t * 28, py - 12 + t * 28);
+    ctx.lineTo(px + 25, py + 25);
+    ctx.stroke();
+    drawPixelStar(ctx, px + 25, py + 25, Math.max(5, 15 - t * 6), effect.color);
+  } else if (effect.type === "trap") {
+    ctx.translate(px + 24, py + 24);
+    ctx.rotate(t * Math.PI * 0.5);
+    ctx.lineWidth = 4;
+    for (let index = 0; index < 8; index += 1) {
+      ctx.rotate(Math.PI / 4);
+      ctx.beginPath();
+      ctx.moveTo(5, 0);
+      ctx.lineTo(17 + t * 18, 0);
+      ctx.stroke();
+    }
   } else if (effect.type === "slash") {
     ctx.lineWidth = 4;
     ctx.beginPath();
@@ -4755,7 +5516,11 @@ function drawFog() {
 }
 
 function drawObjectivePointer(time) {
-  const target = game.mission?.complete ? game.stairs : game.mission;
+  const target = game.mission?.boss && !game.mission.complete
+    ? game.mission
+    : game.stairsRevealed || game.guidanceActive
+      ? game.stairs
+      : null;
   if (!target || inCamera(target.x, target.y)) return;
   const leader = getLeader();
   const dx = target.x - leader.x;
@@ -4766,7 +5531,7 @@ function drawObjectivePointer(time) {
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
-  ctx.fillStyle = game.mission?.complete ? palette.brass : palette.teal;
+  ctx.fillStyle = target === game.stairs ? palette.brass : palette.teal;
   ctx.beginPath();
   ctx.moveTo(18 + Math.sin(time / 180) * 2, 0);
   ctx.lineTo(-11, -10);
@@ -4852,9 +5617,14 @@ function drawMiniMap() {
     );
   }
 
-  if (game.mapped[game.stairs.y][game.stairs.x] || game.guidanceActive) {
+  if (game.stairsRevealed && (game.mapped[game.stairs.y][game.stairs.x] || game.guidanceActive)) {
     miniCtx.fillStyle = game.mission.complete ? "#fff8de" : "#8a8e8d";
     miniCtx.fillRect(game.stairs.x * sx, game.stairs.y * sy, sx + 1, sy + 1);
+  }
+  for (const trap of game.traps) {
+    if (!trap.revealed || !game.mapped[trap.y]?.[trap.x]) continue;
+    miniCtx.fillStyle = "#ff786c";
+    miniCtx.fillRect(trap.x * sx + 1, trap.y * sy + 1, Math.max(3, sx - 2), Math.max(3, sy - 2));
   }
   if (
     game.mission &&
@@ -5043,6 +5813,19 @@ function revealAroundTeam() {
       }
     }
   }
+  const leader = getLeader();
+  const stairSense = 1 + (hasRelic("starCompass") ? 2 : 0);
+  if (!game.stairsRevealed && (game.guidanceActive || manhattan(leader.x, leader.y, game.stairs.x, game.stairs.y) <= stairSense)) {
+    game.stairsRevealed = true;
+    addLog("壁際の星風が揺らぎ、隠し階段を発見した。");
+    announceEvent("SECRET STAIRS", "階段の位置を発見", "階", "good");
+    playSfx("stairs");
+  }
+  if (hasRelic("trapEye") || hasSkill("scout")) {
+    for (const trap of game.traps) {
+      if (!trap.used && manhattan(leader.x, leader.y, trap.x, trap.y) <= 2) trap.revealed = true;
+    }
+  }
   const rareEnemy = game.enemies.find(
     (enemy) => enemy.rare && !enemy.rareNoticed && isVisible(enemy.x, enemy.y),
   );
@@ -5145,7 +5928,10 @@ function drawScreenFlash(time) {
 }
 
 function addEffect(type, x, y, color, dx = 0, dy = 0) {
-  game.effects.push({ type, x, y, color, dx, dy, created: performance.now(), life: type === "beam" ? 260 : 520 });
+  const fastEffects = ["beam", "comet", "slash"];
+  const longEffects = ["nova", "runes", "vortex", "shield"];
+  const life = fastEffects.includes(type) ? 300 : longEffects.includes(type) ? 680 : 520;
+  game.effects.push({ type, x, y, color, dx, dy, created: performance.now(), life });
 }
 
 function addFloatingText(x, y, value, color) {
@@ -5218,6 +6004,7 @@ function randomOpenTile() {
     const y = randInt(room.y, room.y + room.h - 1);
     if (!isWalkable(x, y)) continue;
     if (actorAt(x, y) || enemyAt(x, y) || itemAt(x, y) || merchantAt(x, y)) continue;
+    if (game.traps?.some((trap) => trap.x === x && trap.y === y)) continue;
     if (game.mission && x === game.mission.x && y === game.mission.y) continue;
     if (game.stairs && x === game.stairs.x && y === game.stairs.y) continue;
     return { x, y };
@@ -5455,9 +6242,14 @@ function readSaveSlot(slot) {
 
 function serializeGame() {
   return {
-    version: 5,
+    version: 6,
     savedAt: new Date().toISOString(),
     completedDungeon: game.completedDungeon,
+    highestFloor: game.highestFloor,
+    persistentEvolutionKey: game.persistentEvolutionKey,
+    persistentEvolutionStage: game.persistentEvolutionStage,
+    towerCheckpoint: game.towerCheckpoint ? structuredClone(game.towerCheckpoint) : null,
+    startingRelicKey: game.startingRelicKey,
     coins: game.coins,
     rescuePoints: game.rescuePoints,
     storage: { ...game.storage },
@@ -5466,10 +6258,9 @@ function serializeGame() {
     selectedTownMission: game.selectedTownMission,
     selectedCharacter: game.selectedCharacter,
     trainingLevel: game.trainingLevel,
+    magicTrainingLevel: game.magicTrainingLevel,
     bagCapacity: game.bagCapacity,
     karma: game.karma,
-    gearBag: game.gearBag.map((gear) => ({ ...gear })),
-    equipment: { ...game.equipment },
   };
 }
 
@@ -5499,7 +6290,17 @@ function loadSaveSlot(slot) {
   const saved = readSaveSlot(slot);
   if (!saved) return false;
   game.saveSlot = slot;
-  game.completedDungeon = clamp(Number(saved.completedDungeon ?? saved.completedChapter) || 0, 0, 5);
+  game.completedDungeon = clamp(Number(saved.completedDungeon ?? saved.completedChapter) || 0, 0, 1);
+  game.highestFloor = clamp(Number(saved.highestFloor) || (game.completedDungeon ? 100 : 1), 1, 100);
+  const savedEvolution = evolutionCatalog.find((entry) => entry.key === saved.persistentEvolutionKey);
+  game.persistentEvolutionKey = savedEvolution?.key || "base";
+  game.persistentEvolutionStage = savedEvolution?.stage || 0;
+  game.towerCheckpoint = saved.towerCheckpoint && Number(saved.towerCheckpoint.floor) >= 1
+    ? structuredClone(saved.towerCheckpoint)
+    : null;
+  game.startingRelicKey = relicCatalog.some((entry) => entry.key === saved.startingRelicKey)
+    ? saved.startingRelicKey
+    : null;
   game.coins = Math.max(0, Number(saved.coins) || 0);
   game.rescuePoints = Math.max(0, Number(saved.rescuePoints) || 0);
   game.storage = { ...game.storage, ...(saved.storage || {}) };
@@ -5513,38 +6314,34 @@ function loadSaveSlot(slot) {
     delete game.bag[kind];
   }
   game.trainingLevel = clamp(Number(saved.trainingLevel) || 0, 0, 3);
+  game.magicTrainingLevel = clamp(Number(saved.magicTrainingLevel) || 0, 0, 3);
   game.bagCapacity = clamp(Number(saved.bagCapacity) || BASE_BAG_CAPACITY, BASE_BAG_CAPACITY, MAX_BAG_CAPACITY);
   game.karma = Math.max(0, Number(saved.karma) || 0);
   game.skillPoints = 1;
   game.unlockedSkills = [];
   game.runStats = createRunStats();
-  game.gearBag = Array.isArray(saved.gearBag) ? saved.gearBag.slice(0, 24) : [];
-  game.equipment = { weapon: null, armor: null, charm: null, ...(saved.equipment || {}) };
+  game.gearBag = [];
+  game.equipment = { weapon: null, armor: null, charm: null };
   game.gearViewSlot = "weapon";
   game.shopView = "goods";
   game.forgeSelection = [];
-  for (const slot of Object.keys(game.equipment)) {
-    if (!game.gearBag.some((gear) => gear.id === game.equipment[slot] && gear.slot === slot)) {
-      game.equipment[slot] = null;
-    }
-  }
   const selectedKey = game.roster[saved.selectedCharacter] ? saved.selectedCharacter : "kohaku";
   game.selectedCharacter = selectedKey;
   const leader = createLeader(selectedKey);
   leader.atk += game.trainingLevel;
-  for (const gearId of Object.values(game.equipment)) {
-    applyGearBonus(leader, game.gearBag.find((gear) => gear.id === gearId), 1);
-  }
+  leader.magic += game.magicTrainingLevel;
+  applyPersistentEvolution(leader);
   game.roster[selectedKey] = leader;
   game.team = [leader];
-  const maxMission = Math.min(townMissions.length - 1, game.completedDungeon);
-  game.selectedTownMission = clamp(Number(saved.selectedTownMission) || 0, 0, maxMission);
+  game.relics = [];
+  if (game.startingRelicKey && !game.towerCheckpoint) addRelic(game.startingRelicKey, false);
+  game.selectedTownMission = 0;
   game.mode = "town";
   game.gameOver = false;
   game.victory = false;
   ui.endOverlay.hidden = true;
   updateAll();
-  if ((saved.version || 0) < 5) saveCurrentGame(true);
+  if ((saved.version || 0) < 6) saveCurrentGame(true);
   return true;
 }
 
@@ -5573,13 +6370,14 @@ function renderSaveSlots(initial = ui.saveDialog.dataset.initial === "true") {
       ? new Intl.DateTimeFormat("ja-JP", { dateStyle: "short", timeStyle: "short" }).format(new Date(saved.savedAt))
       : "";
     const leaderProfile = characterCatalog.find((profile) => profile.key === saved?.selectedCharacter);
-    const cleared = clamp(Number(saved?.completedDungeon ?? saved?.completedChapter) || 0, 0, 5);
-    const progressName = cleared >= 5 ? "全迷宮制覇" : `次は迷宮 ${cleared + 1}/5`;
+    const highestFloor = clamp(Number(saved?.highestFloor) || ((saved?.completedDungeon || saved?.completedChapter) ? 100 : 1), 1, 100);
+    const evolution = evolutionCatalog.find((entry) => entry.key === saved?.persistentEvolutionKey);
+    const progressName = highestFloor >= 100 ? "百階踏破" : `最高 B${highestFloor}F`;
     entry.innerHTML = `
       <span class="save-slot-number">${slot}</span>
       <div class="save-slot-copy">
         <strong>${saved ? `${progressName} / ${leaderProfile?.name || "コハク"}` : "新しい冒険"}</strong>
-        <span>${saved ? `制覇 ${cleared}/5　${saved.coins || 0}星貨　救助pt ${saved.rescuePoints || 0}` : "まだ記録はありません"}</span>
+        <span>${saved ? `${evolution?.name || leaderProfile?.name || "コハク"}　${saved.coins || 0}星貨　救助pt ${saved.rescuePoints || 0}` : "まだ記録はありません"}</span>
         <small>${saved ? `${date}${active ? "　使用中" : ""}` : "この枠で迷宮攻略を始める"}</small>
       </div>
     `;
@@ -5615,7 +6413,7 @@ function handleKey(event) {
   const key = event.key.toLowerCase();
   const code = event.code;
 
-  if (ui.townDialog.open || ui.helpDialog.open || ui.saveDialog.open || ui.stairsDialog.open) return;
+  if (ui.townDialog.open || ui.helpDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open) return;
   if (key === "q") {
     if (event.repeat) return;
     event.preventDefault();
@@ -5781,6 +6579,9 @@ function bindEvents() {
     event.preventDefault();
     stayOnCurrentFloor();
   });
+  ui.restDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+  });
   ui.gameMenuButton.addEventListener("click", () => toggleGameMenu("moves"));
   ui.departButton.addEventListener("click", startExpedition);
   canvas.addEventListener("mousemove", (event) => {
@@ -5792,7 +6593,7 @@ function bindEvents() {
   });
   canvas.addEventListener("click", (event) => {
     if (event.button !== 0 || game.mode !== "dungeon") return;
-    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open) return;
+    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open) return;
     const direction = directionFromPointer(event);
     game.aimDirection = direction;
     performAction({ type: "basicAttack", dx: direction.x, dy: direction.y });
@@ -5800,7 +6601,7 @@ function bindEvents() {
   canvas.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     if (game.mode !== "dungeon") return;
-    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open) return;
+    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open) return;
     const direction = directionFromPointer(event);
     game.aimDirection = direction;
     const leader = getLeader();
@@ -5835,6 +6636,10 @@ createGame();
 updateSoundButton();
 window.setTimeout(() => openSaveDialog(true), 0);
 spriteSheet.addEventListener("load", () => {
+  if (game) updateAll();
+});
+mapTokenSheet.addEventListener("load", () => {
+  prepareMapTokenAtlas();
   if (game) updateAll();
 });
 requestAnimationFrame(draw);

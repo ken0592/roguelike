@@ -2299,7 +2299,7 @@ button {
   aspect-ratio: 1;
   align-self: start;
   border: 1px solid color-mix(in srgb, var(--evo-color) 52%, transparent);
-  background-image: url("assets/evolution/evolution-atlas-v1.png?v=pwa3");
+  background-image: url("assets/evolution/evolution-atlas-v1.png?v=pwa4");
   background-size: 400% 200%;
   background-position: var(--art-x) var(--art-y);
   background-repeat: no-repeat;
@@ -3187,5 +3187,394 @@ button {
 @media (hover: none) and (min-width: 641px) {
   .touch-controls:not([hidden]) {
     display: grid;
+  }
+}
+
+.terrain-trap {
+  background: #6b2428;
+  border-color: #ff8b79 !important;
+  box-shadow: inset 0 0 0 2px #2a1215;
+}
+
+.tower-route-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border: 1px solid rgba(229, 174, 72, 0.38);
+  background: rgba(229, 174, 72, 0.08);
+  padding: 12px;
+}
+
+.tower-route-summary strong {
+  color: #ffe19b;
+}
+
+.tower-route-summary span {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.relic-head,
+.relic-reward-head {
+  display: grid;
+  gap: 4px;
+  border-left: 4px solid #dfb65c;
+  background: rgba(223, 182, 92, 0.08);
+  padding: 12px;
+}
+
+.relic-head {
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+}
+
+.relic-head-mark {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid #dfb65c;
+  color: #ffe39b;
+  font-weight: 900;
+}
+
+.relic-head div,
+.relic-reward-head {
+  min-width: 0;
+}
+
+.relic-head span,
+.relic-reward-head span,
+.relic-head small,
+.relic-reward-head small {
+  display: block;
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.relic-head strong,
+.relic-reward-head strong {
+  display: block;
+  color: #fff0c3;
+  font-size: 1rem;
+}
+
+.relic-grid,
+.relic-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.relic-card {
+  min-width: 0;
+  min-height: 94px;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 9px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--relic-color) 54%, transparent);
+  border-left: 4px solid var(--relic-color);
+  background: rgba(4, 7, 7, 0.64);
+  padding: 10px;
+}
+
+.relic-card > b {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid var(--relic-color);
+  color: var(--relic-color);
+  font-size: 0.76rem;
+}
+
+.relic-card div {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.relic-card span {
+  color: var(--relic-color);
+  font-size: 0.58rem;
+  font-weight: 900;
+}
+
+.relic-card strong {
+  color: var(--ink);
+  font-size: 0.8rem;
+}
+
+.relic-card small {
+  color: var(--muted);
+  font-size: 0.64rem;
+  line-height: 1.35;
+}
+
+.relic-choice {
+  min-width: 0;
+  border: 1px solid rgba(255, 245, 223, 0.16);
+  background: rgba(255, 255, 255, 0.025);
+  color: var(--ink);
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.relic-choice:hover,
+.relic-choice:focus-visible,
+.relic-choice.selected {
+  border-color: #ffe08a;
+  background: rgba(229, 174, 72, 0.09);
+}
+
+.relic-choice .relic-card {
+  height: 100%;
+  border: 0;
+}
+
+.relic-choice em {
+  display: block;
+  border-top: 1px solid rgba(255, 245, 223, 0.12);
+  color: #ffe19b;
+  padding: 7px 10px;
+  font-size: 0.65rem;
+  font-style: normal;
+  font-weight: 800;
+  text-align: center;
+}
+
+.rest-dialog {
+  width: min(720px, calc(100vw - 28px));
+  border: 1px solid rgba(229, 174, 72, 0.65);
+  border-radius: 6px;
+  background: #101817;
+  color: var(--ink);
+  padding: 18px;
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.65);
+}
+
+.rest-dialog::backdrop {
+  background: rgba(3, 7, 7, 0.78);
+  backdrop-filter: blur(3px);
+}
+
+.rest-dialog-mark {
+  float: left;
+  display: grid;
+  width: 54px;
+  height: 54px;
+  place-items: center;
+  margin-right: 13px;
+  border: 1px solid #e5ae48;
+  color: #ffe39b;
+  font-size: 1.2rem;
+  font-weight: 900;
+}
+
+.rest-dialog-copy span {
+  color: #e5ae48;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.rest-dialog-copy h2 {
+  margin: 3px 0 5px;
+  font-size: 1.25rem;
+}
+
+.rest-dialog-copy p {
+  min-height: 34px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.rest-dialog-choices {
+  clear: both;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.rest-dialog-choices button {
+  min-width: 0;
+  min-height: 86px;
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(255, 245, 223, 0.17);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--ink);
+  padding: 10px;
+  cursor: pointer;
+  text-align: left;
+}
+
+.rest-dialog-choices button:hover,
+.rest-dialog-choices button:focus-visible {
+  border-color: #e5ae48;
+  background: rgba(229, 174, 72, 0.11);
+}
+
+.rest-dialog-choices button > b {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  border: 1px solid #e5ae48;
+  color: #ffe39b;
+  font-size: 0.66rem;
+}
+
+.rest-dialog-choices span {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.rest-dialog-choices strong {
+  font-size: 0.76rem;
+}
+
+.rest-dialog-choices small {
+  color: var(--muted);
+  font-size: 0.62rem;
+  line-height: 1.35;
+}
+
+.skill-board-compact {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+  align-items: stretch;
+}
+
+.skill-lane {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--lane-color) 40%, transparent);
+  background: rgba(4, 7, 7, 0.48);
+}
+
+.skill-lane > header {
+  display: grid;
+  gap: 3px;
+  border-bottom: 3px solid var(--lane-color);
+  background: color-mix(in srgb, var(--lane-color) 10%, transparent);
+  padding: 10px;
+}
+
+.skill-lane > header b {
+  color: var(--lane-color);
+  font-size: 0.82rem;
+}
+
+.skill-lane > header small {
+  color: var(--muted);
+  font-size: 0.62rem;
+}
+
+.skill-lane-nodes {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 8px;
+}
+
+.skill-node-compact {
+  position: relative;
+  min-width: 0;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) auto;
+  gap: 7px;
+  align-items: center;
+  border: 1px solid rgba(255, 245, 223, 0.11);
+  border-left: 3px solid rgba(255, 245, 223, 0.15);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--ink);
+  padding: 8px;
+  text-align: left;
+}
+
+.skill-node-compact + .skill-node-compact {
+  margin-top: 7px;
+}
+
+.skill-node-compact.available {
+  border-color: var(--lane-color);
+  border-left-color: var(--lane-color);
+  cursor: pointer;
+}
+
+.skill-node-compact.unlocked {
+  border-color: color-mix(in srgb, var(--lane-color) 70%, white);
+  background: color-mix(in srgb, var(--lane-color) 13%, transparent);
+}
+
+.skill-node-compact:disabled:not(.unlocked) {
+  opacity: 0.48;
+}
+
+.skill-node-compact .skill-node-icon {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--lane-color);
+  color: var(--lane-color);
+  font-size: 0.64rem;
+  font-weight: 900;
+}
+
+.skill-node-compact .skill-node-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.skill-node-compact .skill-node-copy b {
+  color: var(--lane-color);
+  font-size: 0.52rem;
+}
+
+.skill-node-compact .skill-node-copy strong {
+  font-size: 0.72rem;
+}
+
+.skill-node-compact .skill-node-copy small {
+  color: var(--muted);
+  font-size: 0.58rem;
+  line-height: 1.3;
+}
+
+.skill-node-compact .skill-cost {
+  color: #f1d78f;
+  font-size: 0.55rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+@media (max-width: 760px) {
+  .relic-grid,
+  .relic-choice-grid,
+  .rest-dialog-choices,
+  .skill-board-compact {
+    grid-template-columns: 1fr;
+  }
+
+  .skill-board-head {
+    grid-template-columns: 92px minmax(0, 1fr);
+  }
+
+  .tower-route-summary {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

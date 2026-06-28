@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="星屑救助隊" />
     <title>星屑救助隊</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa3" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa4" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa3" />
+    <link rel="stylesheet" href="styles.css?v=pwa4" />
   </head>
   <body>
     <div class="app-shell">
@@ -22,7 +22,7 @@
           </span>
           <div>
             <h1>星屑救助隊</h1>
-            <p>5つの迷宮へ何度も挑む、ローグライク救助隊</p>
+            <p>100階の星喰い塔へ挑む、ターン制ローグライク</p>
           </div>
         </div>
 
@@ -67,7 +67,7 @@
         <div class="town-title">
           <span>救助隊の拠点</span>
           <strong>星見広場</strong>
-          <small id="townMissionLabel">依頼を選んで出発しよう</small>
+          <small id="townMissionLabel">星喰い塔 1F / 100F</small>
         </div>
         <div class="town-status" aria-live="polite">
           <span><b>ランク</b><strong id="townRankLabel">見習い</strong></span>
@@ -83,12 +83,12 @@
           <b>進化</b>
         </button>
         <button class="town-spot town-spot-board" type="button" data-town-action="board">
-          <strong>ダンジョン門</strong>
-          <span>次の挑戦を選ぶ</span>
+          <strong>星喰いの塔</strong>
+          <span>100階の攻略路を見る</span>
         </button>
         <button class="town-spot town-spot-shop" type="button" data-town-action="shop">
           <strong>星の商店</strong>
-          <span>道具・装備・合成</span>
+          <span>道具・開始レリック</span>
         </button>
         <button class="town-spot town-spot-storage" type="button" data-town-action="storage">
           <strong>風見倉庫</strong>
@@ -103,8 +103,8 @@
           <span>隊の記録を見る</span>
         </button>
         <button id="departButton" class="town-depart" type="button">
-          <span>選択中の依頼へ</span>
-          <strong>ダンジョンに出発</strong>
+          <span>星喰い塔 1Fへ</span>
+          <strong>100階踏破に挑む</strong>
         </button>
       </section>
 
@@ -125,10 +125,9 @@
           </div>
           <div class="terrain-legend" aria-label="地形の意味">
             <span><i class="terrain-floor"></i>通路</span>
-            <span><i class="terrain-moss"></i>回復苔</span>
-            <span><i class="terrain-crack"></i>亀裂 -3HP</span>
+            <span><i class="terrain-trap"></i>発見済み罠</span>
             <span><i class="terrain-wall"></i>壁</span>
-            <span><i class="terrain-stairs"></i>次の階</span>
+            <span><i class="terrain-stairs"></i>隠し階段</span>
           </div>
         </section>
 
@@ -153,12 +152,12 @@
             <div id="partyList" class="party-list"></div>
           </section>
 
-          <section class="guide-panel" aria-label="探索メモ">
-            <h2>探索メモ</h2>
+          <section class="guide-panel" aria-label="塔の予兆">
+            <h2>塔の予兆</h2>
             <div class="guide-grid">
-              <p><strong>目的</strong><span id="goalLabel">階の印を探す</span></p>
-              <p><strong>気質</strong><span id="tacticSummary">清廉</span></p>
-              <p><strong>階段</strong><span>依頼に決着をつけると使える</span></p>
+              <p><strong>目的</strong><span id="goalLabel">隠し階段を探す</span></p>
+              <p><strong>型</strong><span id="tacticSummary">均衡</span></p>
+              <p><strong>休憩</strong><span id="restLabel">10Fまで</span></p>
             </div>
           </section>
 
@@ -175,15 +174,15 @@
           <section class="run-panel" aria-label="冒険">
             <div class="meter-line">
               <span>探索先</span>
-              <strong id="chapterLabel">迷宮 1/5</strong>
+              <strong id="chapterLabel">星喰いの塔</strong>
             </div>
             <div class="meter-line">
               <span>フロア運勢</span>
               <strong id="luckLabel">平穏</strong>
             </div>
             <div class="meter-line">
-              <span>カルマ</span>
-              <strong id="karmaLabel">0</strong>
+              <span>成長傾向</span>
+              <strong id="karmaLabel">均衡型</strong>
             </div>
             <div class="meter-line">
               <span>階の封印</span>
@@ -202,8 +201,8 @@
               <strong id="materialLabel">素材袋 0</strong>
             </div>
             <div class="meter-line">
-              <span>装備</span>
-              <strong id="gearLabel">0 / 3</strong>
+              <span>レリック</span>
+              <strong id="gearLabel">0個</strong>
             </div>
             <div class="meter-line">
               <span>階段</span>
@@ -273,7 +272,7 @@
           <button type="button" data-menu-view="moves">技</button>
           <button type="button" data-menu-view="bag">バッグ</button>
           <button type="button" data-menu-view="materials">素材袋</button>
-          <button type="button" data-menu-view="gear">装備</button>
+          <button type="button" data-menu-view="relics">レリック</button>
           <button type="button" data-menu-view="evolution">進化</button>
           <button type="button" data-menu-view="mission">探索</button>
           <button type="button" data-menu-view="skills">成長</button>
@@ -313,6 +312,16 @@
       </div>
     </dialog>
 
+    <dialog id="restDialog" class="rest-dialog">
+      <div class="rest-dialog-mark" aria-hidden="true">休</div>
+      <div class="rest-dialog-copy">
+        <span id="restDialogKicker">10F 休憩所</span>
+        <h2 id="restDialogTitle">星火の休憩所</h2>
+        <p id="restDialogText">すべての技PPが回復しました。次へ進む前に、ひとつだけ選べます。</p>
+      </div>
+      <div id="restDialogChoices" class="rest-dialog-choices"></div>
+    </dialog>
+
     <dialog id="helpDialog" class="help-dialog">
       <form method="dialog">
         <header>
@@ -350,31 +359,30 @@
           </div>
         </div>
         <ul class="help-list">
-          <li>5つのダンジョンを順番に攻略します。すべての最深部に固有ボスがいます。</li>
-          <li>入るたびにマップ、敵、道具、装備、フロア運勢が変わります。</li>
-          <li>挑戦開始時にレベルと星網スキル盤は初期化されます。装備とバッグ拡張は町へ持ち帰れます。</li>
-          <li>3つのセーブ枠に攻略状況、装備、カルマ、バッグ拡張を保存できます。迷宮制覇時は自動保存されます。</li>
-          <li>主人公は星の子コハク一体。行動、レベル、進化素材によって五系統へ進化します。</li>
-          <li>救済・闘争・禁忌の進化は二段階。智樹と星王は厳しい条件を満たす一段階の強力な進化です。</li>
+          <li>目的は「星喰いの塔」100階踏破。9・19・29…99階に、次の休憩所を守る門番がいます。</li>
+          <li>10階ごとに休憩所、20階ごとに大休憩所があります。到着すると全技PPが回復します。</li>
+          <li>門番を倒すと、3つのレリックから1つを選べます。装備枠はなく、獲得した効果はすべて同時に働きます。</li>
+          <li>入るたびにマップ、敵、道具、隠し罠、隠し階段、階の運勢が変わります。</li>
+          <li>挑戦開始時にレベル、レリック、星網スキル盤は初期化。進化、素材袋、バッグ拡張は引き継がれます。</li>
+          <li>3つのセーブ枠に最高到達階と休憩所の再開地点を保存できます。休憩所では自動保存されます。</li>
+          <li>物理技と魔法技の使用回数、レベル、到達階、変異種撃破、素材によって進化先が分かれます。</li>
+          <li>進化は一段階または二段階。進化後の姿と能力は、次の挑戦にも残ります。</li>
           <li>一歩動くたびに敵も1手ずつ動きます。</li>
           <li>移動と通常攻撃は別操作です。敵の方向を左クリックすると攻撃します。</li>
-          <li>依頼人を救うとカルマが1減り、二度攻撃して倒すとカルマが3増えます。</li>
           <li>ミニマップには訪れた部屋と、実際に歩いた通路だけが記録されます。</li>
-          <li>緑の回復苔は踏むとHPが2回復。赤い亀裂は踏むと3ダメージです。</li>
-          <li>先遣員を救うか、禁じられた決着を選ぶと階段が開きます。最深部ではボスを倒す必要があります。</li>
-          <li>開いた階段に乗ると、次へ進むか、この階の探索を続けるか選べます。</li>
-          <li>武器・防具・お守りは部位別に選べます。町の星の商店では、同じ部位の装備2つを上位装備へ合成できます。</li>
-          <li>装備は星1コモンから星5レジェンドまで。星が多いほど補正が強くなります。</li>
-          <li>金色の輪郭とRARE表示を持つ敵は非常に珍しく、倒すと星3以上の装備を落とします。</li>
+          <li>通常階の階段と罠は最初は隠れています。近づくか、探索スキルや道具で発見できます。</li>
+          <li>歩くたびにHPが1回復します。逃げて回復するか、増援前に急ぐかも判断の一つです。</li>
+          <li>技は使うだけでも経験値を得られ、通常攻撃より早く成長できます。ただしPPは休憩所まで有限です。</li>
+          <li>物理と魔法を交互に使う、変異種へ強くするなど、レリック同士の組み合わせが重要です。</li>
+          <li>MUTANT表示の変異種は、重装・魔脈・疾走・吸収・爆発のいずれかの特性を持ちます。</li>
           <li>各階の運勢によって、道具の数、敵の数、回復、増援、落とし物が変化します。</li>
           <li>満腹度はゆっくり減ります。月蜜の実を拾ったら、Rで食べて回復できます。</li>
-          <li>敵の隣へ移動しても攻撃はしません。左クリックまたはFで通常攻撃、Jで選択中の技を使います。</li>
           <li>進化素材は容量無制限の素材袋へ入ります。レア敵とボスは「覇星の核」を落とすことがあります。</li>
-          <li>一部の階には行商人が現れ、道具や装備をその場で購入できます。</li>
+          <li>一部の階には行商人が現れ、その場で道具を購入できます。</li>
           <li>バッグは初期20枠。町の商店で星貨を払うと、最大40枠まで永久に拡張できます。</li>
           <li>主人公が倒れると冒険終了です。</li>
         </ul>
-        <p class="credit-line">素材: Kenney Roguelike/RPG Pack (CC0)</p>
+        <p class="credit-line">素材: Kenney Roguelike/RPG Pack (CC0) / キャラクターアート: OpenAI生成</p>
       </form>
     </dialog>
 
@@ -386,6 +394,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa3"></script>
+    <script src="app.js?v=pwa4"></script>
   </body>
 </html>
