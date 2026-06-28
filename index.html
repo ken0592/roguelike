@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="星屑救助隊" />
     <title>星屑救助隊</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa2" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa3" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa2" />
+    <link rel="stylesheet" href="styles.css?v=pwa3" />
   </head>
   <body>
     <div class="app-shell">
@@ -88,7 +88,7 @@
         </button>
         <button class="town-spot town-spot-shop" type="button" data-town-action="shop">
           <strong>星の商店</strong>
-          <span>道具をそろえる</span>
+          <span>道具・装備・合成</span>
         </button>
         <button class="town-spot town-spot-storage" type="button" data-town-action="storage">
           <strong>風見倉庫</strong>
@@ -126,7 +126,7 @@
           <div class="terrain-legend" aria-label="地形の意味">
             <span><i class="terrain-floor"></i>通路</span>
             <span><i class="terrain-moss"></i>回復苔</span>
-            <span><i class="terrain-crack"></i>亀裂 -2HP</span>
+            <span><i class="terrain-crack"></i>亀裂 -3HP</span>
             <span><i class="terrain-wall"></i>壁</span>
             <span><i class="terrain-stairs"></i>次の階</span>
           </div>
@@ -143,6 +143,7 @@
               <span><i class="map-leader"></i>自分</span>
               <span><i class="map-enemy"></i>敵</span>
               <span><i class="map-item"></i>道具</span>
+              <span><i class="map-shop"></i>商店</span>
               <span><i class="map-target"></i>目的</span>
               <span><i class="map-stairs"></i>階段</span>
             </div>
@@ -195,6 +196,10 @@
             <div class="meter-line">
               <span>どうぐ</span>
               <strong id="bellLabel">バッグ 3/20</strong>
+            </div>
+            <div class="meter-line">
+              <span>進化素材</span>
+              <strong id="materialLabel">素材袋 0</strong>
             </div>
             <div class="meter-line">
               <span>装備</span>
@@ -267,6 +272,7 @@
         <nav class="game-menu-tabs" aria-label="メニュー切替">
           <button type="button" data-menu-view="moves">技</button>
           <button type="button" data-menu-view="bag">バッグ</button>
+          <button type="button" data-menu-view="materials">素材袋</button>
           <button type="button" data-menu-view="gear">装備</button>
           <button type="button" data-menu-view="evolution">進化</button>
           <button type="button" data-menu-view="mission">探索</button>
@@ -346,7 +352,7 @@
         <ul class="help-list">
           <li>5つのダンジョンを順番に攻略します。すべての最深部に固有ボスがいます。</li>
           <li>入るたびにマップ、敵、道具、装備、フロア運勢が変わります。</li>
-          <li>挑戦開始時にレベルと蜘蛛型スキル盤は初期化されます。装備とバッグ拡張は町へ持ち帰れます。</li>
+          <li>挑戦開始時にレベルと星網スキル盤は初期化されます。装備とバッグ拡張は町へ持ち帰れます。</li>
           <li>3つのセーブ枠に攻略状況、装備、カルマ、バッグ拡張を保存できます。迷宮制覇時は自動保存されます。</li>
           <li>主人公は星の子コハク一体。行動、レベル、進化素材によって五系統へ進化します。</li>
           <li>救済・闘争・禁忌の進化は二段階。智樹と星王は厳しい条件を満たす一段階の強力な進化です。</li>
@@ -354,16 +360,17 @@
           <li>移動と通常攻撃は別操作です。敵の方向を左クリックすると攻撃します。</li>
           <li>依頼人を救うとカルマが1減り、二度攻撃して倒すとカルマが3増えます。</li>
           <li>ミニマップには訪れた部屋と、実際に歩いた通路だけが記録されます。</li>
-          <li>緑の回復苔は踏むとHPが2回復。赤い亀裂は踏むと2ダメージです。</li>
+          <li>緑の回復苔は踏むとHPが2回復。赤い亀裂は踏むと3ダメージです。</li>
           <li>先遣員を救うか、禁じられた決着を選ぶと階段が開きます。最深部ではボスを倒す必要があります。</li>
           <li>開いた階段に乗ると、次へ進むか、この階の探索を続けるか選べます。</li>
-          <li>武器・防具・お守りは、最初の1個を自動装備します。装備は持ち越され、Qメニューで付け替えられます。</li>
+          <li>武器・防具・お守りは部位別に選べます。町の星の商店では、同じ部位の装備2つを上位装備へ合成できます。</li>
           <li>装備は星1コモンから星5レジェンドまで。星が多いほど補正が強くなります。</li>
           <li>金色の輪郭とRARE表示を持つ敵は非常に珍しく、倒すと星3以上の装備を落とします。</li>
           <li>各階の運勢によって、道具の数、敵の数、回復、増援、落とし物が変化します。</li>
           <li>満腹度はゆっくり減ります。月蜜の実を拾ったら、Rで食べて回復できます。</li>
           <li>敵の隣へ移動しても攻撃はしません。左クリックまたはFで通常攻撃、Jで選択中の技を使います。</li>
-          <li>敵タイプごとに進化素材が異なります。レア敵とボスは「覇星の核」を落とすことがあります。</li>
+          <li>進化素材は容量無制限の素材袋へ入ります。レア敵とボスは「覇星の核」を落とすことがあります。</li>
+          <li>一部の階には行商人が現れ、道具や装備をその場で購入できます。</li>
           <li>バッグは初期20枠。町の商店で星貨を払うと、最大40枠まで永久に拡張できます。</li>
           <li>主人公が倒れると冒険終了です。</li>
         </ul>
@@ -379,6 +386,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa2"></script>
+    <script src="app.js?v=pwa3"></script>
   </body>
 </html>

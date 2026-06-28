@@ -880,6 +880,10 @@ button {
   background: #ffd45f;
 }
 
+.map-shop {
+  background: #61e1bd;
+}
+
 .map-target {
   background: #df78ff;
 }
@@ -1393,7 +1397,7 @@ button {
 
 .game-menu-tabs {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(7, minmax(0, 1fr));
   gap: 1px;
   margin-top: 14px;
   background: rgba(255, 245, 223, 0.12);
@@ -2122,6 +2126,325 @@ button {
   font-size: 0.8rem;
 }
 
+.material-bag-head,
+.merchant-head,
+.forge-head {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 11px;
+  align-items: center;
+  border: 1px solid rgba(104, 222, 195, 0.35);
+  background: rgba(39, 108, 92, 0.1);
+  padding: 11px;
+}
+
+.material-bag-head > div:nth-child(2),
+.merchant-head > div:nth-child(2),
+.forge-head > div:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.material-bag-head span,
+.material-bag-head small,
+.merchant-head span,
+.merchant-head small,
+.forge-head span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.material-bag-head > b,
+.merchant-head > b,
+.forge-head > b {
+  color: #8fe4ca;
+  font-size: 0.78rem;
+}
+
+.material-bag-mark,
+.merchant-portrait,
+.forge-flame {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(137, 239, 214, 0.42);
+  background: #17332d;
+  color: #9ff1db;
+  font-weight: 900;
+}
+
+.merchant-portrait {
+  border-radius: 50%;
+  background: #365f57;
+  color: #ffe197;
+}
+
+.forge-flame {
+  border-color: rgba(241, 186, 80, 0.52);
+  background: #3b291c;
+  color: #ffd370;
+  transform: rotate(45deg);
+}
+
+.forge-flame::first-letter {
+  transform: rotate(-45deg);
+}
+
+.material-bag-list,
+.merchant-stock,
+.town-shop-content,
+.forge-list {
+  display: grid;
+  gap: 7px;
+}
+
+.gear-slot-tabs,
+.town-shop-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 5px;
+}
+
+.gear-slot-tabs button,
+.town-shop-tabs button {
+  min-width: 0;
+  min-height: 40px;
+  display: flex;
+  gap: 7px;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid rgba(255, 245, 223, 0.13);
+  background: rgba(255, 255, 255, 0.035);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.gear-slot-tabs button.active,
+.town-shop-tabs button.active {
+  border-color: rgba(97, 211, 194, 0.62);
+  background: rgba(97, 211, 194, 0.1);
+  color: #a6ebdf;
+}
+
+.gear-slot-tabs button:disabled {
+  cursor: default;
+}
+
+.gear-slot-tabs button span {
+  width: 9px;
+  height: 9px;
+  background: var(--slot-color);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--slot-color) 60%, transparent);
+}
+
+.gear-slot-tabs button b {
+  color: var(--brass);
+  font-size: 0.66rem;
+}
+
+.forge-selection {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 6px;
+  align-items: stretch;
+}
+
+.forge-selection span,
+.forge-selection strong {
+  min-width: 0;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 245, 223, 0.12);
+  background: rgba(0, 0, 0, 0.16);
+  padding: 6px;
+  font-size: 0.67rem;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.forge-selection strong {
+  border-color: rgba(241, 186, 80, 0.45);
+  color: #ffd77f;
+}
+
+.forge-selection i {
+  align-self: center;
+  color: var(--brass);
+  font-style: normal;
+  font-weight: 900;
+}
+
+.forge-action {
+  width: 100%;
+  min-height: 42px;
+}
+
+.forge-action:disabled {
+  opacity: 0.44;
+}
+
+.evolution-card {
+  grid-template-columns: 130px minmax(0, 1fr);
+  align-content: start;
+}
+
+.evolution-art {
+  grid-row: 1 / 7;
+  width: 130px;
+  aspect-ratio: 1;
+  align-self: start;
+  border: 1px solid color-mix(in srgb, var(--evo-color) 52%, transparent);
+  background-image: url("assets/evolution/evolution-atlas-v1.png?v=pwa3");
+  background-size: 400% 200%;
+  background-position: var(--art-x) var(--art-y);
+  background-repeat: no-repeat;
+  box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.28);
+}
+
+.evolution-card > header,
+.evolution-card > strong,
+.evolution-card > small,
+.evolution-card > .evolution-requirements,
+.evolution-card > .evolution-materials,
+.evolution-card > button {
+  grid-column: 2;
+}
+
+.evolution-materials {
+  display: flex;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+
+.evolution-materials span {
+  min-width: 96px;
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto;
+  gap: 5px;
+  align-items: center;
+  border: 1px solid rgba(255, 245, 223, 0.12);
+  background: rgba(0, 0, 0, 0.14);
+  padding: 4px;
+  color: var(--muted);
+}
+
+.evolution-materials span.met {
+  border-color: rgba(102, 202, 125, 0.5);
+  color: #b6ebc1;
+}
+
+.evolution-materials canvas {
+  width: 30px;
+  height: 30px;
+  image-rendering: pixelated;
+}
+
+.evolution-materials b,
+.evolution-materials small {
+  font-size: 0.58rem;
+}
+
+.skill-board-viewport {
+  width: 100%;
+  max-height: 520px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(152, 132, 220, 0.2);
+  background: #080a09;
+}
+
+.skill-board {
+  width: 900px;
+  min-width: 900px;
+  height: 740px;
+  overflow: hidden;
+  border: 0;
+  background:
+    radial-gradient(circle at center, rgba(159, 133, 224, 0.13), transparent 38%),
+    linear-gradient(rgba(152, 132, 220, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(152, 132, 220, 0.035) 1px, transparent 1px),
+    #080a09;
+  background-size: auto, 24px 24px, 24px 24px, auto;
+}
+
+.skill-links {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.skill-links line {
+  stroke: rgba(151, 132, 205, 0.28);
+  stroke-width: 3;
+}
+
+.skill-links line.reachable {
+  stroke: rgba(224, 181, 89, 0.54);
+  stroke-dasharray: 7 5;
+}
+
+.skill-links line.unlocked {
+  stroke: #73d5ba;
+  filter: drop-shadow(0 0 4px rgba(111, 225, 195, 0.5));
+}
+
+.skill-core {
+  position: absolute;
+  z-index: 1;
+  left: 408px;
+  top: 328px;
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #c9b1ff;
+  border-radius: 50%;
+  background: #302447;
+  color: #eee3ff;
+  box-shadow: 0 0 28px rgba(170, 134, 231, 0.34);
+}
+
+.skill-core i {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  border: 2px solid #f0cc68;
+  transform: rotate(45deg);
+}
+
+.skill-core b {
+  z-index: 1;
+  font-size: 0.68rem;
+}
+
+.skill-node {
+  width: 130px;
+  min-height: 78px;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 5px 7px;
+  padding: 7px;
+}
+
+.skill-node-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+}
+
+.skill-node-copy strong {
+  font-size: 0.68rem;
+}
+
+.skill-node-copy small {
+  font-size: 0.56rem;
+}
+
 .touch-controls-single {
   grid-template-columns: 166px 166px;
   justify-content: space-between;
@@ -2621,12 +2944,12 @@ button {
   }
 
   .skill-board {
-    height: 540px;
+    height: 740px;
   }
 
   .skill-node {
-    width: 40%;
-    min-height: 106px;
+    width: 130px;
+    min-height: 78px;
     grid-template-columns: 30px minmax(0, 1fr);
     gap: 5px;
     padding: 7px;
@@ -2774,6 +3097,57 @@ button {
     background: rgba(5, 11, 10, 0.78);
     padding: 5px;
     backdrop-filter: blur(5px);
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .side-panel > .party-panel {
+    position: fixed;
+    z-index: 6;
+    left: max(8px, env(safe-area-inset-left));
+    top: max(6px, env(safe-area-inset-top));
+    width: 180px;
+    display: block;
+    border: 1px solid rgba(255, 245, 223, 0.2);
+    background: rgba(5, 11, 10, 0.8);
+    padding: 4px;
+    backdrop-filter: blur(5px);
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .party-panel .player-card {
+    grid-template-columns: 1fr;
+    gap: 3px;
+    border: 0;
+    border-left: 4px solid;
+    background: transparent;
+    padding: 5px 6px;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .party-panel .portrait,
+  .app-shell:has(.touch-controls:not([hidden])) .party-panel .player-meta span:last-child {
+    display: none;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .party-panel .player-head strong {
+    font-size: 0.72rem;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .party-panel .player-head span,
+  .app-shell:has(.touch-controls:not([hidden])) .party-panel .player-meta span {
+    font-size: 0.58rem;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .party-panel .bar {
+    height: 8px;
+    margin-top: 4px;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .party-panel .player-meta {
+    grid-template-columns: 54px minmax(0, 1fr);
+    gap: 3px;
+    margin-top: 3px;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .party-panel .player-meta span {
+    min-height: 20px;
   }
 
   .app-shell:has(.touch-controls:not([hidden])) .mini-map-title,

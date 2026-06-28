@@ -1,13 +1,14 @@
-const CACHE_NAME = "stardust-rescue-v2";
+const CACHE_NAME = "stardust-rescue-v3";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=pwa2",
-  "./app.js?v=pwa2",
-  "./manifest.webmanifest?v=pwa2",
+  "./styles.css?v=pwa3",
+  "./app.js?v=pwa3",
+  "./manifest.webmanifest?v=pwa3",
   "./assets/pwa/icon-180.png",
   "./assets/pwa/icon-192.png",
   "./assets/pwa/icon-512.png",
+  "./assets/evolution/evolution-atlas-v1.png?v=pwa3",
   "./assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png",
 ];
 
