@@ -2299,7 +2299,7 @@ button {
   aspect-ratio: 1;
   align-self: start;
   border: 1px solid color-mix(in srgb, var(--evo-color) 52%, transparent);
-  background-image: url("assets/evolution/evolution-atlas-v1.png?v=pwa4");
+  background-image: url("assets/evolution/evolution-atlas-v1.png?v=pwa5");
   background-size: 400% 200%;
   background-position: var(--art-x) var(--art-y);
   background-repeat: no-repeat;
@@ -3191,9 +3191,21 @@ button {
 }
 
 .terrain-trap {
-  background: #6b2428;
+  background-color: #6b2428;
+  background-image: url("assets/tokens/foxbound-items-v1.jpg?v=pwa5");
+  background-position: 75% 100%;
+  background-repeat: no-repeat;
+  background-size: 500% 400%;
   border-color: #ff8b79 !important;
   box-shadow: inset 0 0 0 2px #2a1215;
+}
+
+.terrain-stairs {
+  background-color: #c88b31;
+  background-image: url("assets/tokens/foxbound-items-v1.jpg?v=pwa5");
+  background-position: 100% 100%;
+  background-repeat: no-repeat;
+  background-size: 500% 400%;
 }
 
 .tower-route-summary {
@@ -3576,5 +3588,309 @@ button {
   .tower-route-summary {
     align-items: flex-start;
     flex-direction: column;
+  }
+}
+
+.brand-mark,
+#townCanvas,
+#gameCanvas,
+.portrait canvas,
+.character-choice-head canvas,
+.evolution-materials canvas,
+.item-entry-icon {
+  image-rendering: auto;
+}
+
+.dialogue-box {
+  left: 24px;
+  right: 24px;
+  bottom: 18px;
+  width: auto;
+  min-height: 82px;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+  transform: none;
+  border: 2px solid rgba(255, 237, 188, 0.72);
+  border-left: 7px solid var(--brass);
+  border-radius: 4px;
+  background: rgba(10, 16, 17, 0.96);
+  padding: 8px 16px 8px 8px;
+  box-shadow:
+    inset 0 0 0 2px rgba(0, 0, 0, 0.5),
+    0 16px 44px rgba(0, 0, 0, 0.58);
+  transition: opacity 220ms ease;
+}
+
+.dialogue-box.idle {
+  opacity: 0.72;
+}
+
+.dialogue-box.dialogue-pop {
+  animation: dialogue-pop 180ms ease-out;
+}
+
+.dialogue-portrait {
+  width: 64px;
+  height: 64px;
+  align-self: end;
+  border: 1px solid rgba(255, 245, 223, 0.2);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.dialogue-copy {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  gap: 4px 8px;
+  align-items: center;
+}
+
+.dialogue-box .event-icon {
+  width: auto;
+  height: 22px;
+  border: 0;
+  border-bottom: 2px solid var(--brass);
+  background: transparent;
+  color: #e5ae48;
+  padding: 0 4px;
+  font-size: 0.58rem;
+}
+
+.dialogue-box strong {
+  color: #fff2c9;
+  font-size: 0.88rem;
+}
+
+.dialogue-box small {
+  grid-column: 1 / -1;
+  color: #f5eee1;
+  font-size: 0.76rem;
+  line-height: 1.45;
+  white-space: normal;
+}
+
+@keyframes dialogue-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
+#turnLabel[data-pressure="safe"] {
+  color: #8ee3d5;
+}
+
+#turnLabel[data-pressure="warning"] {
+  color: #ffd36e;
+  animation: pressure-pulse 1.2s ease-in-out infinite;
+}
+
+#turnLabel[data-pressure="danger"] {
+  color: #ff776c;
+  animation: pressure-pulse 0.62s ease-in-out infinite;
+}
+
+#turnLabel[data-pressure="rest"] {
+  color: #8ee3d5;
+}
+
+@keyframes pressure-pulse {
+  50% {
+    text-shadow: 0 0 12px currentColor;
+  }
+}
+
+.relic-card {
+  grid-template-columns: 52px minmax(0, 1fr);
+}
+
+.relic-card .relic-art {
+  width: 50px;
+  height: 50px;
+  display: block;
+  border: 1px solid color-mix(in srgb, var(--relic-color) 58%, transparent);
+  background-image: url("assets/tokens/foxbound-relics-v1.jpg?v=pwa5");
+  background-size: 500% 400%;
+  background-position: var(--relic-x) var(--relic-y);
+  background-repeat: no-repeat;
+}
+
+.level-dialog {
+  width: min(760px, calc(100vw - 26px));
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  gap: 0;
+  border: 2px solid rgba(255, 224, 138, 0.72);
+  border-radius: 6px;
+  background: #111918;
+  color: var(--ink);
+  padding: 0;
+  overflow: hidden;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.72);
+}
+
+.level-dialog:not([open]) {
+  display: none;
+}
+
+.level-dialog::backdrop {
+  background: rgba(3, 7, 8, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.level-dialog-hero {
+  min-height: 330px;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 7px;
+  border-right: 1px solid rgba(255, 224, 138, 0.28);
+  background: #18313a;
+}
+
+.level-dialog-hero canvas {
+  width: 150px;
+  height: 150px;
+  image-rendering: auto;
+}
+
+.level-dialog-hero span {
+  color: #8eeaf1;
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+.level-dialog-hero strong {
+  color: #fff0a8;
+  font-size: 1.55rem;
+}
+
+.level-dialog-copy {
+  min-width: 0;
+  padding: 20px;
+}
+
+.level-dialog-copy > p {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.level-stat-changes {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 7px;
+}
+
+.level-stat-changes div {
+  min-width: 0;
+  display: grid;
+  place-items: center;
+  gap: 3px;
+  border: 1px solid rgba(255, 245, 223, 0.12);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 8px 4px;
+}
+
+.level-stat-changes div.raised {
+  border-color: rgba(113, 221, 226, 0.5);
+  background: rgba(75, 184, 191, 0.09);
+}
+
+.level-stat-changes b {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid #69cdd5;
+  color: #8eeaf1;
+  font-size: 0.58rem;
+}
+
+.level-stat-changes span,
+.level-stat-changes em {
+  color: var(--muted);
+  font-size: 0.6rem;
+  font-style: normal;
+}
+
+.level-stat-changes em {
+  color: #8eeaf1;
+  font-weight: 900;
+}
+
+.level-stat-changes strong {
+  font-size: 0.86rem;
+}
+
+.level-skill-point {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  border-left: 4px solid #e5ae48;
+  background: rgba(229, 174, 72, 0.09);
+  padding: 11px 12px;
+}
+
+.level-skill-point span {
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.level-skill-point strong {
+  color: #ffe08a;
+  font-size: 1rem;
+}
+
+.level-dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.level-dialog-actions button {
+  min-height: 44px;
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .app-shell:has(.touch-controls:not([hidden])) .dialogue-box {
+    left: 190px;
+    right: 190px;
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: auto;
+    min-height: 68px;
+    grid-template-columns: 50px minmax(0, 1fr);
+    padding: 6px 10px 6px 6px;
+    transform: none;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .dialogue-portrait {
+    width: 50px;
+    height: 50px;
+  }
+
+  .app-shell:has(.touch-controls:not([hidden])) .dialogue-box small {
+    font-size: 0.63rem;
+    line-height: 1.3;
+  }
+
+  .level-dialog {
+    grid-template-columns: 150px minmax(0, 1fr);
+    max-height: calc(100vh - 14px);
+  }
+
+  .level-dialog-hero {
+    min-height: 0;
+  }
+
+  .level-dialog-hero canvas {
+    width: 110px;
+    height: 110px;
+  }
+
+  .level-dialog-copy {
+    padding: 12px;
   }
 }

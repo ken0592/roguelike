@@ -1,15 +1,17 @@
-const CACHE_NAME = "stardust-rescue-v4";
+const CACHE_NAME = "foxbound-v5";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=pwa4",
-  "./app.js?v=pwa4",
-  "./manifest.webmanifest?v=pwa4",
+  "./styles.css?v=pwa5",
+  "./app.js?v=pwa5",
+  "./manifest.webmanifest?v=pwa5",
   "./assets/pwa/icon-180.png",
   "./assets/pwa/icon-192.png",
   "./assets/pwa/icon-512.png",
-  "./assets/evolution/evolution-atlas-v1.png?v=pwa4",
-  "./assets/tokens/map-token-atlas-v4.jpg?v=pwa4",
+  "./assets/evolution/evolution-atlas-v1.png?v=pwa5",
+  "./assets/tokens/foxbound-characters-v3.png?v=pwa5",
+  "./assets/tokens/foxbound-items-v1.jpg?v=pwa5",
+  "./assets/tokens/foxbound-relics-v1.jpg?v=pwa5",
   "./assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png",
 ];
 

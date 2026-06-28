@@ -2,6 +2,9 @@ const TILE = 48;
 const MAP_W = 36;
 const MAP_H = 24;
 const TARGET_FLOOR = 100;
+const FLOOR_WIND_WARNING = 80;
+const FLOOR_WIND_DANGER = 110;
+const FLOOR_WIND_LIMIT = 140;
 const VISION_RADIUS = 7;
 const BASE_BAG_CAPACITY = 20;
 const MAX_BAG_CAPACITY = 40;
@@ -30,10 +33,14 @@ const townCtx = townCanvas.getContext("2d");
 const spriteSheet = new Image();
 spriteSheet.src = "assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png";
 const mapTokenSheet = new Image();
-mapTokenSheet.src = "assets/tokens/map-token-atlas-v4.jpg?v=pwa4";
+mapTokenSheet.src = "assets/tokens/foxbound-characters-v3.png?v=pwa5";
 const mapTokenCanvas = document.createElement("canvas");
 const mapTokenCtx = mapTokenCanvas.getContext("2d", { willReadFrequently: true });
 let mapTokenReady = false;
+const itemIconSheet = new Image();
+itemIconSheet.src = "assets/tokens/foxbound-items-v1.jpg?v=pwa5";
+const relicIconSheet = new Image();
+relicIconSheet.src = "assets/tokens/foxbound-relics-v1.jpg?v=pwa5";
 
 const ui = {
   floor: document.querySelector("#floorLabel"),
@@ -97,9 +104,18 @@ const ui = {
   chapter: document.querySelector("#chapterLabel"),
   luck: document.querySelector("#luckLabel"),
   eventBanner: document.querySelector("#eventBanner"),
+  eventPortrait: document.querySelector("#eventPortrait"),
   eventIcon: document.querySelector("#eventIcon"),
   eventTitle: document.querySelector("#eventTitle"),
   eventDetail: document.querySelector("#eventDetail"),
+  levelDialog: document.querySelector("#levelDialog"),
+  levelPortrait: document.querySelector("#levelPortrait"),
+  levelDialogTitle: document.querySelector("#levelDialogTitle"),
+  levelDialogText: document.querySelector("#levelDialogText"),
+  levelStatChanges: document.querySelector("#levelStatChanges"),
+  levelSkillPoints: document.querySelector("#levelSkillPoints"),
+  levelLaterButton: document.querySelector("#levelLaterButton"),
+  levelSpendButton: document.querySelector("#levelSpendButton"),
   mapLeaderDot: document.querySelector(".map-leader"),
 };
 
@@ -339,6 +355,29 @@ const itemCatalog = {
 };
 
 const evolutionMaterialKeys = ["moonShard", "emberCore", "shadowFang", "wisdomSeed", "bossCore"];
+const itemIconCells = {
+  apple: [0, 0],
+  bigApple: [0, 0],
+  oran: [1, 0],
+  elixir: [2, 0],
+  reviver: [3, 0],
+  blastSeed: [4, 0],
+  sleepSeed: [0, 1],
+  slumberOrb: [1, 1],
+  warpOrb: [2, 1],
+  guidingOrb: [3, 1],
+  guardBerry: [4, 1],
+  powerBerry: [0, 2],
+  fortuneOrb: [1, 2],
+  moonShard: [2, 2],
+  emberCore: [3, 2],
+  shadowFang: [4, 2],
+  wisdomSeed: [0, 3],
+  bossCore: [1, 3],
+  relic: [2, 3],
+  trap: [3, 3],
+  stairs: [4, 3],
+};
 const evolutionArtCells = {
   lumina: [0, 0],
   seraph: [1, 0],
@@ -706,7 +745,7 @@ const townMissions = [
     title: "ささやきの森",
     dungeon: "ささやきの森",
     theme: "forest",
-    client: "救助隊長アステル",
+    client: "観測院長アステル",
     target: "虚ろの獣ノクス",
     description: "木漏れ日の迷路を抜け、森の星明かりを奪う獣を倒す最初の挑戦。",
     floors: 5,
@@ -1017,6 +1056,10 @@ function createGame() {
     screenFlash: null,
     screenShake: null,
     guidanceActive: false,
+    windWarningShown: false,
+    windDangerShown: false,
+    pendingLevelUps: [],
+    levelDialogScheduled: false,
     floorEvent: { key: "calm", name: "平穏", detail: "特別な兆しはない", luck: 0 },
     luck: 0,
     gameOver: false,
@@ -1070,6 +1113,8 @@ function prepareNewTry() {
   game.belly = 100;
   game.logs = [];
   game.screenShake = null;
+  game.pendingLevelUps = [];
+  game.levelDialogScheduled = false;
   if (game.startingRelicKey) addRelic(game.startingRelicKey, false);
 }
 
@@ -1094,6 +1139,8 @@ function returnToTown() {
   if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
   if (ui.stairsDialog.open) ui.stairsDialog.close();
   if (ui.restDialog.open) ui.restDialog.close();
+  if (ui.levelDialog.open) ui.levelDialog.close();
+  ui.eventBanner.hidden = true;
   prepareNewTry();
   updateAll();
 }
@@ -1193,6 +1240,8 @@ function buildFloor() {
   game.screenFlash = null;
   game.screenShake = null;
   game.guidanceActive = false;
+  game.windWarningShown = false;
+  game.windDangerShown = false;
   game.stairsRevealed = false;
   game.restChoiceTaken = false;
   game.leaderTrail = [];
@@ -1871,10 +1920,77 @@ function resolveWorldTurn() {
   if (game.focusTurns > 0) game.focusTurns -= 1;
   if (getLeader().guardTurns > 0) getLeader().guardTurns -= 1;
   game.turn += 1;
+  if (applyTowerWind()) {
+    updateAll();
+    return;
+  }
   revealAroundTeam();
   checkGameOver();
   updateAll();
-  if (game.rewardPending && !game.gameOver) window.setTimeout(openRelicReward, 80);
+  if (game.pendingLevelUps.length && !game.gameOver) {
+    scheduleLevelUpDialog();
+  } else if (game.rewardPending && !game.gameOver) {
+    window.setTimeout(openRelicReward, 80);
+  }
+}
+
+function applyTowerWind() {
+  if (game.floorKind.includes("rest") || game.gameOver || game.victory) return false;
+  if (game.turn >= FLOOR_WIND_WARNING && !game.windWarningShown) {
+    game.windWarningShown = true;
+    announceEvent("塔風が吹き始めた", `あと${FLOOR_WIND_LIMIT - game.turn}ターンで、この階から弾き出される`, "風", "danger");
+    addLog("塔の奥から不吉な風が吹く。長居はできない。");
+    setScreenFlash("#d6b7ff", 500);
+    playSfx("warning");
+  }
+  if (game.turn >= FLOOR_WIND_DANGER && !game.windDangerShown) {
+    game.windDangerShown = true;
+    announceEvent("塔風・侵食", "風がHPを削り、敵を呼び寄せる。すぐに階段へ。", "風", "danger");
+    addLog("塔風が侵食へ変わった。3ターンごとにHPを失う。");
+    triggerScreenShake(12, 420);
+  }
+  if (game.turn >= FLOOR_WIND_WARNING && game.turn % 8 === 0 && game.enemies.length < 30) {
+    const point = randomOpenTile();
+    if (point) {
+      const hunter = createEnemy(randomEnemyProfile(), point, true);
+      hunter.name = `塔風に追われた${hunter.name}`;
+      hunter.atk += 2;
+      game.enemies.push(hunter);
+      addEffect("vortex", point.x, point.y, "#b99cff");
+      addLog("塔風に押され、新たな敵が現れた。");
+    }
+  }
+  if (game.turn >= FLOOR_WIND_DANGER && game.turn % 3 === 0) {
+    const leader = getLeader();
+    const damage = Math.max(2, Math.ceil(leader.maxHp * 0.06));
+    leader.hp = Math.max(0, leader.hp - damage);
+    addEffect("vortex", leader.x, leader.y, "#ad8ae8");
+    addFloatingText(leader.x, leader.y, `-${damage}`, "#d6b7ff");
+    addLog(`塔風の侵食。${leader.name}は${damage}ダメージを受けた。`);
+    triggerScreenShake(8, 260);
+    if (leader.hp <= 0 && !tryReviveActor(leader)) leader.down = true;
+  }
+  if (game.turn < FLOOR_WIND_LIMIT) return false;
+  failFromTowerWind();
+  return true;
+}
+
+function failFromTowerWind() {
+  const leader = getLeader();
+  leader.hp = 0;
+  leader.down = true;
+  game.gameOver = true;
+  game.towerCheckpoint = null;
+  saveCurrentGame(true);
+  saveBestScore();
+  ui.endTitle.textContent = "塔風に弾き出された";
+  ui.endText.textContent = `B${game.floor}Fに留まりすぎた。階段を探す判断と、探索の切り上げが必要だ。`;
+  ui.endRestartButton.textContent = "星見広場へ戻る";
+  ui.endOverlay.hidden = false;
+  announceEvent("TIME OVER", "同じ階には140ターンまでしか留まれない", "風", "danger");
+  setScreenFlash("#b48cff", 900);
+  triggerScreenShake(20, 700);
+  playSfx("karma");
 }
 
 function companionTurns() {
@@ -2106,7 +2222,7 @@ function dropRareEnemyLoot(x, y) {
   game.items.push({ id: cryptoId(), kind, x: point.x, y: point.y });
   game.score += 120 + game.floor * 4;
   addLog(`レア敵の戦利品。${itemCatalog[kind].name}と星屑を得た。`);
-  announceEvent("RARE REWARD", `${itemCatalog[kind].name}・救助pt獲得`, "★", "good");
+  announceEvent("RARE REWARD", `${itemCatalog[kind].name}・探索pt獲得`, "★", "good");
 }
 
 function completeBossMission(enemy) {
@@ -2182,6 +2298,15 @@ function gainExp(amount) {
     if (actor.down || actor.kind === "recruit") continue;
     actor.exp += amount;
     while (actor.exp >= actor.nextExp) {
+      const before = {
+        level: actor.level,
+        maxHp: actor.maxHp,
+        atk: actor.atk,
+        magic: actor.magic,
+        def: actor.def,
+        res: actor.res,
+        skillPoints: game.skillPoints,
+      };
       actor.exp -= actor.nextExp;
       actor.level += 1;
       actor.nextExp = Math.floor(actor.nextExp * 1.34 + 12);
@@ -2195,12 +2320,94 @@ function gainExp(amount) {
         else actor.def += 1;
       }
       if (actor.id === "leader") game.skillPoints += 1;
+      if (actor.id === "leader") {
+        game.pendingLevelUps.push({
+          fromLevel: before.level,
+          level: actor.level,
+          hp: actor.maxHp - before.maxHp,
+          atk: actor.atk - before.atk,
+          magic: actor.magic - before.magic,
+          def: actor.def - before.def,
+          res: actor.res - before.res,
+          skillPoints: game.skillPoints - before.skillPoints,
+        });
+      }
       addEffect("heal", actor.x, actor.y, actor.color);
       addLog(`${actor.name}はLv.${actor.level}になった。`);
       const bonusText = actor.id === "leader" ? "　スキルポイント +1" : "";
       announceEvent("レベルアップ", `${actor.name} Lv.${actor.level}${bonusText}`, "Lv", "good");
       playSfx("level");
     }
+  }
+}
+
+function scheduleLevelUpDialog() {
+  if (game.levelDialogScheduled || ui.levelDialog.open || !game.pendingLevelUps.length) return;
+  game.levelDialogScheduled = true;
+  window.setTimeout(() => {
+    game.levelDialogScheduled = false;
+    if (game.gameOver || game.victory || game.mode !== "dungeon") return;
+    const blocked = [
+      ui.townDialog,
+      ui.helpDialog,
+      ui.saveDialog,
+      ui.stairsDialog,
+      ui.restDialog,
+      ui.gameMenuDialog,
+    ].some((dialog) => dialog.open);
+    if (blocked) {
+      scheduleLevelUpDialog();
+      return;
+    }
+    openLevelUpDialog();
+  }, 140);
+}
+
+function openLevelUpDialog() {
+  if (!game.pendingLevelUps.length || ui.levelDialog.open) return;
+  const changes = game.pendingLevelUps.splice(0);
+  const first = changes[0];
+  const last = changes[changes.length - 1];
+  const total = changes.reduce((sum, entry) => ({
+    hp: sum.hp + entry.hp,
+    atk: sum.atk + entry.atk,
+    magic: sum.magic + entry.magic,
+    def: sum.def + entry.def,
+    res: sum.res + entry.res,
+    skillPoints: sum.skillPoints + entry.skillPoints,
+  }), { hp: 0, atk: 0, magic: 0, def: 0, res: 0, skillPoints: 0 });
+  const leader = getLeader();
+  ui.levelDialogTitle.textContent = `Lv.${last.level}`;
+  ui.levelDialogText.textContent = changes.length > 1
+    ? `${leader.name}はLv.${first.fromLevel}からLv.${last.level}へ成長した。`
+    : `${leader.name}の新しい力が目覚めた。`;
+  const stats = [
+    ["HP", total.hp, leader.maxHp, "心"],
+    ["物理", total.atk, leader.atk, "牙"],
+    ["魔力", total.magic, leader.magic, "魔"],
+    ["防御", total.def, leader.def, "盾"],
+    ["魔防", total.res, leader.res, "環"],
+  ];
+  ui.levelStatChanges.innerHTML = stats.map(([label, gain, current, icon]) => `
+    <div class="${gain > 0 ? "raised" : ""}">
+      <b>${icon}</b><span>${label}</span><em>${gain > 0 ? `+${gain}` : "±0"}</em><strong>${current}</strong>
+    </div>
+  `).join("");
+  ui.levelSkillPoints.textContent = `${game.skillPoints} pt`;
+  drawPortrait(ui.levelPortrait, leader);
+  ui.levelDialog.showModal();
+}
+
+function closeLevelUpDialog(openSkills = false) {
+  if (ui.levelDialog.open) ui.levelDialog.close();
+  if (openSkills) {
+    openGameMenu("skills");
+    return;
+  }
+  if (game.pendingLevelUps.length) {
+    scheduleLevelUpDialog();
+  } else if (game.rewardPending) {
+    window.setTimeout(openRelicReward, 80);
   }
 }
 
@@ -2354,8 +2561,8 @@ function pickUpItem() {
     game.items = game.items.filter((candidate) => candidate.id !== item.id);
     const points = 45 + game.floor * 8;
     game.score += points;
-    addLog(`星屑を集めた。救助pt +${points}。`);
-    announceEvent("星屑を発見", `救助pt +${points}`, "星", "mystic");
+    addLog(`星屑を集めた。探索pt +${points}。`);
+    announceEvent("星屑を発見", `探索pt +${points}`, "星", "mystic");
     return;
   }
 
@@ -2891,8 +3098,8 @@ function checkGameOver() {
   game.towerCheckpoint = null;
   saveCurrentGame(true);
   saveBestScore();
-  ui.endTitle.textContent = "救助失敗";
-  ui.endText.textContent = `B${game.floor}Fで力尽きた。救助pt ${game.score}。`;
+  ui.endTitle.textContent = "探索失敗";
+  ui.endText.textContent = `B${game.floor}Fで力尽きた。探索pt ${game.score}。`;
   ui.endRestartButton.textContent = "町へ戻る";
   ui.endOverlay.hidden = false;
   updateAll();
@@ -2905,6 +3112,7 @@ function updateAll() {
   ui.townScreen.hidden = !inTown;
   ui.gameLayout.hidden = inTown;
   ui.touchControls.hidden = inTown;
+  if (inTown) ui.eventBanner.hidden = true;
 
   if (inTown) {
     const leader = getLeader();
@@ -2940,7 +3148,17 @@ function updateAll() {
   ui.bag.textContent = `バッグ ${bagTotal()}/${game.bagCapacity}`;
   ui.materials.textContent = `素材袋 ${evolutionMaterialTotal()}`;
   ui.gear.textContent = `${game.relics.length}個`;
-  ui.turn.textContent = `${game.turn}`;
+  if (game.floorKind.includes("rest")) {
+    ui.turn.textContent = "休憩所";
+    ui.turn.dataset.pressure = "rest";
+  } else {
+    ui.turn.textContent = `${game.turn} / ${FLOOR_WIND_LIMIT}`;
+    ui.turn.dataset.pressure = game.turn >= FLOOR_WIND_DANGER
+      ? "danger"
+      : game.turn >= FLOOR_WIND_WARNING
+        ? "warning"
+        : "safe";
+  }
   ui.stairs.textContent = !game.mission?.complete ? "封印中" : game.stairsRevealed ? "発見済" : "未発見";
   ui.goal.textContent = game.floorKind.includes("rest")
     ? game.restChoiceTaken ? "階段から次の区画へ" : "休憩の恩恵を1つ選ぶ"
@@ -3190,8 +3408,11 @@ function renderRelicReward() {
 }
 
 function relicCardMarkup(relic) {
+  const index = Math.max(0, relicCatalog.findIndex((entry) => entry.key === relic.key));
+  const column = index % 5;
+  const row = Math.floor(index / 5);
   return `<article class="relic-card" style="--relic-color:${relic.color}">
-    <b>${relic.icon}</b>
+    <i class="relic-art" style="--relic-x:${column * 25}%;--relic-y:${row * 33.3333}%"></i>
     <div><span>${relic.rarity}</span><strong>${relic.name}</strong><small>${relic.detail}</small></div>
   </article>`;
 }
@@ -3930,13 +4151,13 @@ function renderTownFacility() {
     return;
   }
 
-  ui.townDialogTitle.textContent = "救助隊本部";
+  ui.townDialogTitle.textContent = "星見観測院";
   const rank = currentRank();
   const evolution = evolutionCatalog.find((entry) => entry.key === game.persistentEvolutionKey);
   ui.townDialogBody.innerHTML = `
     <div class="menu-stat-grid">
-      <div class="menu-stat"><span>救助隊ランク</span><strong>${rank.name}</strong></div>
-      <div class="menu-stat"><span>累計救助pt</span><strong>${game.rescuePoints}</strong></div>
+      <div class="menu-stat"><span>探索者ランク</span><strong>${rank.name}</strong></div>
+      <div class="menu-stat"><span>累計探索pt</span><strong>${game.rescuePoints}</strong></div>
       <div class="menu-stat"><span>最高到達</span><strong>B${game.highestFloor}F / B100F</strong></div>
       <div class="menu-stat"><span>敵図鑑</span><strong>${enemyCatalog.length + rareEnemyCatalog.length + towerBossCatalog.length}種</strong></div>
       <div class="menu-stat"><span>永続進化</span><strong>${evolution?.name || "未進化 コハク"}</strong></div>
@@ -4166,7 +4387,7 @@ function drawTown(time) {
 
   drawTownBuilding({
     x: 445, y: 98, width: 262, height: 148,
-    roof: "#47694f", wall: "#e2d1a6", trim: "#f1c65d", sign: "救助隊本部", tower: true,
+    roof: "#47694f", wall: "#e2d1a6", trim: "#f1c65d", sign: "星見観測院", tower: true,
   });
   drawTownBoard(185, 245);
   drawTownBuilding({
@@ -4680,6 +4901,7 @@ function drawMerchant(time) {
   const { x: px, y: py } = toScreen(merchant.x, merchant.y);
   const bob = Math.sin(time / 280 + merchant.x) * 1.5;
   drawOutlinedEntity((targetCtx) => {
+    if (drawMapTokenCell(targetCtx, [0, 1])) return;
     targetCtx.fillStyle = "#365f57";
     targetCtx.fillRect(11, 20, 25, 22);
     targetCtx.fillRect(16, 11, 17, 16);
@@ -4700,9 +4922,14 @@ function drawItemIcon(target, kind, gear) {
   const iconCtx = target instanceof HTMLCanvasElement ? target.getContext("2d") : target;
   if (target instanceof HTMLCanvasElement) iconCtx.clearRect(0, 0, target.width, target.height);
   iconCtx.save();
-  iconCtx.imageSmoothingEnabled = false;
+  iconCtx.imageSmoothingEnabled = true;
   iconCtx.lineJoin = "miter";
   iconCtx.lineCap = "square";
+  const atlasCell = itemIconCells[kind === "gear" ? "relic" : kind];
+  if (drawAtlasCell(iconCtx, itemIconSheet, 5, 4, atlasCell, 48, 48)) {
+    iconCtx.restore();
+    return;
+  }
   const dark = "#251b1b";
   const light = "#fff3c4";
 
@@ -4881,6 +5108,25 @@ function drawItemIcon(target, kind, gear) {
     drawPixelStar(iconCtx, 24, 23, 8, "#fffbe0");
   }
   iconCtx.restore();
+}
+
+function drawAtlasCell(targetCtx, sheet, columns, rows, cell, width = 48, height = 48) {
+  if (!cell || !sheet.complete || !sheet.naturalWidth) return false;
+  const [column, row] = cell;
+  const sourceWidth = sheet.naturalWidth / columns;
+  const sourceHeight = sheet.naturalHeight / rows;
+  targetCtx.drawImage(
+    sheet,
+    column * sourceWidth,
+    row * sourceHeight,
+    sourceWidth,
+    sourceHeight,
+    0,
+    0,
+    width,
+    height,
+  );
+  return true;
 }
 
 function drawGearIcon(targetCtx, gear) {
@@ -5238,13 +5484,16 @@ function prepareMapTokenAtlas() {
   mapTokenCtx.drawImage(mapTokenSheet, 0, 0);
   try {
     const image = mapTokenCtx.getImageData(0, 0, mapTokenCanvas.width, mapTokenCanvas.height);
-    for (let index = 0; index < image.data.length; index += 4) {
-      const red = image.data[index];
-      const green = image.data[index + 1];
-      const blue = image.data[index + 2];
-      const maximum = Math.max(red, green, blue);
-      const minimum = Math.min(red, green, blue);
-      if (minimum >= 194 && maximum - minimum <= 24) image.data[index + 3] = 0;
+    const sourceHasAlpha = image.data[3] < 16;
+    if (!sourceHasAlpha) {
+      for (let index = 0; index < image.data.length; index += 4) {
+        const red = image.data[index];
+        const green = image.data[index + 1];
+        const blue = image.data[index + 2];
+        const maximum = Math.max(red, green, blue);
+        const minimum = Math.min(red, green, blue);
+        if (minimum >= 194 && maximum - minimum <= 24) image.data[index + 3] = 0;
+      }
     }
     mapTokenCtx.putImageData(image, 0, 0);
     mapTokenReady = true;
@@ -5264,8 +5513,8 @@ function actorTokenCell(actor) {
 
 function enemyTokenCell(enemy) {
   if (enemy.boss) return [3, 1];
-  if (enemy.mutated) return [2, 1];
-  return enemy.attackStyle === "magic" ? [1, 1] : [0, 1];
+  if (enemy.mutated) return [3, 1];
+  return enemy.attackStyle === "magic" ? [2, 1] : [1, 1];
 }
 
 function drawMapTokenCell(targetCtx, cell) {
@@ -5314,11 +5563,11 @@ function drawBossHud() {
 
 function drawOutlinedEntity(drawEntity, px, py, color, radius) {
   entityBufferCtx.clearRect(0, 0, TILE, TILE);
-  entityBufferCtx.imageSmoothingEnabled = false;
+  entityBufferCtx.imageSmoothingEnabled = true;
   drawEntity(entityBufferCtx);
 
   ctx.save();
-  ctx.imageSmoothingEnabled = false;
+  ctx.imageSmoothingEnabled = true;
   stampEntitySilhouette(px, py, "rgba(3, 6, 5, 0.96)", radius + 2);
   stampEntitySilhouette(px, py, color, radius);
   ctx.drawImage(entityBuffer, px, py);
@@ -5659,7 +5908,15 @@ function drawMiniMap() {
 function drawPortrait(targetCanvas, actor) {
   const pctx = targetCanvas.getContext("2d");
   pctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+  const scale = Math.min(targetCanvas.width, targetCanvas.height) / TILE;
+  const offsetX = (targetCanvas.width - TILE * scale) / 2;
+  const offsetY = (targetCanvas.height - TILE * scale) / 2;
+  pctx.save();
+  pctx.imageSmoothingEnabled = true;
+  pctx.translate(offsetX, offsetY);
+  pctx.scale(scale, scale);
   drawActorBody(pctx, actor, 0, 0, 1, performance.now());
+  pctx.restore();
 }
 
 function drawSprite(index, x, y, width = TILE, height = TILE) {
@@ -5881,10 +6138,14 @@ function announceEvent(title, detail, icon = "!", tone = "good") {
   ui.eventIcon.textContent = icon;
   ui.eventBanner.dataset.tone = tone;
   ui.eventBanner.hidden = false;
+  ui.eventBanner.classList.remove("idle", "dialogue-pop");
+  void ui.eventBanner.offsetWidth;
+  ui.eventBanner.classList.add("dialogue-pop");
+  if (game?.team?.length && ui.eventPortrait) drawPortrait(ui.eventPortrait, getLeader());
   window.clearTimeout(announceEvent.timer);
   announceEvent.timer = window.setTimeout(() => {
-    ui.eventBanner.hidden = true;
-  }, 2100);
+    ui.eventBanner.classList.add("idle");
+  }, 4200);
 }
 
 function setScreenFlash(color, life = 240) {
@@ -6389,7 +6650,7 @@ function renderSaveSlots(initial = ui.saveDialog.dataset.initial === "true") {
       <span class="save-slot-number">${slot}</span>
       <div class="save-slot-copy">
         <strong>${saved ? `${progressName} / ${leaderProfile?.name || "コハク"}` : "新しい冒険"}</strong>
-        <span>${saved ? `${evolution?.name || leaderProfile?.name || "コハク"}　${saved.coins || 0}星貨　救助pt ${saved.rescuePoints || 0}` : "まだ記録はありません"}</span>
+        <span>${saved ? `${evolution?.name || leaderProfile?.name || "コハク"}　${saved.coins || 0}星貨　探索pt ${saved.rescuePoints || 0}` : "まだ記録はありません"}</span>
         <small>${saved ? `${date}${active ? "　使用中" : ""}` : "この枠で迷宮攻略を始める"}</small>
       </div>
     `;
@@ -6425,7 +6686,7 @@ function handleKey(event) {
   const key = event.key.toLowerCase();
   const code = event.code;
 
-  if (ui.townDialog.open || ui.helpDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open) return;
+  if (ui.townDialog.open || ui.helpDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open || ui.levelDialog.open) return;
   if (key === "q") {
     if (event.repeat) return;
     event.preventDefault();
@@ -6508,7 +6769,7 @@ function getTouchDpadDirection(event, pad) {
 }
 
 function performTouchMove() {
-  if (!touchMoveDirection) return;
+  if (!touchMoveDirection || ui.levelDialog.open) return;
   performAction({ type: "move", dx: touchMoveDirection.x, dy: touchMoveDirection.y });
   window.clearTimeout(touchMoveTimer);
   touchMoveTimer = window.setTimeout(performTouchMove, touchDashHeld ? 92 : 158);
@@ -6594,6 +6855,12 @@ function bindEvents() {
   ui.restDialog.addEventListener("cancel", (event) => {
     event.preventDefault();
   });
+  ui.levelLaterButton.addEventListener("click", () => closeLevelUpDialog(false));
+  ui.levelSpendButton.addEventListener("click", () => closeLevelUpDialog(true));
+  ui.levelDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeLevelUpDialog(false);
+  });
   ui.gameMenuButton.addEventListener("click", () => toggleGameMenu("moves"));
   ui.departButton.addEventListener("click", startExpedition);
   canvas.addEventListener("mousemove", (event) => {
@@ -6605,7 +6872,7 @@ function bindEvents() {
   });
   canvas.addEventListener("click", (event) => {
     if (event.button !== 0 || game.mode !== "dungeon") return;
-    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open) return;
+    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open || ui.levelDialog.open) return;
     const direction = directionFromPointer(event);
     game.aimDirection = direction;
     performAction({ type: "basicAttack", dx: direction.x, dy: direction.y });
@@ -6613,7 +6880,7 @@ function bindEvents() {
   canvas.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     if (game.mode !== "dungeon") return;
-    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open) return;
+    if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open || ui.levelDialog.open) return;
     const direction = directionFromPointer(event);
     game.aimDirection = direction;
     const leader = getLeader();

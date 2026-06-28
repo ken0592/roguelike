@@ -1,8 +1,8 @@
 {
   "id": "./",
-  "name": "星屑救助隊",
-  "short_name": "星屑救助隊",
-  "description": "行動で進化先が変わる、一人旅のターン制ローグライク。",
+  "name": "FOXBOUND: 星喰いの塔",
+  "short_name": "FOXBOUND",
+  "description": "狐の進化とレリックを選び、100階の塔を駆け上がるターン制ローグライク。",
   "lang": "ja",
   "start_url": "./",
   "scope": "./",

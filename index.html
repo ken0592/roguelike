@@ -6,12 +6,12 @@
     <meta name="theme-color" content="#101816" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="星屑救助隊" />
-    <title>星屑救助隊</title>
+    <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
+    <title>FOXBOUND: 星喰いの塔</title>
     <link rel="manifest" href="manifest.webmanifest?v=pwa4" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa4" />
+    <link rel="stylesheet" href="styles.css?v=pwa5" />
   </head>
   <body>
     <div class="app-shell">
@@ -21,14 +21,14 @@
             <span></span>
           </span>
           <div>
-            <h1>星屑救助隊</h1>
-            <p>100階の星喰い塔へ挑む、ターン制ローグライク</p>
+            <h1>FOXBOUND</h1>
+            <p>星喰いの塔を駆け上がる、100階層ローグライク</p>
           </div>
         </div>
 
         <div class="run-strip" aria-live="polite">
           <span><b>階層</b><strong id="floorLabel">B1F</strong></span>
-          <span><b>救助pt</b><strong id="scoreLabel">0 pt</strong></span>
+          <span><b>探索pt</b><strong id="scoreLabel">0 pt</strong></span>
           <span><b>最高記録</b><strong id="bestLabel">Best 0</strong></span>
         </div>
 
@@ -65,7 +65,7 @@
       <section id="townScreen" class="town-screen" aria-label="星見広場">
         <canvas id="townCanvas" width="1152" height="690"></canvas>
         <div class="town-title">
-          <span>救助隊の拠点</span>
+          <span>狐たちの探索拠点</span>
           <strong>星見広場</strong>
           <small id="townMissionLabel">星喰い塔 1F / 100F</small>
         </div>
@@ -99,8 +99,8 @@
           <span>回復と訓練</span>
         </button>
         <button class="town-spot town-spot-guild" type="button" data-town-action="guild">
-          <strong>救助隊本部</strong>
-          <span>隊の記録を見る</span>
+          <strong>星見観測院</strong>
+          <span>塔の記録を見る</span>
         </button>
         <button id="departButton" class="town-depart" type="button">
           <span>星喰い塔 1Fへ</span>
@@ -112,10 +112,11 @@
         <section class="stage-panel" aria-label="ダンジョン">
           <canvas id="gameCanvas" width="1152" height="768"></canvas>
           <div id="toast" class="toast" hidden></div>
-          <div id="eventBanner" class="event-banner" hidden aria-live="assertive">
-            <span id="eventIcon" class="event-icon">!</span>
-            <div>
-              <strong id="eventTitle">発見</strong>
+          <div id="eventBanner" class="event-banner dialogue-box" hidden aria-live="assertive">
+            <canvas id="eventPortrait" class="dialogue-portrait" width="64" height="64" aria-hidden="true"></canvas>
+            <div class="dialogue-copy">
+              <span id="eventIcon" class="event-icon">FOX</span>
+              <strong id="eventTitle">コハク</strong>
               <small id="eventDetail"></small>
             </div>
           </div>
@@ -148,7 +149,7 @@
             </div>
           </section>
 
-          <section class="party-panel" aria-label="救助隊">
+          <section class="party-panel" aria-label="探索者">
             <div id="partyList" class="party-list"></div>
           </section>
 
@@ -209,8 +210,8 @@
               <strong id="stairsLabel">封印中</strong>
             </div>
             <div class="meter-line">
-              <span>ターン</span>
-              <strong id="turnLabel">1</strong>
+              <span>塔風</span>
+              <strong id="turnLabel">0 / 140</strong>
             </div>
           </section>
 
@@ -259,7 +260,7 @@
       <form method="dialog">
         <header>
           <div>
-            <span>救助隊メニュー</span>
+            <span>FOXBOUND MENU</span>
             <h2>冒険メニュー</h2>
           </div>
           <button class="icon-button" type="submit" aria-label="閉じる">
@@ -322,6 +323,26 @@
       <div id="restDialogChoices" class="rest-dialog-choices"></div>
     </dialog>
 
+    <dialog id="levelDialog" class="level-dialog">
+      <div class="level-dialog-hero">
+        <canvas id="levelPortrait" width="96" height="96" aria-hidden="true"></canvas>
+        <span>LEVEL UP</span>
+        <strong id="levelDialogTitle">Lv.2</strong>
+      </div>
+      <div class="level-dialog-copy">
+        <p id="levelDialogText">コハクの力が伸びた。</p>
+        <div id="levelStatChanges" class="level-stat-changes"></div>
+        <div class="level-skill-point">
+          <span>星網ポイント</span>
+          <strong id="levelSkillPoints">1 pt</strong>
+        </div>
+        <div class="level-dialog-actions">
+          <button id="levelLaterButton" type="button">あとで振る</button>
+          <button id="levelSpendButton" class="primary-button" type="button">今スキルを選ぶ</button>
+        </div>
+      </div>
+    </dialog>
+
     <dialog id="helpDialog" class="help-dialog">
       <form method="dialog">
         <header>
@@ -360,6 +381,7 @@
         </div>
         <ul class="help-list">
           <li>目的は「星喰いの塔」100階踏破。9・19・29…99階に、次の休憩所を守る門番がいます。</li>
+          <li>同じ階に長く留まると「塔風」が強まります。80ターンで警告、110ターンから侵食、140ターンで挑戦失敗です。</li>
           <li>10階ごとに休憩所、20階ごとに大休憩所があります。到着すると全技PPが回復します。</li>
           <li>門番を倒すと、3つのレリックから1つを選べます。装備枠はなく、獲得した効果はすべて同時に働きます。</li>
           <li>入るたびにマップ、敵、道具、隠し罠、隠し階段、階の運勢が変わります。</li>
@@ -394,6 +416,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa4"></script>
+    <script src="app.js?v=pwa5"></script>
   </body>
 </html>
