@@ -33,17 +33,17 @@ const townCtx = townCanvas.getContext("2d");
 const spriteSheet = new Image();
 spriteSheet.src = "assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png";
 const mapTokenSheet = new Image();
-mapTokenSheet.src = "assets/tokens/foxbound-characters-v3.png?v=pwa7";
+mapTokenSheet.src = "assets/tokens/foxbound-characters-v3.png?v=pwa9";
 const mapTokenCanvas = document.createElement("canvas");
 const mapTokenCtx = mapTokenCanvas.getContext("2d", { willReadFrequently: true });
 let mapTokenReady = false;
 const itemIconSheet = new Image();
-itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa7";
+itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa9";
 const relicIconSheet = new Image();
-relicIconSheet.src = "assets/tokens/foxbound-relics-v1.jpg?v=pwa7";
+relicIconSheet.src = "assets/tokens/foxbound-relics-v1.jpg?v=pwa9";
 const enemyArtSheets = Array.from({ length: 4 }, (_, index) => {
   const sheet = new Image();
-  sheet.src = `assets/tokens/foxbound-enemies-${index + 1}-v1.png?v=pwa7`;
+  sheet.src = `assets/tokens/foxbound-enemies-${index + 1}-v1.png?v=pwa9`;
   return sheet;
 });
 
@@ -1016,6 +1016,24 @@ let touchMoveTimer = null;
 let touchDashHeld = false;
 let renderCamera = { x: 0, y: 0, width: canvas.width / TILE, height: canvas.height / TILE };
 
+function createStarterBag() {
+  return {
+    apple: 1,
+    bigApple: 0,
+    oran: 1,
+    elixir: 0,
+    reviver: 1,
+    blastSeed: 0,
+    sleepSeed: 0,
+    slumberOrb: 0,
+    warpOrb: 0,
+    guidingOrb: 0,
+    guardBerry: 0,
+    powerBerry: 0,
+    fortuneOrb: 0,
+  };
+}
+
 function createGame() {
   const roster = Object.fromEntries(
     characterCatalog.map((character) => [character.key, createLeader(character.key)]),
@@ -1042,21 +1060,7 @@ function createGame() {
     trainingLevel: 0,
     magicTrainingLevel: 0,
     belly: 100,
-    bag: {
-      apple: 1,
-      bigApple: 0,
-      oran: 1,
-      elixir: 0,
-      reviver: 1,
-      blastSeed: 0,
-      sleepSeed: 0,
-      slumberOrb: 0,
-      warpOrb: 0,
-      guidingOrb: 0,
-      guardBerry: 0,
-      powerBerry: 0,
-      fortuneOrb: 0,
-    },
+    bag: createStarterBag(),
     evolutionBag: Object.fromEntries(evolutionMaterialKeys.map((key) => [key, 0])),
     bagCapacity: BASE_BAG_CAPACITY,
     karma: 0,
@@ -1163,6 +1167,13 @@ function prepareNewTry() {
   game.pendingLevelUps = [];
   game.levelDialogScheduled = false;
   if (game.startingRelicKey) addRelic(game.startingRelicKey, false);
+}
+
+function discardRunInventory() {
+  game.bag = createStarterBag();
+  game.gearBag = [];
+  game.equipment = { weapon: null, armor: null, charm: null };
+  game.forgeSelection = [];
 }
 
 function createRunStats() {
@@ -2047,10 +2058,11 @@ function failFromTowerWind() {
   leader.down = true;
   game.gameOver = true;
   game.towerCheckpoint = null;
+  discardRunInventory();
   saveCurrentGame(true);
   saveBestScore();
   ui.endTitle.textContent = "塔風に弾き出された";
-  ui.endText.textContent = `B${game.floor}Fに留まりすぎた。階段を探す判断と、探索の切り上げが必要だ。`;
+  ui.endText.textContent = `B${game.floor}Fに留まりすぎた。探索中のバッグは失われた。`;
   ui.endRestartButton.textContent = "星見広場へ戻る";
   ui.endOverlay.hidden = false;
   announceEvent("TIME OVER", "同じ階には140ターンまでしか留まれない", "風", "danger");
@@ -2213,11 +2225,13 @@ function bossSpecialAttack(enemy, target) {
   const rawDamage = Math.max(2, base + randInt(-2, 3) - defense);
   const damage = target.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
   target.hp = Math.max(0, target.hp - damage);
-  addEffect("burst", enemy.x, enemy.y, enemy.color);
+  addTargetedEffect("bossWave", enemy.x, enemy.y, target.x, target.y, enemy.color, 760);
+  addEffect("runes", enemy.x, enemy.y, enemy.color);
+  addEffect("impact", target.x, target.y, "#ffffff");
   addEffect("hit", target.x, target.y, enemy.color);
   addFloatingText(target.x, target.y, `-${damage}`, palette.coral);
   addLog(`${enemy.name}の${enemy.special}。${target.name}に${damage}ダメージ。`);
-  announceEvent(enemy.special, `${target.name}に${damage}ダメージ`, "!", "danger");
+  announceEvent(enemy.special, `${target.name}に${damage}ダメージ`, "敵技", "danger", enemy);
   setScreenFlash(enemy.color, 360);
   if (target.id === "leader") triggerScreenShake(18, 420);
   if (target.id === "leader") playSfx("hurt");
@@ -2331,11 +2345,27 @@ function enemyAttack(enemy, actor, ranged = false) {
   const attackPower = ranged ? Math.ceil(enemy.atk * 0.72) : enemy.atk;
   const rawDamage = Math.max(1, attackPower + randInt(-1, 2) - defense);
   const damage = actor.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
+  const moveName = enemyMoveName(enemy, ranged);
   actor.hp = Math.max(0, actor.hp - damage);
   enemy.alerted = true;
-  addEffect(ranged ? "comet" : "hit", actor.x, actor.y, enemy.color);
+  if (ranged) {
+    addTargetedEffect("enemyProjectile", enemy.x, enemy.y, actor.x, actor.y, enemy.color, 620);
+    addEffect("runes", enemy.x, enemy.y, enemy.color);
+    addEffect("impact", actor.x, actor.y, "#ffffff");
+  } else {
+    addEffect(
+      "enemyClaw",
+      actor.x,
+      actor.y,
+      enemy.color,
+      Math.sign(actor.x - enemy.x),
+      Math.sign(actor.y - enemy.y),
+    );
+  }
+  addEffect("hit", actor.x, actor.y, enemy.color);
   addFloatingText(actor.x, actor.y, `-${damage}`, palette.coral);
-  addLog(`${enemy.name}の${ranged ? "魔弾" : "攻撃"}。${actor.name}に${damage}ダメージ。`);
+  addLog(`${enemy.name}の${moveName}。${actor.name}に${damage}ダメージ。`);
+  announceEvent(moveName, `${enemy.name}から ${actor.name}へ ${damage}ダメージ`, "敵技", "danger", enemy);
   if (enemy.mutation?.vampiric) {
     const healed = Math.min(enemy.maxHp - enemy.hp, Math.max(1, Math.floor(damage / 2)));
     enemy.hp += healed;
@@ -2357,6 +2387,19 @@ function enemyAttack(enemy, actor, ranged = false) {
       addLog(`${actor.name}は倒れた。次の階で復帰する。`);
     }
   }
+}
+
+function enemyMoveName(enemy, ranged) {
+  const moveNames = {
+    starwater: ranged ? "流星しぶき" : "水晶牙",
+    firecrystal: ranged ? "火晶弾" : "灼熱爪",
+    forestleaf: ranged ? "木霊の種砲" : "森角突き",
+    moonshade: ranged ? "月影弾" : "影裂き",
+    skywind: ranged ? "天風刃" : "旋風斬り",
+  };
+  const baseName = moveNames[enemy.typeKey] || (ranged ? "魔力弾" : "強襲");
+  if (!enemy.mutation) return baseName;
+  return `${enemy.mutation.name}・${baseName}`;
 }
 
 function gainExp(amount) {
@@ -3162,10 +3205,11 @@ function checkGameOver() {
   if (!leader.down && leader.hp > 0) return;
   game.gameOver = true;
   game.towerCheckpoint = null;
+  discardRunInventory();
   saveCurrentGame(true);
   saveBestScore();
   ui.endTitle.textContent = "探索失敗";
-  ui.endText.textContent = `B${game.floor}Fで力尽きた。探索pt ${game.score}。`;
+  ui.endText.textContent = `B${game.floor}Fで力尽きた。探索中のバッグは失われた。探索pt ${game.score}。`;
   ui.endRestartButton.textContent = "町へ戻る";
   ui.endOverlay.hidden = false;
   updateAll();
@@ -3351,6 +3395,11 @@ function renderGameMenu(view = "moves") {
     return;
   }
 
+  if (view === "ground") {
+    renderGroundMenu();
+    return;
+  }
+
   if (view === "materials") {
     renderEvolutionMaterialBag();
     return;
@@ -3394,6 +3443,93 @@ function renderGameMenu(view = "moves") {
       <div class="menu-stat"><span>運勢の効果</span><strong>${game.floorEvent?.detail || "-"}</strong></div>
     </div>
   `;
+}
+
+function renderGroundMenu() {
+  const leader = getLeader();
+  const footItem = itemAt(leader.x, leader.y);
+  const footTrap = game.traps.find((trap) => trap.x === leader.x && trap.y === leader.y);
+  const onStairs = leader.x === game.stairs.x && leader.y === game.stairs.y;
+  const onMission = game.mission
+    && !game.mission.complete
+    && leader.x === game.mission.x
+    && leader.y === game.mission.y;
+  let entries = 0;
+
+  ui.gameMenuBody.innerHTML = `
+    <div class="menu-stat-grid">
+      <div class="menu-stat"><span>現在座標</span><strong>${leader.x + 1}, ${leader.y + 1}</strong></div>
+      <div class="menu-stat"><span>地面</span><strong>${game.floorKind.includes("rest") ? "休憩所の床" : "塔の石床"}</strong></div>
+    </div>
+  `;
+
+  if (footItem) {
+    const catalog = itemCatalog[footItem.kind];
+    const gear = footItem.kind === "gear" ? footItem.gear : null;
+    const bagBlocked = !gear
+      && catalog
+      && catalog.category !== "進化素材"
+      && !["badge", "stardust"].includes(footItem.kind)
+      && bagTotal() >= game.bagCapacity;
+    appendTownEntry(ui.gameMenuBody, {
+      title: gear?.name || catalog?.name || "見知らぬ落とし物",
+      detail: gear ? gearStatText(gear) : catalog?.detail || "足元に何か落ちている。",
+      meta: bagBlocked ? `バッグ ${bagTotal()}/${game.bagCapacity}　空きがない` : "足元に落ちている",
+      iconKind: gear ? undefined : footItem.kind,
+      iconGear: gear,
+      buttonLabel: bagBlocked ? "満杯" : "拾う",
+      disabled: bagBlocked,
+      onClick: () => {
+        ui.gameMenuDialog.close();
+        pickUpItem();
+        updateAll();
+      },
+    });
+    entries += 1;
+  }
+
+  if (onStairs) {
+    const sealed = !game.mission?.complete;
+    appendTownEntry(ui.gameMenuBody, {
+      title: sealed ? "封印された階段" : `B${game.floor + 1}Fへの階段`,
+      detail: sealed ? "この階の目的を達成すると封印が解ける。" : "次の階へ進む。現在の階には戻れない。",
+      meta: game.stairsRevealed ? "発見済み" : "足元から風が漏れている",
+      iconKind: "stairs",
+      buttonLabel: sealed ? "封印中" : "進む",
+      disabled: sealed,
+      onClick: () => {
+        ui.gameMenuDialog.close();
+        tryUseStairs();
+      },
+    });
+    entries += 1;
+  }
+
+  if (footTrap && (footTrap.revealed || footTrap.used)) {
+    appendTownEntry(ui.gameMenuBody, {
+      title: `${trapName(footTrap.kind)}${footTrap.used ? "の跡" : ""}`,
+      detail: footTrap.used ? "すでに作動し、効力を失っている。" : "踏むと作動する発見済みの罠。",
+      meta: footTrap.used ? "使用済み" : "危険",
+      iconKind: "trap",
+    });
+    entries += 1;
+  }
+
+  if (onMission) {
+    appendTownEntry(ui.gameMenuBody, {
+      title: game.mission.target || "この階の目的",
+      detail: game.mission.message || "目的の対象がここにいる。",
+      meta: "探索目標",
+    });
+    entries += 1;
+  }
+
+  if (!entries) {
+    ui.gameMenuBody.insertAdjacentHTML(
+      "beforeend",
+      '<p class="town-note">足元には拾えるものも、作動する仕掛けもない。</p>',
+    );
+  }
 }
 
 function renderEvolutionMaterialBag() {
@@ -5745,6 +5881,60 @@ function drawEffect(effect, time) {
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 2;
     ctx.stroke();
+  } else if (effect.type === "enemyProjectile") {
+    const destination = toScreen(effect.targetX, effect.targetY);
+    const startX = px + 24;
+    const startY = py + 24;
+    const endX = destination.x + 24;
+    const endY = destination.y + 24;
+    const travel = Math.min(1, t * 1.45);
+    const orbX = startX + (endX - startX) * travel;
+    const orbY = startY + (endY - startY) * travel;
+    ctx.lineCap = "round";
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 17;
+    ctx.globalAlpha = (1 - t) * 0.72;
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(orbX, orbY);
+    ctx.stroke();
+    ctx.globalAlpha = Math.max(0.25, 1 - t);
+    ctx.fillStyle = "#ffffff";
+    ctx.beginPath();
+    ctx.arc(orbX, orbY, 5 + Math.sin(t * Math.PI) * 3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = effect.color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(endX, endY, 13 + t * 8, 0, Math.PI * 2);
+    ctx.stroke();
+  } else if (effect.type === "bossWave") {
+    const destination = toScreen(effect.targetX, effect.targetY);
+    const startX = px + 24;
+    const startY = py + 24;
+    const endX = destination.x + 24;
+    const endY = destination.y + 24;
+    ctx.lineCap = "round";
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 24;
+    ctx.globalAlpha = (1 - t) * 0.34;
+    ctx.lineWidth = 20 - t * 7;
+    ctx.beginPath();
+    ctx.moveTo(startX, startY);
+    ctx.lineTo(endX, endY);
+    ctx.stroke();
+    ctx.globalAlpha = (1 - t) * 0.92;
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 4;
+    ctx.stroke();
+    ctx.strokeStyle = effect.color;
+    for (let ring = 0; ring < 3; ring += 1) {
+      ctx.lineWidth = 5 - ring;
+      ctx.beginPath();
+      ctx.arc(endX, endY, 12 + ring * 9 + t * 22, 0, Math.PI * 2);
+      ctx.stroke();
+    }
   } else if (effect.type === "sparkTrail") {
     ctx.shadowColor = effect.color;
     ctx.shadowBlur = 13;
@@ -5891,6 +6081,29 @@ function drawEffect(effect, time) {
       ctx.beginPath();
       ctx.moveTo(5, 0);
       ctx.lineTo(17 + t * 18, 0);
+      ctx.stroke();
+    }
+  } else if (effect.type === "enemyClaw") {
+    ctx.translate(px + 24, py + 24);
+    ctx.rotate(Math.atan2(effect.dy, effect.dx));
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 18;
+    ctx.lineCap = "round";
+    ctx.globalAlpha = (1 - t) * 0.52;
+    ctx.fillStyle = effect.color;
+    ctx.beginPath();
+    ctx.arc(0, 0, 17 + t * 16, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1 - t;
+    for (let slash = -1; slash <= 1; slash += 1) {
+      ctx.strokeStyle = effect.color;
+      ctx.lineWidth = 10;
+      ctx.beginPath();
+      ctx.moveTo(-22 + t * 7, slash * 8 - 14);
+      ctx.quadraticCurveTo(0, slash * 8, 22 + t * 9, slash * 8 + 12);
+      ctx.stroke();
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3;
       ctx.stroke();
     }
   } else if (effect.type === "slash") {
@@ -6313,7 +6526,7 @@ function showToast(message) {
   }, 1800);
 }
 
-function announceEvent(title, detail, icon = "!", tone = "good") {
+function announceEvent(title, detail, icon = "!", tone = "good", speaker = null) {
   ui.eventTitle.textContent = title;
   ui.eventDetail.textContent = detail;
   ui.eventIcon.textContent = icon;
@@ -6322,11 +6535,30 @@ function announceEvent(title, detail, icon = "!", tone = "good") {
   ui.eventBanner.classList.remove("idle", "dialogue-pop");
   void ui.eventBanner.offsetWidth;
   ui.eventBanner.classList.add("dialogue-pop");
-  if (game?.team?.length && ui.eventPortrait) drawPortrait(ui.eventPortrait, getLeader());
+  if (game?.team?.length && ui.eventPortrait) {
+    if (speaker && (speaker.familyKey || speaker.boss || speaker.rare)) drawEnemyPortrait(ui.eventPortrait, speaker);
+    else drawPortrait(ui.eventPortrait, speaker || getLeader());
+  }
   window.clearTimeout(announceEvent.timer);
   announceEvent.timer = window.setTimeout(() => {
     ui.eventBanner.classList.add("idle");
   }, 4200);
+}
+
+function drawEnemyPortrait(targetCanvas, enemy) {
+  const pctx = targetCanvas.getContext("2d");
+  pctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+  const scale = Math.min(targetCanvas.width, targetCanvas.height) / TILE;
+  const offsetX = (targetCanvas.width - TILE * scale) / 2;
+  const offsetY = (targetCanvas.height - TILE * scale) / 2;
+  pctx.save();
+  pctx.imageSmoothingEnabled = true;
+  pctx.translate(offsetX, offsetY);
+  pctx.scale(scale, scale);
+  if (!drawEnemyArt(pctx, enemy, performance.now())) {
+    drawMapTokenCell(pctx, enemyTokenCell(enemy));
+  }
+  pctx.restore();
 }
 
 function setScreenFlash(color, life = 240) {
@@ -6370,10 +6602,23 @@ function drawScreenFlash(time) {
 }
 
 function addEffect(type, x, y, color, dx = 0, dy = 0) {
-  const fastEffects = ["beam", "comet", "slash", "sparkTrail", "impact"];
+  const fastEffects = ["beam", "comet", "slash", "sparkTrail", "impact", "enemyClaw"];
   const longEffects = ["nova", "runes", "vortex", "shield", "gustTile", "healBurst", "guardDome"];
   const life = fastEffects.includes(type) ? 300 : longEffects.includes(type) ? 680 : 520;
   game.effects.push({ type, x, y, color, dx, dy, created: performance.now(), life });
+}
+
+function addTargetedEffect(type, x, y, targetX, targetY, color, life = 620) {
+  game.effects.push({
+    type,
+    x,
+    y,
+    targetX,
+    targetY,
+    color,
+    created: performance.now(),
+    life,
+  });
 }
 
 function addFloatingText(x, y, value, color) {
@@ -6872,6 +7117,12 @@ function handleKey(event) {
     if (event.repeat) return;
     event.preventDefault();
     toggleGameMenu("moves");
+    return;
+  }
+  if (key === "g") {
+    if (event.repeat) return;
+    event.preventDefault();
+    toggleGameMenu("ground");
     return;
   }
   if (ui.gameMenuDialog.open || game.mode !== "dungeon") return;
