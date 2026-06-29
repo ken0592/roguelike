@@ -2299,7 +2299,7 @@ button {
   aspect-ratio: 1;
   align-self: start;
   border: 1px solid color-mix(in srgb, var(--evo-color) 52%, transparent);
-  background-image: url("assets/evolution/evolution-atlas-v1.png?v=pwa5");
+  background-image: url("assets/evolution/evolution-atlas-v1.png?v=pwa7");
   background-size: 400% 200%;
   background-position: var(--art-x) var(--art-y);
   background-repeat: no-repeat;
@@ -3192,7 +3192,7 @@ button {
 
 .terrain-trap {
   background-color: #6b2428;
-  background-image: url("assets/tokens/foxbound-items-v1.jpg?v=pwa5");
+  background-image: url("assets/tokens/foxbound-items-v2.png?v=pwa7");
   background-position: 75% 100%;
   background-repeat: no-repeat;
   background-size: 500% 400%;
@@ -3202,7 +3202,7 @@ button {
 
 .terrain-stairs {
   background-color: #c88b31;
-  background-image: url("assets/tokens/foxbound-items-v1.jpg?v=pwa5");
+  background-image: url("assets/tokens/foxbound-items-v2.png?v=pwa7");
   background-position: 100% 100%;
   background-repeat: no-repeat;
   background-size: 500% 400%;
@@ -3709,7 +3709,7 @@ button {
   height: 50px;
   display: block;
   border: 1px solid color-mix(in srgb, var(--relic-color) 58%, transparent);
-  background-image: url("assets/tokens/foxbound-relics-v1.jpg?v=pwa5");
+  background-image: url("assets/tokens/foxbound-relics-v1.jpg?v=pwa7");
   background-size: 500% 400%;
   background-position: var(--relic-x) var(--relic-y);
   background-repeat: no-repeat;

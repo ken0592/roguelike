@@ -1,17 +1,21 @@
-const CACHE_NAME = "foxbound-v5";
+const CACHE_NAME = "foxbound-v7";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=pwa5",
-  "./app.js?v=pwa5",
-  "./manifest.webmanifest?v=pwa5",
+  "./styles.css?v=pwa7",
+  "./app.js?v=pwa7",
+  "./manifest.webmanifest?v=pwa7",
   "./assets/pwa/icon-180.png",
   "./assets/pwa/icon-192.png",
   "./assets/pwa/icon-512.png",
-  "./assets/evolution/evolution-atlas-v1.png?v=pwa5",
-  "./assets/tokens/foxbound-characters-v3.png?v=pwa5",
-  "./assets/tokens/foxbound-items-v1.jpg?v=pwa5",
-  "./assets/tokens/foxbound-relics-v1.jpg?v=pwa5",
+  "./assets/evolution/evolution-atlas-v1.png?v=pwa7",
+  "./assets/tokens/foxbound-characters-v3.png?v=pwa7",
+  "./assets/tokens/foxbound-items-v2.png?v=pwa7",
+  "./assets/tokens/foxbound-relics-v1.jpg?v=pwa7",
+  "./assets/tokens/foxbound-enemies-1-v1.png?v=pwa7",
+  "./assets/tokens/foxbound-enemies-2-v1.png?v=pwa7",
+  "./assets/tokens/foxbound-enemies-3-v1.png?v=pwa7",
+  "./assets/tokens/foxbound-enemies-4-v1.png?v=pwa7",
   "./assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png",
 ];
 

@@ -33,14 +33,19 @@ const townCtx = townCanvas.getContext("2d");
 const spriteSheet = new Image();
 spriteSheet.src = "assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png";
 const mapTokenSheet = new Image();
-mapTokenSheet.src = "assets/tokens/foxbound-characters-v3.png?v=pwa5";
+mapTokenSheet.src = "assets/tokens/foxbound-characters-v3.png?v=pwa7";
 const mapTokenCanvas = document.createElement("canvas");
 const mapTokenCtx = mapTokenCanvas.getContext("2d", { willReadFrequently: true });
 let mapTokenReady = false;
 const itemIconSheet = new Image();
-itemIconSheet.src = "assets/tokens/foxbound-items-v1.jpg?v=pwa5";
+itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa7";
 const relicIconSheet = new Image();
-relicIconSheet.src = "assets/tokens/foxbound-relics-v1.jpg?v=pwa5";
+relicIconSheet.src = "assets/tokens/foxbound-relics-v1.jpg?v=pwa7";
+const enemyArtSheets = Array.from({ length: 4 }, (_, index) => {
+  const sheet = new Image();
+  sheet.src = `assets/tokens/foxbound-enemies-${index + 1}-v1.png?v=pwa7`;
+  return sheet;
+});
 
 const ui = {
   floor: document.querySelector("#floorLabel"),
@@ -642,28 +647,70 @@ const mutationCatalog = [
   { key: "volatile", prefix: "爆核変異", name: "爆核", color: "#f0a953", hpScale: 1.05, atk: 3, def: 0, volatile: true },
 ];
 
-const enemyFamilies = [
-  { key: "ember", name: "ヒノコだま", friendName: "ヒノコ", hp: 12, atk: 4, def: 0, exp: 14, recruit: 0.12, sprite: 462, tier: 1 },
-  { key: "sprout", name: "コケつむり", friendName: "コケ丸", hp: 15, atk: 3, def: 1, exp: 16, recruit: 0.14, sprite: 640, tier: 1 },
-  { key: "crystal", name: "結晶兵", friendName: "キララ", hp: 19, atk: 5, def: 1, exp: 22, recruit: 0.09, sprite: 554, tier: 1 },
-  { key: "totem", name: "石の番人", friendName: "イワノ", hp: 25, atk: 6, def: 2, exp: 30, recruit: 0.07, sprite: 602, tier: 1 },
-  { key: "bellbee", name: "風鈴バチ", friendName: "リンネ", hp: 14, atk: 6, def: 0, exp: 19, recruit: 0.11, sprite: 463, tier: 1 },
-  { key: "mistowl", name: "霧フクロウ", friendName: "キリリ", hp: 18, atk: 5, def: 1, exp: 23, recruit: 0.09, sprite: 464, tier: 1 },
-  { key: "sandrunner", name: "砂走り", friendName: "サラサ", hp: 16, atk: 7, def: 0, exp: 25, recruit: 0.1, sprite: 641, tier: 1 },
-  { key: "stareater", name: "星喰い", friendName: "ホシミ", hp: 22, atk: 6, def: 1, exp: 29, recruit: 0.06, sprite: 642, tier: 1 },
-  { key: "mossbird", name: "苔鳥", friendName: "モリノ", hp: 20, atk: 5, def: 2, exp: 28, recruit: 0.1, sprite: 555, tier: 2 },
-  { key: "mooncat", name: "月影ネコ", friendName: "ミカヅキ", hp: 18, atk: 8, def: 1, exp: 31, recruit: 0.08, sprite: 556, tier: 2 },
-  { key: "thundermouse", name: "雷尾ネズミ", friendName: "ライカ", hp: 17, atk: 9, def: 0, exp: 33, recruit: 0.09, sprite: 603, tier: 2 },
-  { key: "bubblejelly", name: "泡クラゲ", friendName: "アワワ", hp: 24, atk: 6, def: 2, exp: 35, recruit: 0.08, sprite: 604, tier: 2 },
-  { key: "hollowbear", name: "樹洞グマ", friendName: "ウロロ", hp: 32, atk: 8, def: 2, exp: 42, recruit: 0.05, sprite: 690, tier: 2 },
-  { key: "ironturtle", name: "鉄甲カメ", friendName: "クロガネ", hp: 30, atk: 6, def: 4, exp: 44, recruit: 0.05, sprite: 691, tier: 2 },
-  { key: "dreamtapir", name: "夢喰いバク", friendName: "ユメジ", hp: 26, atk: 8, def: 2, exp: 41, recruit: 0.06, sprite: 744, tier: 2 },
-  { key: "ashbat", name: "灰羽コウモリ", friendName: "ハイネ", hp: 21, atk: 10, def: 1, exp: 43, recruit: 0.07, sprite: 745, tier: 2 },
-  { key: "lightdeer", name: "光角シカ", friendName: "ルクス", hp: 29, atk: 9, def: 2, exp: 48, recruit: 0.05, sprite: 800, tier: 3 },
-  { key: "snowrabbit", name: "雪玉ウサギ", friendName: "ユキネ", hp: 24, atk: 11, def: 1, exp: 47, recruit: 0.07, sprite: 801, tier: 3 },
-  { key: "craterlizard", name: "火口トカゲ", friendName: "カザン", hp: 34, atk: 10, def: 3, exp: 54, recruit: 0.04, sprite: 856, tier: 3 },
-  { key: "hollowknight", name: "虚ろ騎士", friendName: "クウガ", hp: 38, atk: 11, def: 4, exp: 62, recruit: 0.03, sprite: 857, tier: 3 },
+const enemyFamilySeeds = [
+  ["hornedSlime", "髑角スライム", "ツノプル"],
+  ["purpleBat", "紫翼デーモン", "バティ"],
+  ["skeleton", "骸骨剣士", "コツマル"],
+  ["toxicMushroom", "毒泡キノコ", "ポイズ"],
+  ["mossGolem", "苔岩ゴーレム", "イワモ"],
+  ["fireSalamander", "火脈サラマンダー", "ラーヴァ"],
+  ["iceSpider", "氷晶グモ", "クリス"],
+  ["mimicChest", "牙箱ミミック", "ハコベ"],
+  ["shadowMage", "影晶の魔導士", "ノクス"],
+  ["goblinBomber", "爆弾ゴブリン", "ボムチ"],
+  ["thunderWolf", "雷爪ウルフ", "ライガ"],
+  ["mossTreant", "苔樹トレント", "モクド"],
+  ["desertScorpion", "砂岩サソリ", "サジン"],
+  ["crystalCrab", "晶殻クラブ", "シェル"],
+  ["hauntedArmor", "呪鎧の亡霊", "ガイスト"],
+  ["frostTurtle", "氷山タートル", "フロスト"],
+  ["plagueCrow", "疫風カラス", "ペスト"],
+  ["toxicToad", "毒壺ガマ錬金師", "ガマル"],
+  ["lavaBoar", "溶岩ボア", "マグマ"],
+  ["cursedLantern", "呪火ランタン", "トモシ"],
+  ["voidEye", "虚空眼", "オルボ"],
+  ["armoredBeetle", "鋼角ビートル", "カブト"],
+  ["serpentPriest", "蛇神の祭司", "ナーガ"],
+  ["boneDragon", "骨竜の幼体", "コツリュウ"],
+  ["stitchedRogue", "継ぎ接ぎ盗賊", "ヌイ"],
+  ["clockworkDrone", "歯車剣機", "ギア"],
+  ["acidOoze", "酸蝕ウーズ", "アシド"],
+  ["stormHarpy", "雷嵐ハーピー", "テンペ"],
+  ["darkJackal", "月影ジャッカル", "アヌ"],
+  ["thornVine", "茨甲の獣", "ソーン"],
+  ["thunderRam", "雷帝ラム", "ボルト"],
+  ["mummyJackal", "砂王のジャッカル", "サンド"],
+  ["coralJelly", "海晶クラゲ", "コーラル"],
+  ["clockworkImp", "爆機インプ", "メカ"],
+  ["shadowCentipede", "影鎧ムカデ", "ムカゲ"],
+  ["cursedPumpkin", "呪樹パンプキン", "カボ"],
+  ["frostOwl", "極星フクロウ", "スノウ"],
+  ["toxicSnail", "毒城スネイル", "シェルド"],
+  ["obsidianGargoyle", "黒曜ガーゴイル", "オブシ"],
+  ["moonSamurai", "月冥の侍霊", "ツキサム"],
 ];
+
+const enemyBandStarts = [1, 21, 46, 71];
+const enemyFamilies = enemyFamilySeeds.map(([key, name, friendName], index) => {
+  const band = Math.floor(index / 10);
+  const localIndex = index % 10;
+  const minFloor = enemyBandStarts[band] + Math.max(0, localIndex - 3) * 3;
+  return {
+    key,
+    name,
+    friendName,
+    artIndex: index,
+    minFloor,
+    maxFloor: band === 3 ? 100 : Math.min(100, minFloor + 38),
+    hp: 12 + band * 11 + (localIndex % 5) * 3,
+    atk: 4 + band * 4 + (localIndex % 4),
+    def: band + (localIndex % 3 === 0 ? 1 : 0),
+    exp: 14 + band * 34 + localIndex * 4,
+    recruit: 0,
+    sprite: 462 + (index % 8),
+    tier: band + 1,
+  };
+});
 
 const enemyCatalog = enemyFamilies.flatMap((family) =>
   enemyTypes.map((type) => ({
@@ -686,27 +733,27 @@ const rareEnemyCatalog = [
   {
     key: "rare-stargold", name: "星金ミミック", friendName: "キンボシ", minDungeon: 1,
     hp: 32, atk: 9, def: 3, exp: 110, recruit: 0.004, sprite: 554,
-    color: "#e9bd58", accent: "#fff3ae", rare: true,
+    color: "#e9bd58", accent: "#fff3ae", rare: true, artIndex: 7,
   },
   {
     key: "rare-rainbow", name: "虹羽フェニクス", friendName: "ニジハ", minDungeon: 2,
     hp: 38, atk: 12, def: 3, exp: 155, recruit: 0.0035, sprite: 800,
-    color: "#ef7b72", accent: "#9de9df", rare: true,
+    color: "#ef7b72", accent: "#9de9df", rare: true, artIndex: 27,
   },
   {
     key: "rare-moonwhite", name: "月白ユニコーン", friendName: "ハクギン", minDungeon: 3,
     hp: 46, atk: 14, def: 5, exp: 210, recruit: 0.003, sprite: 690,
-    color: "#d9d4f2", accent: "#fffbd6", rare: true,
+    color: "#d9d4f2", accent: "#fffbd6", rare: true, artIndex: 36,
   },
   {
     key: "rare-timehare", name: "時渡りウサギ", friendName: "トキノ", minDungeon: 4,
     hp: 42, atk: 18, def: 4, exp: 280, recruit: 0.0025, sprite: 801,
-    color: "#79d4d9", accent: "#ffe58d", rare: true,
+    color: "#79d4d9", accent: "#ffe58d", rare: true, artIndex: 33,
   },
   {
     key: "rare-voidling", name: "虚空竜の幼体", friendName: "クウリュウ", minDungeon: 5,
     hp: 58, atk: 21, def: 7, exp: 380, recruit: 0.002, sprite: 857,
-    color: "#b978df", accent: "#ffdf8b", rare: true,
+    color: "#b978df", accent: "#ffdf8b", rare: true, artIndex: 38,
   },
 ];
 
@@ -1564,8 +1611,9 @@ function randomRareEnemyProfile() {
 }
 
 function randomEnemyProfile() {
-  const maxTier = Math.min(3, 1 + Math.floor(game.floor / 25));
-  const families = enemyFamilies.filter((family) => family.tier <= maxTier);
+  const families = enemyFamilies.filter(
+    (family) => family.minFloor <= game.floor && game.floor <= family.maxFloor,
+  );
   const family = families[randInt(0, families.length - 1)];
   const type = enemyTypes[randInt(0, enemyTypes.length - 1)];
   return enemyCatalog.find((enemy) => enemy.familyKey === family.key && enemy.typeKey === type.key);
@@ -1596,6 +1644,8 @@ function createEnemy(catalog, point, alerted = false) {
     x: point.x,
     y: point.y,
     wobble: Math.random() * Math.PI * 2,
+    idleAmplitude: 2.4 + Math.random() * 1.8,
+    idleSpeed: 250 + Math.random() * 130,
     alerted,
   };
   return enemy;
@@ -1605,6 +1655,7 @@ function spawnBoss(profile, point) {
   const bossIndex = Math.floor(game.floor / 10);
   const bossType = enemyTypes[bossIndex % enemyTypes.length];
   const bossHp = Math.ceil(profile.hp * 1.18);
+  const bossArt = [4, 9, 14, 19, 24, 29, 34, 35, 38, 39][Math.min(9, bossIndex)];
   game.enemies.push({
     id: cryptoId(),
     ...profile,
@@ -1612,6 +1663,7 @@ function spawnBoss(profile, point) {
     familyKey: "boss",
     type: bossType.name,
     typeKey: bossType.key,
+    artIndex: bossArt,
     friendName: profile.name,
     hp: bossHp,
     maxHp: bossHp,
@@ -1622,6 +1674,8 @@ function spawnBoss(profile, point) {
     x: point.x,
     y: point.y,
     wobble: Math.random() * Math.PI * 2,
+    idleAmplitude: 4.2,
+    idleSpeed: 310,
     alerted: true,
     boss: true,
     specialCooldown: 2,
@@ -1863,6 +1917,9 @@ function useSpark(actor, move) {
   const target = ray.map((point) => enemyAt(point.x, point.y)).find(Boolean);
   addEffect("beam", actor.x, actor.y, actor.color, actor.dx, actor.dy);
   addEffect("runes", actor.x, actor.y, "#bcefff");
+  for (const point of ray) {
+    addEffect("sparkTrail", point.x, point.y, "#69eaff", actor.dx, actor.dy);
+  }
   if (!target) {
     addLog(`${move.name}を放ったが、敵には届かなかった。`);
     return true;
@@ -1870,6 +1927,7 @@ function useSpark(actor, move) {
   const power = Math.ceil((actor.magic + 8 + actor.level) * game.currentActionMultiplier);
   damageEnemy(target, power, actor, move.name);
   addEffect("nova", target.x, target.y, actor.color);
+  addEffect("impact", target.x, target.y, "#ffffff");
   triggerScreenShake(8, 230);
   return true;
 }
@@ -1877,6 +1935,12 @@ function useSpark(actor, move) {
 function useGust(actor, move) {
   const targets = game.enemies.filter((enemy) => gridDistance(actor, enemy) <= 1);
   addEffect("vortex", actor.x, actor.y, actor.color);
+  for (let dy = -1; dy <= 1; dy += 1) {
+    for (let dx = -1; dx <= 1; dx += 1) {
+      if ((!dx && !dy) || !inBounds(actor.x + dx, actor.y + dy)) continue;
+      addEffect("gustTile", actor.x + dx, actor.y + dy, "#8eeaff", dx, dy);
+    }
+  }
   if (!targets.length) {
     addLog(`${move.name}が周囲のほこりを巻き上げた。`);
     return true;
@@ -1892,6 +1956,7 @@ function useHeal(actor, move) {
   const total = healActor(actor, Math.ceil((12 + actor.level * 2 + actor.magic) * game.currentActionMultiplier));
   addEffect("runes", actor.x, actor.y, actor.color);
   addEffect("heal", actor.x, actor.y, "#bffff1");
+  addEffect("healBurst", actor.x, actor.y, "#7dffd0");
   addLog(`${move.name}。HPを${total}回復した。`);
   return true;
 }
@@ -1899,6 +1964,7 @@ function useHeal(actor, move) {
 function useGuard(actor, move) {
   actor.guardTurns = 3;
   addEffect("shield", actor.x, actor.y, "#8dcbd9");
+  addEffect("guardDome", actor.x, actor.y, "#80dfff");
   addLog(`${move.name}。3ターンの間、受けるダメージを半減する。`);
   return true;
 }
@@ -5427,8 +5493,12 @@ function drawEvolutionAdornment(targetCtx, actor, light) {
 function drawEnemy(enemy, time) {
   const visual = getActorVisualPosition(enemy, time);
   const { x: px, y: py } = toScreen(visual.x, visual.y);
-  const wobble = Math.sin(time / 240 + enemy.wobble) * 2.4;
+  const idleSpeed = enemy.idleSpeed || 310;
+  const idleAmplitude = enemy.idleAmplitude || (enemy.boss ? 4.2 : 3);
+  const idlePhase = enemy.wobble || 0;
+  const wobble = Math.sin(time / idleSpeed + idlePhase) * idleAmplitude;
   drawOutlinedEntity((targetCtx) => {
+    if (drawEnemyArt(targetCtx, enemy, time)) return;
     if (drawMapTokenCell(targetCtx, enemyTokenCell(enemy))) return;
     const spriteInset = enemy.boss ? 3 : 8;
     const spriteSize = enemy.boss ? 42 : 32;
@@ -5515,6 +5585,45 @@ function enemyTokenCell(enemy) {
   if (enemy.boss) return [3, 1];
   if (enemy.mutated) return [3, 1];
   return enemy.attackStyle === "magic" ? [2, 1] : [1, 1];
+}
+
+function enemyArtIndex(enemy) {
+  if (Number.isInteger(enemy.artIndex)) return clamp(enemy.artIndex, 0, 39);
+  const identity = enemy.familyKey || enemy.key || enemy.name || "enemy";
+  let hash = 0;
+  for (let index = 0; index < identity.length; index += 1) {
+    hash = (hash * 31 + identity.charCodeAt(index)) >>> 0;
+  }
+  return hash % 40;
+}
+
+function drawEnemyArt(targetCtx, enemy, time) {
+  const artIndex = enemyArtIndex(enemy);
+  const sheet = enemyArtSheets[Math.floor(artIndex / 10)];
+  if (!sheet?.complete || !sheet.naturalWidth) return false;
+  const localIndex = artIndex % 10;
+  const column = localIndex % 5;
+  const row = Math.floor(localIndex / 5);
+  const cellWidth = sheet.naturalWidth / 5;
+  const cellHeight = sheet.naturalHeight / 2;
+  const breath = 1 + Math.sin(time / ((enemy.idleSpeed || 310) * 1.35) + (enemy.wobble || 0)) * 0.025;
+  targetCtx.save();
+  targetCtx.imageSmoothingEnabled = true;
+  targetCtx.translate(TILE / 2, TILE / 2);
+  targetCtx.scale(breath, breath);
+  targetCtx.drawImage(
+    sheet,
+    column * cellWidth,
+    row * cellHeight,
+    cellWidth,
+    cellHeight,
+    -TILE / 2,
+    -TILE / 2,
+    TILE,
+    TILE,
+  );
+  targetCtx.restore();
+  return true;
 }
 
 function drawMapTokenCell(targetCtx, cell) {
@@ -5636,6 +5745,34 @@ function drawEffect(effect, time) {
     ctx.strokeStyle = "#ffffff";
     ctx.lineWidth = 2;
     ctx.stroke();
+  } else if (effect.type === "sparkTrail") {
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 13;
+    ctx.globalAlpha = (1 - t) * 0.16;
+    ctx.fillRect(px + 3, py + 3, TILE - 6, TILE - 6);
+    ctx.globalAlpha = (1 - t) * 0.92;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(px + 5 + t * 3, py + 5 + t * 3, TILE - 10 - t * 6, TILE - 10 - t * 6);
+    ctx.translate(px + 24, py + 24);
+    ctx.rotate(Math.atan2(effect.dy, effect.dx));
+    ctx.beginPath();
+    ctx.moveTo(-18 + t * 12, -7);
+    ctx.lineTo(15, 0);
+    ctx.lineTo(-18 + t * 12, 7);
+    ctx.stroke();
+  } else if (effect.type === "impact") {
+    ctx.translate(px + 24, py + 24);
+    ctx.rotate(t * Math.PI * 0.75);
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 18;
+    ctx.lineWidth = 4;
+    for (let index = 0; index < 8; index += 1) {
+      ctx.rotate(Math.PI / 4);
+      ctx.beginPath();
+      ctx.moveTo(5 + t * 8, 0);
+      ctx.lineTo(25 + t * 16, 0);
+      ctx.stroke();
+    }
   } else if (effect.type === "nova") {
     ctx.translate(px + 24, py + 24);
     ctx.rotate(t * Math.PI);
@@ -5661,6 +5798,20 @@ function drawEffect(effect, time) {
       ctx.arc(0, 0, 12 + ring * 9 + t * 12, ring * 1.8, ring * 1.8 + Math.PI * 1.25);
       ctx.stroke();
     }
+  } else if (effect.type === "gustTile") {
+    ctx.globalAlpha = (1 - t) * 0.13;
+    ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+    ctx.globalAlpha = (1 - t) * 0.9;
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 12;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(px + 24, py + 24, 8 + t * 16, -1.2 + t * 2, 3.8 + t * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(px + 24 - effect.dx * 8, py + 24 - effect.dy * 8);
+    ctx.lineTo(px + 24 + effect.dx * (17 + t * 8), py + 24 + effect.dy * (17 + t * 8));
+    ctx.stroke();
   } else if (effect.type === "runes") {
     ctx.translate(px + 24, py + 24);
     ctx.rotate(t * Math.PI * 1.5);
@@ -5692,6 +5843,36 @@ function drawEffect(effect, time) {
     ctx.lineTo(px + 24, py + 8 - t * 4);
     ctx.lineTo(px + 34, py + 15);
     ctx.stroke();
+  } else if (effect.type === "guardDome") {
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 18;
+    ctx.globalAlpha = (1 - t) * 0.18;
+    ctx.beginPath();
+    ctx.arc(px + 24, py + 26, 21 + t * 5, Math.PI, Math.PI * 2);
+    ctx.lineTo(px + 45 + t * 5, py + 37);
+    ctx.lineTo(px + 3 - t * 5, py + 37);
+    ctx.closePath();
+    ctx.fill();
+    ctx.globalAlpha = (1 - t) * 0.92;
+    ctx.lineWidth = 4;
+    ctx.stroke();
+  } else if (effect.type === "healBurst") {
+    ctx.shadowColor = effect.color;
+    ctx.shadowBlur = 14;
+    ctx.lineWidth = 3;
+    for (let index = 0; index < 7; index += 1) {
+      const angle = (Math.PI * 2 * index) / 7;
+      const radius = 8 + (index % 3) * 5;
+      const x = px + 24 + Math.cos(angle) * radius;
+      const y = py + 36 + Math.sin(angle) * 6 - t * (28 + index * 3);
+      const size = 3 + (index % 2);
+      ctx.beginPath();
+      ctx.moveTo(x - size, y);
+      ctx.lineTo(x + size, y);
+      ctx.moveTo(x, y - size);
+      ctx.lineTo(x, y + size);
+      ctx.stroke();
+    }
   } else if (effect.type === "comet") {
     ctx.shadowColor = effect.color;
     ctx.shadowBlur = 14;
@@ -6189,8 +6370,8 @@ function drawScreenFlash(time) {
 }
 
 function addEffect(type, x, y, color, dx = 0, dy = 0) {
-  const fastEffects = ["beam", "comet", "slash"];
-  const longEffects = ["nova", "runes", "vortex", "shield"];
+  const fastEffects = ["beam", "comet", "slash", "sparkTrail", "impact"];
+  const longEffects = ["nova", "runes", "vortex", "shield", "gustTile", "healBurst", "guardDome"];
   const life = fastEffects.includes(type) ? 300 : longEffects.includes(type) ? 680 : 520;
   game.effects.push({ type, x, y, color, dx, dy, created: performance.now(), life });
 }
