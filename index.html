@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa4" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa11" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa9" />
+    <link rel="stylesheet" href="styles.css?v=pwa11" />
   </head>
   <body>
     <div class="app-shell">
@@ -65,8 +65,8 @@
       <section id="townScreen" class="town-screen" aria-label="星見広場">
         <canvas id="townCanvas" width="1152" height="690"></canvas>
         <div class="town-title">
-          <span>狐たちの探索拠点</span>
-          <strong>星見広場</strong>
+          <span>NEXT EXPEDITION</span>
+          <strong>星喰いの塔</strong>
           <small id="townMissionLabel">星喰い塔 1F / 100F</small>
         </div>
         <div class="town-status" aria-live="polite">
@@ -76,15 +76,15 @@
         <button class="town-leader-select" type="button" data-town-action="characters">
           <i id="townLeaderSwatch" aria-hidden="true"></i>
           <span>
-            <small>唯一の探索者</small>
+            <small>運命を継ぐ探索者</small>
             <strong id="townLeaderName">コハク</strong>
             <em id="townLeaderType">星水タイプ</em>
           </span>
           <b>進化</b>
         </button>
         <button class="town-spot town-spot-board" type="button" data-town-action="board">
-          <strong>星喰いの塔</strong>
-          <span>100階の攻略路を見る</span>
+          <strong>塔の経路</strong>
+          <span>休憩所と門番を確認</span>
         </button>
         <button class="town-spot town-spot-shop" type="button" data-town-action="shop">
           <strong>星の商店</strong>
@@ -99,9 +99,16 @@
           <span>回復と訓練</span>
         </button>
         <button class="town-spot town-spot-guild" type="button" data-town-action="guild">
-          <strong>星見観測院</strong>
-          <span>塔の記録を見る</span>
+          <strong>遠征記録</strong>
+          <span>進化と到達階を確認</span>
         </button>
+        <div class="town-run-brief" aria-label="今回の遠征経路">
+          <span><b>START</b><strong id="townStartFloor">B1F</strong></span>
+          <i aria-hidden="true"></i>
+          <span><b>GATE</b><strong id="townNextGate">B9F</strong></span>
+          <i aria-hidden="true"></i>
+          <span><b>GOAL</b><strong>B100F</strong></span>
+        </div>
         <button id="departButton" class="town-depart" type="button">
           <span>星喰い塔 1Fへ</span>
           <strong>100階踏破に挑む</strong>
@@ -421,6 +428,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa9"></script>
+    <script src="app.js?v=pwa11"></script>
   </body>
 </html>

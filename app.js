@@ -30,20 +30,22 @@ const miniCanvas = document.querySelector("#miniMap");
 const miniCtx = miniCanvas.getContext("2d");
 const townCanvas = document.querySelector("#townCanvas");
 const townCtx = townCanvas.getContext("2d");
+const townBackdrop = new Image();
+townBackdrop.src = "assets/town/foxbound-spire-hub-v1.jpg?v=pwa11";
 const spriteSheet = new Image();
 spriteSheet.src = "assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png";
 const mapTokenSheet = new Image();
-mapTokenSheet.src = "assets/tokens/foxbound-characters-v3.png?v=pwa9";
+mapTokenSheet.src = "assets/tokens/foxbound-characters-v3.png?v=pwa11";
 const mapTokenCanvas = document.createElement("canvas");
 const mapTokenCtx = mapTokenCanvas.getContext("2d", { willReadFrequently: true });
 let mapTokenReady = false;
 const itemIconSheet = new Image();
-itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa9";
+itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa11";
 const relicIconSheet = new Image();
-relicIconSheet.src = "assets/tokens/foxbound-relics-v1.jpg?v=pwa9";
+relicIconSheet.src = "assets/tokens/foxbound-relics-v1.jpg?v=pwa11";
 const enemyArtSheets = Array.from({ length: 4 }, (_, index) => {
   const sheet = new Image();
-  sheet.src = `assets/tokens/foxbound-enemies-${index + 1}-v1.png?v=pwa9`;
+  sheet.src = `assets/tokens/foxbound-enemies-${index + 1}-v1.png?v=pwa11`;
   return sheet;
 });
 
@@ -97,6 +99,8 @@ const ui = {
   townLeaderName: document.querySelector("#townLeaderName"),
   townLeaderType: document.querySelector("#townLeaderType"),
   townLeaderSwatch: document.querySelector("#townLeaderSwatch"),
+  townStartFloor: document.querySelector("#townStartFloor"),
+  townNextGate: document.querySelector("#townNextGate"),
   departButton: document.querySelector("#departButton"),
   townDialog: document.querySelector("#townDialog"),
   townDialogTitle: document.querySelector("#townDialogTitle"),
@@ -2178,19 +2182,28 @@ function enemyTurn() {
 
     if (enemy.boss) {
       enemy.specialCooldown = Math.max(0, (enemy.specialCooldown || 0) - 1);
-      if (enemy.specialCooldown === 0 && gridDistance(enemy, target) <= 5) {
+      if (
+        enemy.specialCooldown === 0 &&
+        gridDistance(enemy, target) <= 5 &&
+        hasClearAttackPath(enemy, target)
+      ) {
         bossSpecialAttack(enemy, target);
         enemy.specialCooldown = randInt(3, 5);
         continue;
       }
     }
 
-    if (enemy.attackStyle === "magic" && gridDistance(enemy, target) <= 3 && isVisible(enemy.x, enemy.y)) {
+    if (
+      enemy.attackStyle === "magic" &&
+      gridDistance(enemy, target) <= 3 &&
+      isVisible(enemy.x, enemy.y) &&
+      hasClearAttackPath(enemy, target)
+    ) {
       enemyAttack(enemy, target, true);
       continue;
     }
 
-    if (gridDistance(enemy, target) === 1) {
+    if (gridDistance(enemy, target) === 1 && hasClearAttackPath(enemy, target)) {
       startBumpMotion(enemy, Math.sign(target.x - enemy.x), Math.sign(target.y - enemy.y), 0.3, 70);
       enemyAttack(enemy, target);
       continue;
@@ -3237,6 +3250,10 @@ function updateAll() {
     ui.townLeaderName.textContent = leader.name;
     ui.townLeaderType.textContent = `${leader.type}タイプ${evolution ? ` / ${evolution.path === "magic" ? "魔法型" : evolution.path === "physical" ? "物理型" : "複合型"}` : ""}`;
     ui.townLeaderSwatch.style.background = leader.color;
+    const startFloor = checkpoint || 1;
+    const nextGate = Math.min(99, Math.floor(startFloor / 10) * 10 + 9);
+    ui.townStartFloor.textContent = `B${startFloor}F`;
+    ui.townNextGate.textContent = `B${nextGate}F`;
     ui.departButton.querySelector("span").textContent = checkpoint
       ? `B${checkpoint}Fの休憩所から再開`
       : "B1Fから100階踏破へ挑む";
@@ -4496,141 +4513,68 @@ function draw(time = 0) {
 function drawTown(time) {
   const width = townCanvas.width;
   const height = townCanvas.height;
-  const sky = townCtx.createLinearGradient(0, 0, 0, height);
-  sky.addColorStop(0, "#78aeb5");
-  sky.addColorStop(0.42, "#b9d6bd");
-  sky.addColorStop(0.43, "#76985c");
-  sky.addColorStop(1, "#3d6447");
-  townCtx.fillStyle = sky;
+  townCtx.fillStyle = "#080d0d";
+  townCtx.fillRect(0, 0, width, height);
+  if (townBackdrop.complete && townBackdrop.naturalWidth) {
+    const scale = Math.max(width / townBackdrop.naturalWidth, height / townBackdrop.naturalHeight);
+    const sourceWidth = width / scale;
+    const sourceHeight = height / scale;
+    const sourceX = (townBackdrop.naturalWidth - sourceWidth) / 2;
+    const sourceY = Math.max(0, (townBackdrop.naturalHeight - sourceHeight) * 0.42);
+    townCtx.drawImage(
+      townBackdrop,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      width,
+      height,
+    );
+  }
+
+  const lowerShade = townCtx.createLinearGradient(0, height * 0.5, 0, height);
+  lowerShade.addColorStop(0, "rgba(4, 8, 8, 0)");
+  lowerShade.addColorStop(1, "rgba(4, 7, 7, 0.58)");
+  townCtx.fillStyle = lowerShade;
   townCtx.fillRect(0, 0, width, height);
 
-  townCtx.fillStyle = "#587c63";
-  townCtx.beginPath();
-  townCtx.moveTo(0, 220);
-  townCtx.quadraticCurveTo(130, 112, 300, 205);
-  townCtx.quadraticCurveTo(440, 100, 610, 197);
-  townCtx.quadraticCurveTo(800, 85, 970, 195);
-  townCtx.quadraticCurveTo(1070, 130, width, 182);
-  townCtx.lineTo(width, 310);
-  townCtx.lineTo(0, 310);
-  townCtx.closePath();
-  townCtx.fill();
-
-  townCtx.fillStyle = "#6f965f";
-  townCtx.beginPath();
-  townCtx.moveTo(0, 260);
-  townCtx.quadraticCurveTo(180, 180, 350, 255);
-  townCtx.quadraticCurveTo(550, 170, 730, 245);
-  townCtx.quadraticCurveTo(930, 155, width, 244);
-  townCtx.lineTo(width, height);
-  townCtx.lineTo(0, height);
-  townCtx.closePath();
-  townCtx.fill();
-
-  for (let y = 245; y < height; y += 24) {
-    for (let x = 10; x < width; x += 28) {
-      const fleck = noise(x, y, 71);
-      if (fleck < 0.7) continue;
-      townCtx.fillStyle = fleck > 0.9 ? "#f3cb68" : "#a8c979";
-      townCtx.fillRect(x + fleck * 8, y + fleck * 5, 3, 3);
-    }
-  }
-
-  drawTownPath([
-    [576, 690],
-    [576, 365],
-    [576, 200],
-  ], 82);
-  drawTownPath([
-    [576, 365],
-    [226, 292],
-  ], 58);
-  drawTownPath([
-    [576, 365],
-    [924, 285],
-  ], 58);
-  drawTownPath([
-    [576, 395],
-    [232, 520],
-  ], 54);
-  drawTownPath([
-    [576, 395],
-    [920, 520],
-  ], 54);
-
-  townCtx.fillStyle = "#477c7b";
-  townCtx.beginPath();
-  townCtx.moveTo(0, 565);
-  townCtx.bezierCurveTo(250, 525, 405, 610, 620, 570);
-  townCtx.bezierCurveTo(820, 532, 985, 600, width, 550);
-  townCtx.lineTo(width, 635);
-  townCtx.bezierCurveTo(900, 670, 720, 615, 560, 650);
-  townCtx.bezierCurveTo(340, 692, 180, 615, 0, 652);
-  townCtx.closePath();
-  townCtx.fill();
-  townCtx.strokeStyle = "rgba(224, 247, 230, 0.34)";
-  townCtx.lineWidth = 4;
-  for (let x = 20; x < width; x += 76) {
-    const wave = Math.sin(time / 520 + x * 0.02) * 7;
-    townCtx.beginPath();
-    townCtx.moveTo(x, 596 + wave);
-    townCtx.quadraticCurveTo(x + 18, 588 + wave, x + 38, 596 + wave);
-    townCtx.stroke();
-  }
-
-  drawTownBridge(576, 588);
-
-  const trees = [
-    [40, 190, 1.15], [104, 160, 0.9], [1080, 185, 1.2], [1022, 145, 0.92],
-    [36, 400, 1], [1085, 390, 1.1], [375, 160, 0.82], [778, 145, 0.86],
-    [350, 505, 0.75], [805, 500, 0.74],
+  const routeBeacons = [
+    [576, 522],
+    [588, 465],
+    [602, 407],
+    [618, 350],
+    [635, 294],
   ];
-  trees.forEach(([x, y, scale]) => drawTownTree(x, y, scale));
-
-  drawTownBuilding({
-    x: 445, y: 98, width: 262, height: 148,
-    roof: "#47694f", wall: "#e2d1a6", trim: "#f1c65d", sign: "星見観測院", tower: true,
-  });
-  drawTownBoard(185, 245);
-  drawTownBuilding({
-    x: 837, y: 206, width: 190, height: 130,
-    roof: "#bd5d50", wall: "#ead1a1", trim: "#ffd473", sign: "星の商店",
-  });
-  drawTownBuilding({
-    x: 833, y: 424, width: 190, height: 128,
-    roof: "#4f8990", wall: "#c5d5c6", trim: "#e7f5e3", sign: "風見倉庫",
-  });
-  drawTownBuilding({
-    x: 126, y: 420, width: 214, height: 132,
-    roof: "#7663a6", wall: "#d6c5ba", trim: "#f0d67c", sign: "月影道場",
+  routeBeacons.forEach(([x, y], index) => {
+    const pulse = 0.62 + Math.sin(time / 420 + index * 0.9) * 0.22;
+    townCtx.save();
+    townCtx.globalAlpha = pulse;
+    townCtx.shadowColor = "#efb34f";
+    townCtx.shadowBlur = 18;
+    townCtx.strokeStyle = index === routeBeacons.length - 1 ? "#ef6b64" : "#ffd172";
+    townCtx.lineWidth = 2;
+    townCtx.beginPath();
+    townCtx.arc(x, y, 5 + pulse * 3, 0, Math.PI * 2);
+    townCtx.stroke();
+    townCtx.restore();
   });
 
-  drawTownPlaza(time);
-  drawTownGate(time);
-
-  drawTownNpc(enemyCatalog[1], 372, 342, time, "#e8f3c8");
-  drawTownNpc(enemyCatalog[0], 786, 355, time + 500, "#ffe0ad");
-  drawTownNpc(enemyCatalog[2], 755, 500, time + 900, "#d8f6ff");
+  for (let index = 0; index < 22; index += 1) {
+    const phase = time / 920 + index * 1.71;
+    const x = 250 + ((index * 97) % 650) + Math.sin(phase) * 16;
+    const y = 155 + ((index * 43) % 390) + Math.cos(phase * 1.4) * 12;
+    const alpha = 0.12 + (Math.sin(phase * 2) + 1) * 0.13;
+    townCtx.fillStyle = index % 3 ? `rgba(115, 214, 211, ${alpha})` : `rgba(255, 198, 92, ${alpha})`;
+    townCtx.beginPath();
+    townCtx.arc(x, y, index % 4 === 0 ? 2 : 1.2, 0, Math.PI * 2);
+    townCtx.fill();
+  }
 
   const leader = getLeader();
   const bob = Math.sin(time / 330) * 2;
-  drawActorBody(townCtx, leader, 552, 414 + bob, 1.62, time);
-
-  townCtx.fillStyle = "rgba(19, 28, 21, 0.82)";
-  townCtx.fillRect(476, 486, 206, 30);
-  townCtx.fillStyle = "#fff3c9";
-  townCtx.font = "800 15px sans-serif";
-  townCtx.textAlign = "center";
-  townCtx.fillText(`${leader.name}の進化譚`, 579, 506);
-
-  for (let i = 0; i < 16; i += 1) {
-    const phase = time / 850 + i * 2.17;
-    const x = 430 + ((i * 83) % 310) + Math.sin(phase) * 13;
-    const y = 250 + ((i * 47) % 210) + Math.cos(phase * 1.3) * 11;
-    const alpha = 0.28 + (Math.sin(phase * 2) + 1) * 0.22;
-    townCtx.fillStyle = `rgba(255, 226, 130, ${alpha})`;
-    townCtx.fillRect(x, y, 3, 3);
-  }
+  drawActorBody(townCtx, leader, 310, 500 + bob, 1.5, time);
 }
 
 function drawTownPath(points, width) {
@@ -6723,6 +6667,31 @@ function canTakeStep(fromX, fromY, dx, dy) {
   if (!isWalkable(x, y)) return false;
   if (!dx || !dy) return true;
   return isWalkable(fromX + dx, fromY) && isWalkable(fromX, fromY + dy);
+}
+
+function hasClearAttackPath(from, to) {
+  const deltaX = to.x - from.x;
+  const deltaY = to.y - from.y;
+  const steps = Math.max(Math.abs(deltaX), Math.abs(deltaY));
+  if (!steps) return true;
+  let previousX = from.x;
+  let previousY = from.y;
+  for (let step = 1; step <= steps; step += 1) {
+    const x = Math.round(from.x + (deltaX * step) / steps);
+    const y = Math.round(from.y + (deltaY * step) / steps);
+    if (x === previousX && y === previousY) continue;
+    if (
+      x !== previousX &&
+      y !== previousY &&
+      (!isWalkable(x, previousY) || !isWalkable(previousX, y))
+    ) {
+      return false;
+    }
+    if (step < steps && !isWalkable(x, y)) return false;
+    previousX = x;
+    previousY = y;
+  }
+  return true;
 }
 
 function inBounds(x, y) {
