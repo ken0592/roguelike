@@ -1,10 +1,10 @@
-const CACHE_NAME = "foxbound-v14";
+const CACHE_NAME = "foxbound-v14a";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=pwa14",
-  "./app.js?v=pwa14",
-  "./manifest.webmanifest?v=pwa14",
+  "./styles.css?v=pwa14a",
+  "./app.js?v=pwa14a",
+  "./manifest.webmanifest?v=pwa14a",
   "./assets/pwa/icon-180.png",
   "./assets/pwa/icon-192.png",
   "./assets/pwa/icon-512.png",
