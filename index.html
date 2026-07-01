@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa11" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa12" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa11" />
+    <link rel="stylesheet" href="styles.css?v=pwa12" />
   </head>
   <body>
     <div class="app-shell">
@@ -118,6 +118,7 @@
       <main id="gameLayout" class="game-layout" hidden>
         <section class="stage-panel" aria-label="ダンジョン">
           <canvas id="gameCanvas" width="1152" height="768"></canvas>
+          <div id="relicRibbon" class="relic-ribbon" aria-label="所持レリック"></div>
           <div id="toast" class="toast" hidden></div>
           <div id="eventBanner" class="event-banner dialogue-box" hidden aria-live="assertive">
             <canvas id="eventPortrait" class="dialogue-portrait" width="64" height="64" aria-hidden="true"></canvas>
@@ -303,7 +304,7 @@
             </svg>
           </button>
         </header>
-        <p id="saveDialogNote" class="town-note">3つの記録から、遊ぶデータを選んでください。</p>
+        <p id="saveDialogNote" class="town-note">冒険の記録は自動で1つに保存されます。</p>
         <div id="saveSlotList" class="save-slot-list"></div>
       </form>
     </dialog>
@@ -398,9 +399,10 @@
           <li>門番を倒すと、3つのレリックから1つを選べます。装備枠はなく、獲得した効果はすべて同時に働きます。</li>
           <li>入るたびにマップ、敵、道具、隠し罠、隠し階段、階の運勢が変わります。</li>
           <li>挑戦開始時にレベル、レリック、星網スキル盤は初期化。進化、素材袋、バッグ拡張は引き継がれます。</li>
-          <li>3つのセーブ枠に最高到達階と休憩所の再開地点を保存できます。休憩所では自動保存されます。</li>
-          <li>物理技と魔法技の使用回数、レベル、到達階、変異種撃破、素材によって進化先が分かれます。</li>
-          <li>進化は一段階または二段階。進化後の姿と能力は、次の挑戦にも残ります。</li>
+          <li>記録は1つ。休憩所と町で自動保存されます。</li>
+          <li>出発前に狐・亡国の騎士・マジシャンと、初期レリックを選びます。</li>
+          <li>10階ごとに進化か強力なレリックを選択。進化は全10段階で、毎段階3〜4候補あります。</li>
+          <li>隠し祭壇、モンスターハウス、流星賭場、商人からの泥棒など、危険な寄り道があります。</li>
           <li>一歩動くたびに敵も1手ずつ動きます。</li>
           <li>移動と通常攻撃は別操作です。敵の方向を左クリックすると攻撃します。</li>
           <li>ミニマップには訪れた部屋と、実際に歩いた通路だけが記録されます。</li>
@@ -412,7 +414,7 @@
           <li>各階の運勢によって、道具の数、敵の数、回復、増援、落とし物が変化します。</li>
           <li>満腹度はゆっくり減ります。月蜜の実を拾ったら、Rで食べて回復できます。</li>
           <li>進化素材は容量無制限の素材袋へ入ります。レア敵とボスは「覇星の核」を落とすことがあります。</li>
-          <li>一部の階には行商人が現れ、その場で道具を購入できます。</li>
+          <li>一部の階には行商人が現れ、道具の購入・売却・泥棒ができます。</li>
           <li>バッグは初期20枠。町の商店で星貨を払うと、最大40枠まで永久に拡張できます。</li>
           <li>主人公が倒れると冒険終了です。</li>
         </ul>
@@ -428,6 +430,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa11"></script>
+    <script src="app.js?v=pwa12"></script>
   </body>
 </html>
