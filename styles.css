@@ -462,15 +462,10 @@ button {
 }
 
 .town-spot-storage {
-  right: 20px;
+  left: 20px;
+  right: auto;
   top: 250px;
   border-left-color: #71bdc5;
-}
-
-.town-spot-training {
-  left: 20px;
-  top: 250px;
-  border-left-color: #9a86d9;
 }
 
 .town-spot-guild {
@@ -833,6 +828,31 @@ button {
   width: 9px;
   height: 9px;
   border: 1px solid rgba(255, 255, 255, 0.38);
+}
+
+.element-badge,
+.type-label .element-badge {
+  width: 20px;
+  height: 20px;
+  display: inline-grid;
+  flex: 0 0 20px;
+  place-items: center;
+  border: 1px solid var(--element-color);
+  background: color-mix(in srgb, var(--element-color) 18%, rgba(6, 9, 8, 0.94));
+  color: var(--element-color);
+  font-size: 0.62rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.move-name strong .element-badge,
+.move-choice strong .element-badge,
+.ascension-choice .element-badge,
+.character-choice .element-badge,
+.loadout-character .element-badge {
+  margin-right: 5px;
 }
 
 .bar {
@@ -1560,6 +1580,28 @@ button {
 .loadout-intro small,
 .milestone-head small {
   color: var(--muted);
+}
+
+.element-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 7px;
+}
+
+.loadout-intro .element-legend span {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--muted);
+  padding: 3px 6px;
+  font-size: 0.62rem;
+}
+
+.loadout-intro .element-legend span.special {
+  border-style: dashed;
 }
 
 .loadout-section {
@@ -3666,13 +3708,9 @@ button {
   }
 
   .town-spot-storage {
-    right: 16px;
-    top: 390px;
-  }
-
-  .town-spot-training {
     left: 16px;
-    top: 470px;
+    right: auto;
+    top: 310px;
   }
 
   .town-spot-guild {
@@ -3869,11 +3907,6 @@ button {
     top: 114px;
   }
 
-  .town-spot-training {
-    left: 9px;
-    top: 180px;
-  }
-
   .town-spot-guild {
     right: 9px;
     top: 48px;
@@ -3885,7 +3918,8 @@ button {
   }
 
   .town-spot-storage {
-    right: 9px;
+    left: 9px;
+    right: auto;
     top: 180px;
   }
 

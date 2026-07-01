@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa12" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa13" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa12" />
+    <link rel="stylesheet" href="styles.css?v=pwa13" />
   </head>
   <body>
     <div class="app-shell">
@@ -78,7 +78,7 @@
           <span>
             <small>運命を継ぐ探索者</small>
             <strong id="townLeaderName">コハク</strong>
-            <em id="townLeaderType">星水タイプ</em>
+            <em id="townLeaderType">光属性 / 星巡タイプ</em>
           </span>
           <b>進化</b>
         </button>
@@ -93,10 +93,6 @@
         <button class="town-spot town-spot-storage" type="button" data-town-action="storage">
           <strong>風見倉庫</strong>
           <span>食料を預ける</span>
-        </button>
-        <button class="town-spot town-spot-training" type="button" data-town-action="training">
-          <strong>月影道場</strong>
-          <span>回復と訓練</span>
         </button>
         <button class="town-spot town-spot-guild" type="button" data-town-action="guild">
           <strong>遠征記録</strong>
@@ -219,7 +215,7 @@
             </div>
             <div class="meter-line">
               <span>塔風</span>
-              <strong id="turnLabel">0 / 140</strong>
+              <strong id="turnLabel">0 / 420</strong>
             </div>
           </section>
 
@@ -394,11 +390,11 @@
         </div>
         <ul class="help-list">
           <li>目的は「星喰いの塔」100階踏破。9・19・29…99階に、次の休憩所を守る門番がいます。</li>
-          <li>同じ階に長く留まると「塔風」が強まります。80ターンで警告、110ターンから侵食、140ターンで挑戦失敗です。</li>
+          <li>同じ階に長く留まると「塔風」が強まります。240ターンで警告、330ターンから侵食、420ターンで挑戦失敗です。</li>
           <li>10階ごとに休憩所、20階ごとに大休憩所があります。到着すると全技PPが回復します。</li>
-          <li>門番を倒すと、3つのレリックから1つを選べます。装備枠はなく、獲得した効果はすべて同時に働きます。</li>
+          <li>門番を越えて休憩所へ着くと、進化か強力なレリックを選べます。レリックの効果はすべて同時に働きます。</li>
           <li>入るたびにマップ、敵、道具、隠し罠、隠し階段、階の運勢が変わります。</li>
-          <li>挑戦開始時にレベル、レリック、星網スキル盤は初期化。進化、素材袋、バッグ拡張は引き継がれます。</li>
+          <li>挑戦開始時にレベル、レリック、星網スキル盤、進化素材は初期化。進化形態とバッグ拡張は引き継がれます。</li>
           <li>記録は1つ。休憩所と町で自動保存されます。</li>
           <li>出発前に狐・亡国の騎士・マジシャンと、初期レリックを選びます。</li>
           <li>10階ごとに進化か強力なレリックを選択。進化は全10段階で、毎段階3〜4候補あります。</li>
@@ -413,7 +409,8 @@
           <li>MUTANT表示の変異種は、重装・魔脈・疾走・吸収・爆発のいずれかの特性を持ちます。</li>
           <li>各階の運勢によって、道具の数、敵の数、回復、増援、落とし物が変化します。</li>
           <li>満腹度はゆっくり減ります。月蜜の実を拾ったら、Rで食べて回復できます。</li>
-          <li>進化素材は容量無制限の素材袋へ入ります。レア敵とボスは「覇星の核」を落とすことがあります。</li>
+          <li>進化素材は容量無制限の素材袋へ入りますが、その挑戦を終えるとすべて失われます。</li>
+          <li>基本属性は炎・水・木・光・闇。炎→木→水→炎が有利で、光と闇は互いに弱点です。氷・毒は特殊属性です。</li>
           <li>一部の階には行商人が現れ、道具の購入・売却・泥棒ができます。</li>
           <li>バッグは初期20枠。町の商店で星貨を払うと、最大40枠まで永久に拡張できます。</li>
           <li>主人公が倒れると冒険終了です。</li>
@@ -430,6 +427,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa12"></script>
+    <script src="app.js?v=pwa13"></script>
   </body>
 </html>
