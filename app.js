@@ -5,6 +5,7 @@ const TARGET_FLOOR = 100;
 const FLOOR_WIND_WARNING = 240;
 const FLOOR_WIND_DANGER = 330;
 const FLOOR_WIND_LIMIT = 420;
+const ENEMY_RANGED_START_FLOOR = 11;
 const VISION_RADIUS = 7;
 const BASE_BAG_CAPACITY = 20;
 const MAX_BAG_CAPACITY = 40;
@@ -559,7 +560,7 @@ const relicCatalog = [
   { key: "prismCore", name: "七彩星核", icon: "彩", rarity: "RARE", color: "#d5b4ff", detail: "物理技と魔法技を交互に使うと威力上昇。", effect: "alternating" },
   { key: "secondMoon", name: "二度目の月", icon: "復", rarity: "RARE", color: "#f7da79", detail: "1回だけ、倒れた時にHP40%で復活。", effect: "secondLife" },
   { key: "mutationSeal", name: "変異封じ", icon: "封", rarity: "RARE", color: "#5ed5c7", detail: "変異種への与ダメージ +35%。", effect: "mutantDamage" },
-  { key: "starCompass", name: "逆星羅針", icon: "針", rarity: "UNCOMMON", color: "#6fc6e9", detail: "階段を発見できる距離が2マス増える。", effect: "stairSense" },
+  { key: "starCompass", name: "逆星羅針", icon: "針", rarity: "UNCOMMON", color: "#6fc6e9", detail: "通常階段をミニマップに常時表示する。", effect: "stairSense" },
   { key: "hungryCrown", name: "飢王の冠", icon: "冠", rarity: "RARE", color: "#d76fe1", detail: "満腹度30以下で攻撃・魔力 +6。", effect: "desperation" },
   { key: "luckyAsh", name: "幸運の灰", icon: "運", rarity: "UNCOMMON", color: "#d9ca66", detail: "変異種と珍しい道具の出現率が上がる。", effect: "luck" },
   { key: "arcaneVein", name: "魔脈結晶", icon: "魔", rarity: "RARE", color: "#7dbbf2", detail: "魔法技の消費PPが時々0になる。", effect: "freeMagic" },
@@ -764,6 +765,32 @@ const enemyTypes = [
   { key: "moonshade", elementKey: "dark", name: "闇", prefix: "紫", color: "#9568d8", accent: "#eadfff", hp: 0, atk: 1, def: 1 },
   { key: "skywind", elementKey: "light", name: "光", prefix: "輝", color: "#e8c958", accent: "#fff6bd", hp: -1, atk: 2, def: 0 },
 ];
+
+const enemyTypeBiases = [
+  { starwater: 6, forestleaf: 5, skywind: 2, firecrystal: 1, moonshade: 1 },
+  { firecrystal: 6, forestleaf: 5, starwater: 2, skywind: 1, moonshade: 1 },
+  { starwater: 6, skywind: 4, moonshade: 2, firecrystal: 1, forestleaf: 1 },
+  { moonshade: 6, starwater: 3, skywind: 2, forestleaf: 1, firecrystal: 1 },
+  { skywind: 6, firecrystal: 4, forestleaf: 2, starwater: 1, moonshade: 1 },
+  { forestleaf: 6, moonshade: 4, starwater: 2, firecrystal: 1, skywind: 1 },
+  { moonshade: 6, skywind: 4, firecrystal: 2, starwater: 1, forestleaf: 1 },
+  { skywind: 6, starwater: 4, forestleaf: 2, moonshade: 1, firecrystal: 1 },
+  { firecrystal: 6, moonshade: 5, skywind: 2, starwater: 1, forestleaf: 1 },
+  { moonshade: 5, skywind: 5, firecrystal: 3, starwater: 2, forestleaf: 2 },
+];
+
+function floorEnemyTypeBias() {
+  return enemyTypeBiases[clamp(Math.floor((game.floor - 1) / 10), 0, enemyTypeBiases.length - 1)];
+}
+
+function floorElementTrend() {
+  const bias = floorEnemyTypeBias();
+  return Object.entries(bias)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([key]) => enemyTypes.find((type) => type.key === key)?.elementKey)
+    .filter(Boolean);
+}
 
 const specialEnemyElements = {
   toxicMushroom: "poison",
@@ -1592,7 +1619,7 @@ function buildFloor() {
   game.guidanceActive = false;
   game.windWarningShown = false;
   game.windDangerShown = false;
-  game.stairsRevealed = false;
+  game.stairsRevealed = true;
   game.restChoiceTaken = false;
   game.leaderTrail = [];
 
@@ -1634,7 +1661,7 @@ function buildFloor() {
   const restFloor = isRestFloor(game.floor);
   game.floorKind = restFloor ? (isMajorRestFloor(game.floor) ? "major-rest" : "rest") : bossFloor ? "boss" : "combat";
   game.mission = {
-    target: bossProfile?.name || "隠し階段",
+    target: bossProfile?.name || "階段",
     x: bossPoint.x,
     y: bossPoint.y,
     complete: !bossFloor,
@@ -1642,7 +1669,7 @@ function buildFloor() {
     boss: bossFloor,
   };
   game.stairs = stairPoint;
-  game.stairsRevealed = restFloor;
+  game.stairsRevealed = true;
   game.floorEvent = restFloor
     ? { key: "rest", name: isMajorRestFloor(game.floor) ? "大休憩" : "休憩", detail: "敵も罠も現れない", luck: 0 }
     : rollFloorEvent();
@@ -1675,7 +1702,8 @@ function buildFloor() {
     addLog(`B${game.floor}F: 休憩所を守る門番 ${bossProfile.name}が現れた。`);
     announceEvent("GATE BOSS", `${bossProfile.title} ${bossProfile.name}`, "冠", "danger");
   } else {
-    addLog(`B${game.floor}F: 隠し階段を探し、罠と変異種を見極めて進もう。`);
+    const trend = floorElementTrend().map((key) => elementInfo(key).name).join("・");
+    addLog(`B${game.floor}F: 通常階段を目指そう。この区画は${trend}属性の敵が多い。`);
   }
   addLog(`階層運勢「${game.floorEvent.name}」: ${game.floorEvent.detail}。`);
 }
@@ -1890,7 +1918,7 @@ function spawnEnemies() {
     const spawnRare = !rareSpawned && Math.random() < rareChance;
     const catalog = spawnRare ? randomRareEnemyProfile() : randomEnemyProfile();
     rareSpawned ||= spawnRare;
-    const point = randomOpenTile();
+    const point = randomEnemySpawnTile(7);
     if (!point) continue;
     game.enemies.push(createEnemy(catalog, point));
   }
@@ -1898,9 +1926,37 @@ function spawnEnemies() {
 
 function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0) {
   if (bossFloor || (!forced && game.floor !== 2 && Math.random() > 0.42)) return;
-  const point = randomOpenTile();
+  const leader = getLeader();
+  const candidates = game.rooms.filter((room) => (
+    room.w >= 5
+    && room.h >= 4
+    && !pointInRoom(leader.x, leader.y, room)
+    && !pointInRoom(game.stairs.x, game.stairs.y, room)
+    && !pointInRoom(game.mission.x, game.mission.y, room)
+  ));
+  const room = candidates[randInt(0, candidates.length - 1)] || game.rooms.find((entry) => !pointInRoom(leader.x, leader.y, entry));
+  if (!room) return;
+  const shopTiles = [];
+  for (let y = room.y; y < room.y + room.h; y += 1) {
+    for (let x = room.x; x < room.x + room.w; x += 1) shopTiles.push({ x, y });
+  }
+  const point = shopTiles.find((tile) => (
+    !actorAt(tile.x, tile.y)
+    && !(tile.x === game.stairs.x && tile.y === game.stairs.y)
+    && !(tile.x === game.mission.x && tile.y === game.mission.y)
+  ));
   if (!point) return;
+  const shopKeys = new Set(shopTiles.map((tile) => `${tile.x},${tile.y}`));
+  game.items = game.items.filter((item) => !shopKeys.has(`${item.x},${item.y}`));
+  game.traps = game.traps.filter((trap) => !shopKeys.has(`${trap.x},${trap.y}`));
+  game.enemies = game.enemies.filter((enemy) => !shopKeys.has(`${enemy.x},${enemy.y}`));
   const materialKind = evolutionMaterialKeys[randInt(0, evolutionMaterialKeys.length - 2)];
+  const stock = [
+    { id: cryptoId(), kind: "apple", price: 55, sold: false, picked: false },
+    { id: cryptoId(), kind: Math.random() < 0.5 ? "oran" : "elixir", price: 85, sold: false, picked: false },
+    { id: cryptoId(), kind: materialKind, price: 145, sold: false, picked: false, material: true },
+    { id: cryptoId(), kind: Math.random() < 0.5 ? "reviver" : "fortuneOrb", price: 180 + game.floor * 2, sold: false, picked: false },
+  ];
   game.merchant = {
     id: cryptoId(),
     name: "星渡り商ノノ",
@@ -1908,14 +1964,33 @@ function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0) {
     y: point.y,
     robbed: false,
     shopTier,
-    stock: [
-      { id: cryptoId(), kind: "apple", price: 55, sold: false },
-      { id: cryptoId(), kind: Math.random() < 0.5 ? "oran" : "elixir", price: 85, sold: false },
-      { id: cryptoId(), kind: materialKind, price: 145, sold: false, material: true },
-      { id: cryptoId(), kind: Math.random() < 0.5 ? "reviver" : "fortuneOrb", price: 180 + game.floor * 2, sold: false },
-    ],
+    room: { ...room },
+    shopTiles,
+    unpaid: [],
+    stock,
   };
-  addLog("この階のどこかに、星渡りの行商人が店を開いた。");
+  const productTiles = shopTiles
+    .filter((tile) => tile.x !== point.x || tile.y !== point.y)
+    .sort(() => Math.random() - 0.5);
+  stock.forEach((offer, index) => {
+    const tile = productTiles[index];
+    if (!tile) {
+      offer.sold = true;
+      return;
+    }
+    offer.x = tile.x;
+    offer.y = tile.y;
+    game.items.push({
+      id: cryptoId(),
+      kind: offer.kind,
+      x: tile.x,
+      y: tile.y,
+      shopItem: true,
+      shopOfferId: offer.id,
+      price: offer.price,
+    });
+  });
+  addLog("色の違う床に星渡り商ノノの商品が並んだ。拾った品は店内で精算しよう。");
 }
 
 function createRestFacilities(major = false) {
@@ -1938,7 +2013,9 @@ function spawnSecretRewardStairs() {
 
 function spawnMonsterHouse() {
   if (game.floor < 4 || Math.random() > 0.2 || game.rooms.length < 3) return;
-  const candidates = game.rooms.slice(1, -1);
+  const candidates = game.rooms
+    .slice(1, -1)
+    .filter((room) => !game.merchant || !pointInRoom(game.merchant.x, game.merchant.y, room));
   const room = candidates[randInt(0, candidates.length - 1)];
   if (room) game.monsterHouse = { room: { ...room }, triggered: false, cleared: false };
 }
@@ -1967,14 +2044,18 @@ function randomEnemyProfile() {
     (family) => family.minFloor <= game.floor && game.floor <= family.maxFloor,
   );
   const family = families[randInt(0, families.length - 1)];
-  const type = enemyTypes[randInt(0, enemyTypes.length - 1)];
+  const bias = floorEnemyTypeBias();
+  const type = weighted(enemyTypes.map((entry) => ({
+    value: entry,
+    weight: bias[entry.key] || 1,
+  })));
   return enemyCatalog.find((enemy) => enemy.familyKey === family.key && enemy.typeKey === type.key);
 }
 
 function createEnemy(catalog, point, alerted = false) {
   const scale = Math.floor((game.floor - 1) * 0.32);
   const expMultiplier = 1 + (game.floorEvent?.expBonus || 0);
-  const mutationChance = clamp(0.055 + game.floor * 0.0012 + Math.max(0, game.luck) * 0.005, 0.05, 0.22);
+  const mutationChance = clamp(0.005 + game.floor * 0.00018 + Math.max(0, game.luck) * 0.0005, 0.005, 0.025);
   const mutation = !catalog.rare && Math.random() < mutationChance
     ? mutationCatalog[randInt(0, mutationCatalog.length - 1)]
     : null;
@@ -2147,6 +2228,7 @@ function tryMoveLeader(dx, dy) {
     resolveStepEffects(leader);
     if (!ally.down) resolveStepEffects(ally);
     if (!leader.down) pickUpItem();
+    checkMerchantShopExit(from, leader);
     addLog(`${leader.name}と${ally.name}が場所を入れ替えた。`);
     showToast(`${ally.name}と場所を交代`);
     return true;
@@ -2161,7 +2243,15 @@ function tryMoveLeader(dx, dy) {
   addEffect("step", tx, ty, leader.color);
   resolveStepEffects(leader);
   if (!leader.down) pickUpItem();
+  checkMerchantShopExit(from, leader);
   return true;
+}
+
+function checkMerchantShopExit(from, to) {
+  if (!game.merchant || game.merchant.robbed || merchantDebt() <= 0) return;
+  if (isMerchantShopTile(from.x, from.y) && !isMerchantShopTile(to.x, to.y)) {
+    triggerMerchantTheft();
+  }
 }
 
 function basicAttack(dx = 0, dy = 0) {
@@ -2440,6 +2530,7 @@ function useBlinkHex(actor, move) {
   for (const enemy of game.enemies.filter((entry) => gridDistance(actor, entry) <= 1)) {
     damageEnemy(enemy, Math.ceil((actor.magic + 5) * game.currentActionMultiplier), actor, move.name);
   }
+  if (actor.id === "leader") checkMerchantShopExit(from, actor);
   addLog(destination === from ? `${move.name}は壁に阻まれた。` : `${move.name}で${destination.x + 1},${destination.y + 1}へ転位した。`);
   revealAroundTeam();
   return true;
@@ -2460,23 +2551,25 @@ function useMirrorCurse(actor, move) {
 
 function useTimeLoop(actor, move) {
   const anchor = actor.timeAnchor;
+  let restoredPp = 0;
   if (anchor) {
     actor.hp = clamp(anchor.hp, 1, actor.maxHp);
     for (const current of actor.moves) {
+      if (current.key === move.key) continue;
       const previous = anchor.moves.find((entry) => entry.key === current.key);
-      if (previous) current.pp = Math.max(current.pp, Math.min(current.maxPp, previous.pp));
+      const before = current.pp;
+      const targetPp = previous ? previous.pp : current.maxPp;
+      current.pp = Math.max(current.pp, Math.min(current.maxPp, targetPp));
+      restoredPp += current.pp - before;
     }
   } else {
     actor.hp = Math.min(actor.maxHp, actor.hp + Math.ceil(actor.maxHp * 0.35));
   }
-  actor.timeAnchor = {
-    hp: actor.hp,
-    moves: actor.moves.map((entry) => ({ key: entry.key, pp: entry.pp })),
-  };
   addEffect("runes", actor.x, actor.y, "#f8c8ff");
   addEffect("healBurst", actor.x, actor.y, "#90dfff");
+  if (restoredPp > 0) addFloatingText(actor.x, actor.y, `PP +${restoredPp}`, "#90dfff");
   setScreenFlash("#a58cff", 320);
-  addLog(`${move.name}。少し前の生命と術式を呼び戻した。`);
+  addLog(`${move.name}。フロア開始時の生命と術式を呼び戻し、技PPを${restoredPp}回復した。`);
   return true;
 }
 
@@ -2541,7 +2634,7 @@ function applyTowerWind() {
     triggerScreenShake(12, 420);
   }
   if (game.turn >= FLOOR_WIND_WARNING && game.turn % 8 === 0 && game.enemies.length < 30) {
-    const point = randomOpenTile();
+    const point = randomEnemySpawnTile(8);
     if (point) {
       const hunter = createEnemy(randomEnemyProfile(), point, true);
       hunter.name = `塔風に追われた${hunter.name}`;
@@ -2703,9 +2796,10 @@ function enemyTurn() {
       }
     }
 
+    const rangedRange = enemyRangedRange(enemy);
     if (
-      enemy.attackStyle === "magic" &&
-      gridDistance(enemy, target) <= 3 &&
+      rangedRange > 0 &&
+      gridDistance(enemy, target) <= rangedRange &&
       isVisible(enemy.x, enemy.y) &&
       hasClearAttackPath(enemy, target)
     ) {
@@ -2734,12 +2828,18 @@ function enemyTurn() {
   const reinforcementTurn = game.floorEvent?.reinforcement || 16;
   if (game.turn > 1 && game.turn % reinforcementTurn === 0 && game.enemies.length < 26) {
     const catalog = randomEnemyProfile();
-    const point = randomOpenTile();
+    const point = randomEnemySpawnTile(8);
     if (point) {
       game.enemies.push(createEnemy(catalog, point, true));
       addLog("遠くから敵の気配が近づいてきた。");
     }
   }
+}
+
+function enemyRangedRange(enemy) {
+  if (enemy.boss) return 5;
+  if (enemy.attackStyle !== "magic" || game.floor < ENEMY_RANGED_START_FLOOR) return 0;
+  return game.floor < 31 ? 2 : 3;
 }
 
 function bossSpecialAttack(enemy, target) {
@@ -2848,7 +2948,7 @@ function completeBossMission(enemy) {
   const point = { x: enemy.x, y: enemy.y };
   addEffect("burst", point.x, point.y, palette.brass);
   game.coins += 100 + game.floor * 4;
-  addLog(`${enemy.name}を撃破。隠し階段と、進化核が現れた。`);
+  addLog(`${enemy.name}を撃破。通常階段の封印が解け、進化核が現れた。`);
   announceEvent("BOSS REWARD", `進化核と${100 + game.floor * 4}星貨を獲得`, "冠", "good");
   setScreenFlash("#ffe08a", 700);
 }
@@ -3165,7 +3265,7 @@ function triggerMonsterHouse(actor) {
   for (let index = 0; index < count; index += 1) {
     const x = randInt(room.x, room.x + room.w - 1);
     const y = randInt(room.y, room.y + room.h - 1);
-    if (actorAt(x, y) || enemyAt(x, y) || merchantAt(x, y)) continue;
+    if (manhattan(actor.x, actor.y, x, y) < 3 || actorAt(x, y) || enemyAt(x, y) || merchantAt(x, y)) continue;
     game.enemies.push(createEnemy(randomEnemyProfile(), { x, y }, true));
     addEffect("vortex", x, y, "#e35b78");
   }
@@ -3212,10 +3312,39 @@ function trapName(kind) {
   return { spike: "星針", sleep: "眠り粉", warp: "転移陣", silence: "封技印" }[kind] || "未知の罠";
 }
 
+function pickUpMerchantItem(item) {
+  const merchant = game.merchant;
+  const offer = merchant?.stock.find((entry) => entry.id === item.shopOfferId);
+  const catalog = itemCatalog[item.kind];
+  if (!merchant || merchant.robbed || !offer || offer.sold || offer.picked || !catalog) return;
+  if (!offer.material && bagTotal() >= game.bagCapacity) {
+    showToast(`バッグがいっぱい。${catalog.name}を持てない`);
+    return;
+  }
+  game.items = game.items.filter((candidate) => candidate.id !== item.id);
+  offer.picked = true;
+  if (!merchant.unpaid.includes(offer.id)) merchant.unpaid.push(offer.id);
+  if (offer.material) {
+    game.evolutionBag[offer.kind] = (game.evolutionBag[offer.kind] || 0) + 1;
+  } else {
+    game.bag[offer.kind] = (game.bag[offer.kind] || 0) + 1;
+  }
+  game.merchantView = "buy";
+  addLog(`${catalog.name}を売り場から手に取った。未精算 ${merchantDebt()}星貨。`);
+  announceEvent("未精算の商品", `${catalog.name}　${offer.price}星貨`, "店", "mystic");
+  showToast(`未精算 ${merchantDebt()}星貨。店を出る前に商人へ`);
+  playSfx("pickup");
+}
+
 function pickUpItem() {
   const leader = getLeader();
   const item = itemAt(leader.x, leader.y);
   if (!item) return;
+
+  if (item.shopItem) {
+    pickUpMerchantItem(item);
+    return;
+  }
 
   if (item.kind === "gear" && item.gear) {
     if (game.gearBag.length >= 24) {
@@ -3450,7 +3579,7 @@ function useItem(kind) {
   } else if (kind === "guidingOrb") {
     game.guidanceActive = true;
     game.stairsRevealed = true;
-    detail = "隠し階段がミニマップに表示された";
+    detail = "通常階段の位置がミニマップに表示された";
   } else if (kind === "guardBerry") {
     leader.def += 1;
     detail = "この挑戦中、防御 +1";
@@ -3487,6 +3616,7 @@ function enemyInFacingLine(actor, range) {
 
 function warpTeamToSafeRoom() {
   const leader = getLeader();
+  const leaderFrom = { x: leader.x, y: leader.y };
   const choices = game.rooms.filter((room) => !pointInRoom(leader.x, leader.y, room));
   const room = choices[randInt(0, Math.max(0, choices.length - 1))] || game.rooms[0];
   const destination = centerOf(room);
@@ -3506,6 +3636,7 @@ function warpTeamToSafeRoom() {
     x: leader.x,
     y: leader.y,
   }));
+  checkMerchantShopExit(leaderFrom, leader);
   revealAroundTeam();
 }
 
@@ -3564,10 +3695,6 @@ function checkMission() {
 function tryUseStairs() {
   const leader = getLeader();
   if (leader.x !== game.stairs.x || leader.y !== game.stairs.y) return false;
-  if (!game.stairsRevealed) {
-    game.stairsRevealed = true;
-    announceEvent("SECRET STAIRS", "足元に隠し階段が現れた", "階", "good");
-  }
   if (!game.mission.complete) {
     addLog("休憩所を守る門番を倒すまで、階段は開かない。");
     return false;
@@ -3847,6 +3974,7 @@ function updateAll() {
   }
 
   const nextRest = Math.min(100, Math.ceil((game.floor + (isRestFloor(game.floor) ? 1 : 0)) / 10) * 10);
+  const stairsMapped = Boolean(game.mapped[game.stairs.y]?.[game.stairs.x]);
   const physicalLead = game.runStats.physicalUses - game.runStats.magicUses;
   const buildName = physicalLead >= 8 ? "物理型" : physicalLead <= -8 ? "魔法型" : "均衡型";
   ui.floor.textContent = `B${game.floor}F`;
@@ -3856,7 +3984,7 @@ function updateAll() {
     ? (game.restChoiceTaken ? "休息済" : "休憩所")
     : game.mission?.boss
       ? (game.mission.complete ? "門番撃破" : "門番戦")
-      : game.stairsRevealed ? "階段発見" : "探索中";
+      : stairsMapped ? "階段確認" : "探索中";
   ui.belly.textContent = `${Math.ceil(game.belly)}`;
   ui.bag.textContent = `バッグ ${bagTotal()}/${game.bagCapacity}`;
   ui.materials.textContent = `素材袋 ${evolutionMaterialTotal()}`;
@@ -3872,17 +4000,18 @@ function updateAll() {
         ? "warning"
         : "safe";
   }
-  ui.stairs.textContent = !game.mission?.complete ? "封印中" : game.stairsRevealed ? "発見済" : "未発見";
+  ui.stairs.textContent = !game.mission?.complete ? "封印中" : stairsMapped ? "確認済" : "未踏";
   ui.goal.textContent = game.floorKind.includes("rest")
     ? game.restChoiceTaken ? "階段から次の区画へ" : "休憩の恩恵を1つ選ぶ"
     : !game.mission?.complete
       ? `${game.mission.target}を倒す`
-      : game.stairsRevealed
+      : stairsMapped
         ? "階段へ向かう"
-        : "隠し階段を探す";
+        : "通常階段を探す";
   ui.rest.textContent = game.floor >= 100 ? "最深部" : `次は B${nextRest}F`;
   ui.chapter.textContent = "星喰いの塔";
-  ui.luck.textContent = game.floorEvent?.name || "平穏";
+  const trend = floorElementTrend().map((key) => elementInfo(key).name).join("・");
+  ui.luck.textContent = `${game.floorEvent?.name || "平穏"} / ${trend}`;
   ui.luck.style.color = game.luck > 0 ? "#9ee88c" : game.luck < 0 ? "#ff9b87" : "";
   ui.mapLeaderDot.style.background = getLeader().color;
   ui.tacticSummary.textContent = `${buildName} / 物${game.runStats.physicalUses} 魔${game.runStats.magicUses}`;
@@ -4067,10 +4196,10 @@ function renderGameMenu(view = "moves") {
   const nextGateIndex = Math.min(9, Math.floor(game.floor / 10));
   const nextBoss = towerBossCatalog[nextGateIndex];
   ui.gameMenuBody.innerHTML = `
-    <p class="town-note">10の門番と休憩所を越え、B100Fの星核を目指します。通常階の階段と罠は隠されています。</p>
+    <p class="town-note">10の門番と休憩所を越え、B100Fの星核を目指します。通常階段は床に見えており、隠されているのは罠と星裏の祭壇だけです。</p>
     <div class="menu-stat-grid">
       <div class="menu-stat"><span>現在地</span><strong>B${game.floor}F / B${game.targetFloor}F</strong></div>
-      <div class="menu-stat"><span>階の目的</span><strong>${game.mission?.boss && !game.mission.complete ? "門番を倒す" : game.stairsRevealed ? "階段へ進む" : "隠し階段を探す"}</strong></div>
+      <div class="menu-stat"><span>階の目的</span><strong>${game.mission?.boss && !game.mission.complete ? "門番を倒す" : "通常階段へ進む"}</strong></div>
       <div class="menu-stat"><span>次の門番</span><strong>${nextBoss?.name || "星喰皇ゼロム"}</strong></div>
       <div class="menu-stat"><span>次の休憩</span><strong>B${Math.min(100, Math.ceil((game.floor + 1) / 10) * 10)}F</strong></div>
       <div class="menu-stat"><span>フロア運勢</span><strong>${game.floorEvent?.name || "平穏"}</strong></div>
@@ -4111,7 +4240,9 @@ function renderGroundMenu() {
     appendTownEntry(ui.gameMenuBody, {
       title: gear?.name || catalog?.name || "見知らぬ落とし物",
       detail: gear ? gearStatText(gear) : catalog?.detail || "足元に何か落ちている。",
-      meta: bagBlocked ? `バッグ ${bagTotal()}/${game.bagCapacity}　空きがない` : "足元に落ちている",
+      meta: bagBlocked
+        ? `バッグ ${bagTotal()}/${game.bagCapacity}　空きがない`
+        : footItem.shopItem ? `${footItem.price}星貨　拾うと未精算` : "足元に落ちている",
       iconKind: gear ? undefined : footItem.kind,
       iconGear: gear,
       buttonLabel: bagBlocked ? "満杯" : "拾う",
@@ -4130,7 +4261,7 @@ function renderGroundMenu() {
     appendTownEntry(ui.gameMenuBody, {
       title: sealed ? "封印された階段" : `B${game.floor + 1}Fへの階段`,
       detail: sealed ? "この階の目的を達成すると封印が解ける。" : "次の階へ進む。現在の階には戻れない。",
-      meta: game.stairsRevealed ? "発見済み" : "足元から風が漏れている",
+      meta: "通常階段",
       iconKind: "stairs",
       buttonLabel: sealed ? "封印中" : "進む",
       disabled: sealed,
@@ -4559,6 +4690,20 @@ function renderDungeonMerchant() {
     ui.gameMenuBody.innerHTML = '<p class="town-note">行商人はもうこの階にいません。</p>';
     return;
   }
+  if (merchant.robbed) {
+    ui.gameMenuBody.innerHTML = `
+      <div class="merchant-furoshiki">
+        <div class="merchant-head">
+          <div class="merchant-portrait">怒</div>
+          <div><span>閉店</span><strong>${merchant.name}</strong><small>「代金を踏み倒したね。番兵から逃げ切れると思うなよ」</small></div>
+          <b>泥棒認定</b>
+        </div>
+      </div>
+    `;
+    return;
+  }
+  if (!["buy", "sell"].includes(game.merchantView)) game.merchantView = "buy";
+  const debt = merchantDebt();
   ui.gameMenuBody.innerHTML = `
     <div class="merchant-furoshiki">
       <i class="cloth-knot left"></i><i class="cloth-knot right"></i>
@@ -4567,14 +4712,13 @@ function renderDungeonMerchant() {
       <div>
         <span>迷宮の行商人</span>
         <strong>${merchant.name}</strong>
-        <small>「次に会える保証はないよ。星貨は命より軽いからね」</small>
+        <small>「色の違う床が売り場だよ。商品を手に取ったら、出る前に払っておくれ」</small>
       </div>
-      <b>${game.coins}星貨</b>
+      <b>${debt ? `未精算 ${debt}` : game.coins}星貨</b>
     </div>
     <div class="merchant-tabs">
-      <button type="button" data-merchant-view="buy" class="${game.merchantView === "buy" ? "active" : ""}">買う</button>
+      <button type="button" data-merchant-view="buy" class="${game.merchantView === "buy" ? "active" : ""}">精算</button>
       <button type="button" data-merchant-view="sell" class="${game.merchantView === "sell" ? "active" : ""}">売る</button>
-      <button type="button" data-merchant-view="steal" class="${game.merchantView === "steal" ? "active" : ""}">盗む</button>
     </div>
     <div class="merchant-stock"></div>
     </div>
@@ -4587,6 +4731,10 @@ function renderDungeonMerchant() {
   });
   const stock = ui.gameMenuBody.querySelector(".merchant-stock");
   if (game.merchantView === "sell") {
+    if (debt > 0) {
+      stock.innerHTML = `<p class="town-note">未精算 ${debt}星貨。先に手に取った商品の代金を支払ってください。</p>`;
+      return;
+    }
     const owned = Object.entries(itemCatalog).filter(
       ([kind, item]) => item.category !== "進化素材" && (game.bag[kind] || 0) > 0,
     );
@@ -4610,50 +4758,35 @@ function renderDungeonMerchant() {
     }
     return;
   }
-  if (game.merchantView === "steal") {
-    const chance = clamp(0.34 + game.luck * 0.035 - game.floor * 0.0015, 0.12, 0.58);
-    stock.innerHTML = `
-      <div class="steal-offer">
-        <b>盗</b>
-        <strong>風呂敷ごと持ち去る</strong>
-        <span>成功すれば売れ残りを奪える。失敗すればカルマが増え、番兵に囲まれる。</span>
-        <small>予測成功率 ${Math.round(chance * 100)}%　カルマ +${Math.max(2, 5 - Math.floor(game.luck / 2))}</small>
-        <button type="button">実行する</button>
-      </div>
-    `;
-    stock.querySelector("button").addEventListener("click", attemptMerchantTheft);
-    return;
-  }
-  for (const offer of merchant.stock) {
-    const item = offer.kind === "gear" ? null : itemCatalog[offer.kind];
-    const blockedByCapacity = offer.kind === "gear"
-      ? game.gearBag.length >= 24
-      : !offer.material && bagTotal() >= game.bagCapacity;
+
+  if (debt > 0) {
+    const unpaidNames = merchant.unpaid
+      .map((offerId) => merchant.stock.find((offer) => offer.id === offerId))
+      .filter(Boolean)
+      .map((offer) => itemCatalog[offer.kind]?.name)
+      .filter(Boolean)
+      .join("・");
     appendTownEntry(stock, {
-      title: offer.gear?.name || item.name,
-      detail: offer.gear ? `${gearSlots[offer.gear.slot].name}　${gearStatText(offer.gear)}` : item.detail,
-      meta: offer.gear ? `${gearRarityLabel(offer.gear)}　${offer.price}星貨` : `${offer.price}星貨`,
-      iconKind: offer.gear ? null : offer.kind,
-      iconGear: offer.gear,
-      selected: offer.sold,
-      buttonLabel: offer.sold ? "売切" : "買う",
-      disabled: offer.sold || game.coins < offer.price || blockedByCapacity,
-      onClick: () => {
-        if (offer.sold || game.coins < offer.price || blockedByCapacity) return;
-        game.coins -= offer.price;
-        offer.sold = true;
-        if (offer.gear) {
-          game.gearBag.push(offer.gear);
-          if (!game.equipment[offer.gear.slot]) equipGear(offer.gear.id, false);
-        } else if (offer.material) {
-          game.evolutionBag[offer.kind] = (game.evolutionBag[offer.kind] || 0) + 1;
-        } else {
-          game.bag[offer.kind] = (game.bag[offer.kind] || 0) + 1;
-        }
-        announceEvent("購入", `${offer.gear?.name || item.name}を受け取った`, "貨", "good");
-        playSfx("pickup");
-        updateAll();
-      },
+      title: `未精算 ${debt}星貨`,
+      detail: unpaidNames,
+      meta: game.coins >= debt ? `所持 ${game.coins}星貨` : `所持 ${game.coins}星貨　不足`,
+      buttonLabel: "支払う",
+      disabled: game.coins < debt,
+      onClick: settleMerchantDebt,
+    });
+  } else {
+    stock.innerHTML = '<p class="town-note">商品は色付きの売り場へ並んでいます。欲しい品を床から拾って、ノノに話しかけて精算します。</p>';
+  }
+
+  for (const offer of merchant.stock) {
+    const item = itemCatalog[offer.kind];
+    const status = offer.sold ? "精算済み" : offer.picked ? "未精算" : "売り場に陳列";
+    appendTownEntry(stock, {
+      title: item.name,
+      detail: item.detail,
+      meta: `${offer.price}星貨　${status}`,
+      iconKind: offer.kind,
+      selected: offer.picked && !offer.sold,
     });
   }
 }
@@ -4667,39 +4800,45 @@ function itemSellPrice(kind) {
   return prices[kind] || 18;
 }
 
-function attemptMerchantTheft() {
+function settleMerchantDebt() {
   const merchant = game.merchant;
   if (!merchant) return;
-  const karmaGain = Math.max(2, 5 - Math.floor(game.luck / 2));
-  const chance = clamp(0.34 + game.luck * 0.035 - game.floor * 0.0015, 0.12, 0.58);
-  const success = Math.random() < chance;
+  const debt = merchantDebt();
+  if (!debt || game.coins < debt) return;
+  game.coins -= debt;
+  for (const offerId of merchant.unpaid) {
+    const offer = merchant.stock.find((entry) => entry.id === offerId);
+    if (offer) offer.sold = true;
+  }
+  merchant.unpaid = [];
+  addLog(`星渡り商ノノへ${debt}星貨を払い、商品を精算した。`);
+  announceEvent("精算完了", `${debt}星貨を支払った`, "貨", "good");
+  playSfx("pickup");
+  updateAll();
+  renderDungeonMerchant();
+}
+
+function triggerMerchantTheft() {
+  const merchant = game.merchant;
+  const debt = merchantDebt();
+  if (!merchant || merchant.robbed || debt <= 0) return;
+  const karmaGain = 4;
+  const stolenCount = merchant.unpaid.length;
   game.karma += karmaGain;
   game.runStats.thefts = (game.runStats.thefts || 0) + 1;
-  if (success) {
-    let stolen = 0;
-    for (const offer of merchant.stock.filter((entry) => !entry.sold)) {
-      if (offer.material) {
-        game.evolutionBag[offer.kind] = (game.evolutionBag[offer.kind] || 0) + 1;
-        stolen += 1;
-      } else if (bagTotal() < game.bagCapacity) {
-        game.bag[offer.kind] = (game.bag[offer.kind] || 0) + 1;
-        stolen += 1;
-      }
-      offer.sold = true;
-    }
-    addLog(`風呂敷を盗み、${stolen}品を奪った。カルマ +${karmaGain}。`);
-    announceEvent("THEFT SUCCESS", `${stolen}品を強奪　カルマ +${karmaGain}`, "盗", "danger");
-    setScreenFlash("#8d54b8", 500);
-  } else {
-    addLog(`盗みを見破られた。番兵が現れ、カルマ +${karmaGain}。`);
-    announceEvent("THEFT FAILED", "星渡りの番兵に包囲された", "!", "danger");
-    spawnMerchantGuards(merchant.x, merchant.y);
-    getLeader().hp = Math.max(1, getLeader().hp - Math.max(4, Math.floor(getLeader().maxHp * 0.12)));
-    triggerScreenShake(16, 480);
-    setScreenFlash("#ef625c", 600);
+  for (const offerId of merchant.unpaid) {
+    const offer = merchant.stock.find((entry) => entry.id === offerId);
+    if (offer) offer.sold = true;
   }
-  game.merchant = null;
-  if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
+  merchant.unpaid = [];
+  merchant.robbed = true;
+  game.items = game.items.filter((item) => !item.shopItem);
+  for (const offer of merchant.stock) offer.sold = true;
+  addLog(`未精算のまま売り場を出た。${stolenCount}品、${debt}星貨分の泥棒として追われる。カルマ +${karmaGain}。`);
+  announceEvent("THIEF!", `${stolenCount}品を持ち逃げ　商隊番兵が出現`, "盗", "danger");
+  spawnMerchantGuards(merchant.x, merchant.y);
+  triggerScreenShake(16, 480);
+  setScreenFlash("#ef625c", 600);
   playSfx("karma");
   updateAll();
 }
@@ -6036,6 +6175,16 @@ function drawTile(x, y, type, visible) {
   };
   ctx.fillStyle = floorColors[type] || floorColors.floor;
   ctx.fillRect(px, py, TILE, TILE);
+  if (isMerchantShopTile(x, y)) {
+    ctx.fillStyle = game.merchant?.robbed ? "rgba(139, 47, 56, 0.5)" : "rgba(43, 139, 116, 0.48)";
+    ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+    ctx.strokeStyle = game.merchant?.robbed ? "#e86c70" : "#75e3bf";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px + 4, py + 4, TILE - 8, TILE - 8);
+    ctx.fillStyle = game.merchant?.robbed ? "rgba(255, 104, 107, 0.2)" : "rgba(201, 255, 230, 0.18)";
+    ctx.fillRect(px + 8, py + 8, 6, 6);
+    ctx.fillRect(px + TILE - 14, py + TILE - 14, 6, 6);
+  }
   ctx.strokeStyle = "rgba(255, 239, 200, 0.1)";
   ctx.lineWidth = 1;
   ctx.strokeRect(px + 2, py + 2, TILE - 4, TILE - 4);
@@ -6215,7 +6364,15 @@ function drawItem(item, time) {
   const bob = Math.sin(time / 260 + item.x) * 2;
   drawOutlinedEntity((targetCtx) => {
     drawItemIcon(targetCtx, item.kind, item.gear);
-  }, px, py + bob, "#ffd84d", 2);
+  }, px, py + bob, item.shopItem ? "#75e3bf" : "#ffd84d", item.shopItem ? 3 : 2);
+  if (item.shopItem) {
+    ctx.fillStyle = "rgba(5, 17, 14, 0.9)";
+    ctx.fillRect(px + 5, py + 37, 38, 10);
+    ctx.fillStyle = "#a9f4d4";
+    ctx.font = "900 7px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(`${item.price} G`, px + 24, py + 45);
+  }
 }
 
 function drawMerchant(time) {
@@ -6237,7 +6394,7 @@ function drawMerchant(time) {
     targetCtx.fillStyle = "#fff8d8";
     targetCtx.fillRect(21, 17, 3, 3);
     targetCtx.fillRect(27, 17, 3, 3);
-  }, px, py + bob, "#64e0c2", 2);
+  }, px, py + bob, merchant.robbed ? "#ef6768" : "#64e0c2", merchant.robbed ? 3 : 2);
 }
 
 function drawCasino(time) {
@@ -6854,7 +7011,7 @@ function drawEnemy(enemy, time) {
       drawPixelStar(targetCtx, 9, 9, 7, "#ffe978");
       drawPixelStar(targetCtx, 39, 12, 6, "#fff7c7");
     }
-  }, px, py + wobble, enemy.rare ? "#ffe978" : enemy.boss ? "#ff4fc1" : "#ff5f62", enemy.boss || enemy.rare ? 3 : 2);
+  }, px, py + wobble, elementInfo(enemy.elementKey).color, enemy.boss || enemy.rare ? 3 : 2);
   if (enemy.rare) {
     ctx.fillStyle = "rgba(23, 16, 8, 0.9)";
     ctx.fillRect(px + 7, py - 4 + wobble, 34, 9);
@@ -7367,7 +7524,7 @@ function drawFog() {
 function drawObjectivePointer(time) {
   const target = game.mission?.boss && !game.mission.complete
     ? game.mission
-    : game.stairsRevealed || game.guidanceActive
+    : game.guidanceActive || hasRelic("starCompass") || game.mapped[game.stairs.y]?.[game.stairs.x]
       ? game.stairs
       : null;
   if (!target || inCamera(target.x, target.y)) return;
@@ -7444,7 +7601,9 @@ function drawMiniMap() {
   for (let y = 0; y < MAP_H; y += 1) {
     for (let x = 0; x < MAP_W; x += 1) {
       if (!game.mapped[y][x] || game.map[y][x] === "wall") continue;
-      miniCtx.fillStyle = game.visible[y][x] ? "#69cbd0" : "#346f76";
+      miniCtx.fillStyle = isMerchantShopTile(x, y)
+        ? (game.merchant?.robbed ? "#b34850" : "#43b995")
+        : game.visible[y][x] ? "#69cbd0" : "#346f76";
       miniCtx.fillRect(Math.floor(x * sx), Math.floor(y * sy), Math.ceil(sx), Math.ceil(sy));
     }
   }
@@ -7474,7 +7633,7 @@ function drawMiniMap() {
     miniCtx.fillRect(game.secretStairs.x * sx, game.secretStairs.y * sy, sx + 1, sy + 1);
   }
 
-  if (game.stairsRevealed && (game.mapped[game.stairs.y][game.stairs.x] || game.guidanceActive)) {
+  if (game.stairsRevealed && (game.mapped[game.stairs.y][game.stairs.x] || game.guidanceActive || hasRelic("starCompass"))) {
     miniCtx.fillStyle = game.mission.complete ? "#fff8de" : "#8a8e8d";
     miniCtx.fillRect(game.stairs.x * sx, game.stairs.y * sy, sx + 1, sy + 1);
   }
@@ -7493,7 +7652,7 @@ function drawMiniMap() {
   }
   for (const enemy of game.enemies) {
     if (!isVisible(enemy.x, enemy.y) || !game.mapped[enemy.y]?.[enemy.x]) continue;
-    miniCtx.fillStyle = enemy.rare ? "#ffe45f" : "#ff625e";
+    miniCtx.fillStyle = enemy.rare ? "#ffe45f" : elementInfo(enemy.elementKey).color;
     miniCtx.fillRect(enemy.x * sx, enemy.y * sy, sx + 1, sy + 1);
   }
   for (let index = game.team.length - 1; index >= 0; index -= 1) {
@@ -7679,13 +7838,6 @@ function revealAroundTeam() {
     }
   }
   const leader = getLeader();
-  const stairSense = 1 + (hasRelic("starCompass") ? 2 : 0);
-  if (!game.stairsRevealed && (game.guidanceActive || manhattan(leader.x, leader.y, game.stairs.x, game.stairs.y) <= stairSense)) {
-    game.stairsRevealed = true;
-    addLog("壁際の星風が揺らぎ、隠し階段を発見した。");
-    announceEvent("SECRET STAIRS", "階段の位置を発見", "階", "good");
-    playSfx("stairs");
-  }
   if (hasRelic("trapEye") || hasSkill("scout")) {
     for (const trap of game.traps) {
       if (!trap.used && manhattan(leader.x, leader.y, trap.x, trap.y) <= 2) trap.revealed = true;
@@ -7898,6 +8050,31 @@ function merchantAt(x, y) {
   return game.merchant && game.merchant.x === x && game.merchant.y === y ? game.merchant : null;
 }
 
+function isMerchantShopTile(x, y) {
+  return Boolean(game.merchant?.shopTiles?.some((tile) => tile.x === x && tile.y === y));
+}
+
+function merchantDebt() {
+  const merchant = game.merchant;
+  if (!merchant) return 0;
+  return (merchant.unpaid || []).reduce((sum, offerId) => {
+    const offer = merchant.stock.find((entry) => entry.id === offerId);
+    return sum + (offer?.price || 0);
+  }, 0);
+}
+
+function randomEnemySpawnTile(minDistance = 7) {
+  for (let attempt = 0; attempt < 220; attempt += 1) {
+    const point = randomOpenTile();
+    if (!point) return null;
+    if (livingTeam().some((actor) => manhattan(actor.x, actor.y, point.x, point.y) < minDistance)) continue;
+    if (game.visible[point.y]?.[point.x]) continue;
+    if (isMerchantShopTile(point.x, point.y)) continue;
+    return point;
+  }
+  return null;
+}
+
 function randomOpenTile() {
   for (let attempt = 0; attempt < 160; attempt += 1) {
     const room = game.rooms[randInt(0, game.rooms.length - 1)];
@@ -7905,6 +8082,7 @@ function randomOpenTile() {
     const y = randInt(room.y, room.y + room.h - 1);
     if (!isWalkable(x, y)) continue;
     if (actorAt(x, y) || enemyAt(x, y) || itemAt(x, y) || merchantAt(x, y)) continue;
+    if (isMerchantShopTile(x, y)) continue;
     if (game.casino && game.casino.x === x && game.casino.y === y) continue;
     if (game.secretStairs && game.secretStairs.x === x && game.secretStairs.y === y) continue;
     if (game.traps?.some((trap) => trap.x === x && trap.y === y)) continue;

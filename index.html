@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa13" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa14" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa13" />
+    <link rel="stylesheet" href="styles.css?v=pwa14" />
   </head>
   <body>
     <div class="app-shell">
@@ -132,7 +132,7 @@
             <span><i class="terrain-floor"></i>通路</span>
             <span><i class="terrain-trap"></i>発見済み罠</span>
             <span><i class="terrain-wall"></i>壁</span>
-            <span><i class="terrain-stairs"></i>隠し階段</span>
+            <span><i class="terrain-stairs"></i>通常階段</span>
           </div>
         </section>
 
@@ -160,7 +160,7 @@
           <section class="guide-panel" aria-label="塔の予兆">
             <h2>塔の予兆</h2>
             <div class="guide-grid">
-              <p><strong>目的</strong><span id="goalLabel">隠し階段を探す</span></p>
+              <p><strong>目的</strong><span id="goalLabel">通常階段を探す</span></p>
               <p><strong>型</strong><span id="tacticSummary">均衡</span></p>
               <p><strong>休憩</strong><span id="restLabel">10Fまで</span></p>
             </div>
@@ -393,7 +393,7 @@
           <li>同じ階に長く留まると「塔風」が強まります。240ターンで警告、330ターンから侵食、420ターンで挑戦失敗です。</li>
           <li>10階ごとに休憩所、20階ごとに大休憩所があります。到着すると全技PPが回復します。</li>
           <li>門番を越えて休憩所へ着くと、進化か強力なレリックを選べます。レリックの効果はすべて同時に働きます。</li>
-          <li>入るたびにマップ、敵、道具、隠し罠、隠し階段、階の運勢が変わります。</li>
+          <li>入るたびにマップ、敵、道具、隠し罠、隠し祭壇、階の運勢が変わります。通常階段は隠されません。</li>
           <li>挑戦開始時にレベル、レリック、星網スキル盤、進化素材は初期化。進化形態とバッグ拡張は引き継がれます。</li>
           <li>記録は1つ。休憩所と町で自動保存されます。</li>
           <li>出発前に狐・亡国の騎士・マジシャンと、初期レリックを選びます。</li>
@@ -402,7 +402,7 @@
           <li>一歩動くたびに敵も1手ずつ動きます。</li>
           <li>移動と通常攻撃は別操作です。敵の方向を左クリックすると攻撃します。</li>
           <li>ミニマップには訪れた部屋と、実際に歩いた通路だけが記録されます。</li>
-          <li>通常階の階段と罠は最初は隠れています。近づくか、探索スキルや道具で発見できます。</li>
+          <li>通常階段は見つけた部屋でそのまま確認できます。隠し罠と星裏の祭壇は近づくか探索能力で発見します。</li>
           <li>歩くたびにHPが1回復します。逃げて回復するか、増援前に急ぐかも判断の一つです。</li>
           <li>技は使うだけでも経験値を得られ、通常攻撃より早く成長できます。ただしPPは休憩所まで有限です。</li>
           <li>物理と魔法を交互に使う、変異種へ強くするなど、レリック同士の組み合わせが重要です。</li>
@@ -411,7 +411,7 @@
           <li>満腹度はゆっくり減ります。月蜜の実を拾ったら、Rで食べて回復できます。</li>
           <li>進化素材は容量無制限の素材袋へ入りますが、その挑戦を終えるとすべて失われます。</li>
           <li>基本属性は炎・水・木・光・闇。炎→木→水→炎が有利で、光と闇は互いに弱点です。氷・毒は特殊属性です。</li>
-          <li>一部の階には行商人が現れ、道具の購入・売却・泥棒ができます。</li>
+          <li>行商人の色付き売り場では商品を床から拾い、商人へ精算します。未精算のまま売り場を出ると泥棒扱いです。</li>
           <li>バッグは初期20枠。町の商店で星貨を払うと、最大40枠まで永久に拡張できます。</li>
           <li>主人公が倒れると冒険終了です。</li>
         </ul>
@@ -427,6 +427,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa13"></script>
+    <script src="app.js?v=pwa14"></script>
   </body>
 </html>
