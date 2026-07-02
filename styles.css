@@ -292,6 +292,66 @@ button {
   image-rendering: auto;
 }
 
+.town-shortcut {
+  display: none !important;
+}
+
+.town-interaction {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 18px;
+  transform: translateX(-50%);
+  width: min(340px, calc(100% - 32px));
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  border: 1px solid color-mix(in srgb, var(--facility-color, #f0c862) 70%, transparent);
+  border-left: 5px solid var(--facility-color, #f0c862);
+  background: rgba(5, 11, 11, 0.94);
+  color: #fff7e4;
+  padding: 9px 12px;
+  pointer-events: none;
+  box-shadow:
+    0 14px 32px rgba(0, 0, 0, 0.5),
+    0 0 20px color-mix(in srgb, var(--facility-color, #f0c862) 18%, transparent);
+}
+
+.town-interaction[hidden] {
+  display: none;
+}
+
+.town-interaction kbd {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(255, 244, 215, 0.56);
+  background: color-mix(in srgb, var(--facility-color, #f0c862) 24%, #111);
+  color: #fff8e6;
+  font: 900 0.86rem/1 sans-serif;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.36);
+}
+
+.town-interaction span {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.town-interaction strong {
+  font-size: 0.88rem;
+}
+
+.town-interaction small {
+  overflow: hidden;
+  color: #b9cbc4;
+  font-size: 0.64rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .town-title {
   position: absolute;
   z-index: 3;
@@ -1614,14 +1674,14 @@ button {
 
 .loadout-character-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(230px, 100%), 1fr));
   gap: 10px;
 }
 
 .loadout-character {
   min-width: 0;
   display: grid;
-  grid-template-rows: 118px auto auto minmax(36px, auto) auto auto;
+  grid-template-rows: auto auto auto minmax(36px, auto) auto auto;
   gap: 4px;
   align-items: center;
   border: 1px solid rgba(255, 245, 223, 0.18);
@@ -1632,12 +1692,26 @@ button {
   text-align: center;
 }
 
-.loadout-character canvas {
-  width: 118px;
-  height: 118px;
+.loadout-character-visual {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(72px, 92px) minmax(0, 1fr);
+  gap: 4px;
+  align-items: center;
+}
+
+.loadout-portrait {
+  width: 92px;
+  height: 92px;
   max-width: 100%;
   justify-self: center;
-  object-fit: contain;
+}
+
+.loadout-stat-radar {
+  width: 100%;
+  height: 124px;
+  border-left: 2px solid rgba(239, 200, 108, 0.22);
+  background: rgba(4, 10, 11, 0.38);
 }
 
 .loadout-character > span {
@@ -1669,7 +1743,7 @@ button {
 
 .loadout-relic-grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(150px, 100%), 1fr));
   gap: 8px;
 }
 
@@ -2765,6 +2839,13 @@ button {
   image-rendering: pixelated;
 }
 
+.character-stat-radar {
+  width: 100%;
+  height: 150px;
+  border: 1px solid rgba(255, 245, 223, 0.1);
+  background: rgba(4, 10, 11, 0.48);
+}
+
 .character-choice-head div {
   min-width: 0;
   display: grid;
@@ -3246,6 +3327,17 @@ button {
   grid-template-columns: 166px 166px;
   justify-content: space-between;
   align-items: end;
+}
+
+.touch-controls[data-mode="town"] .button-x,
+.touch-controls[data-mode="town"] .button-y {
+  pointer-events: none;
+  opacity: 0.22;
+}
+
+.touch-controls[data-mode="town"] .button-a {
+  border-color: #f0c862;
+  box-shadow: 0 0 18px rgba(240, 200, 98, 0.2);
 }
 
 .touch-dpad {
@@ -3957,6 +4049,31 @@ button {
     min-height: 100dvh;
     display: block;
     padding: 0;
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-screen {
+    position: fixed;
+    z-index: 1;
+    inset: 0;
+    width: 100vw;
+    height: 100dvh;
+    min-height: 0;
+    border: 0;
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) #townCanvas {
+    width: 100vw;
+    height: 100dvh;
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-title {
+    top: max(5px, env(safe-area-inset-top));
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-interaction {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: min(310px, calc(100% - 350px));
+    min-width: 250px;
   }
 
   .app-shell:has(.touch-controls:not([hidden])) .topbar {

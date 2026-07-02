@@ -49,6 +49,21 @@ const enemyArtSheets = Array.from({ length: 4 }, (_, index) => {
   sheet.src = `assets/tokens/foxbound-enemies-${index + 1}-v1.png?v=pwa11`;
   return sheet;
 });
+const townFacilities = [
+  { key: "characters", name: "継承の鏡", detail: "探索者と進化を選ぶ", x: 286, y: 340, radius: 70, color: "#9de6ed" },
+  { key: "board", name: "塔の経路板", detail: "門番と休憩所を確認", x: 446, y: 350, radius: 64, color: "#efc867" },
+  { key: "guild", name: "星見観測院", detail: "遠征記録を見る", x: 910, y: 312, radius: 72, color: "#9dcc7c" },
+  { key: "storage", name: "風見倉庫", detail: "道具を預ける", x: 224, y: 566, radius: 72, color: "#76cdd4" },
+  { key: "shop", name: "星の商店", detail: "道具とレリックを整える", x: 930, y: 566, radius: 72, color: "#ef8b70" },
+  { key: "depart", name: "星喰い塔 出発門", detail: "探索者と初期レリックを選んで出発", x: 576, y: 616, radius: 72, color: "#f0c862" },
+];
+const townObstacles = [
+  { left: 210, top: 164, right: 362, bottom: 316 },
+  { left: 365, top: 188, right: 527, bottom: 326 },
+  { left: 78, top: 370, right: 340, bottom: 538 },
+  { left: 812, top: 370, right: 1088, bottom: 538 },
+  { left: 796, top: 88, right: 1088, bottom: 282 },
+];
 
 const ui = {
   floor: document.querySelector("#floorLabel"),
@@ -103,6 +118,10 @@ const ui = {
   townStartFloor: document.querySelector("#townStartFloor"),
   townNextGate: document.querySelector("#townNextGate"),
   departButton: document.querySelector("#departButton"),
+  townInteraction: document.querySelector("#townInteraction"),
+  townInteractionKey: document.querySelector("#townInteractionKey"),
+  townInteractionName: document.querySelector("#townInteractionName"),
+  townInteractionDetail: document.querySelector("#townInteractionDetail"),
   townDialog: document.querySelector("#townDialog"),
   townDialogTitle: document.querySelector("#townDialogTitle"),
   townDialogBody: document.querySelector("#townDialogBody"),
@@ -128,6 +147,9 @@ const ui = {
   levelSpendButton: document.querySelector("#levelSpendButton"),
   mapLeaderDot: document.querySelector(".map-leader"),
   relicRibbon: document.querySelector("#relicRibbon"),
+  touchAButton: document.querySelector("#touchAButton"),
+  touchXButton: document.querySelector("#touchXButton"),
+  touchYButton: document.querySelector("#touchYButton"),
 };
 
 const palette = {
@@ -1215,6 +1237,7 @@ function createGame() {
   );
   game = {
     mode: "town",
+    townPlayer: { x: 576, y: 470, dx: 0, dy: 1, movingUntil: 0 },
     floor: 1,
     turn: 1,
     score: 0,
@@ -1341,11 +1364,14 @@ function renderExpeditionLoadout() {
     card.className = `loadout-character ${selected ? "selected" : ""}`;
     card.disabled = Boolean(game.towerCheckpoint);
     card.innerHTML = `
-      <canvas width="128" height="128" aria-hidden="true"></canvas>
+      <div class="loadout-character-visual">
+        <canvas class="loadout-portrait" width="128" height="128" aria-hidden="true"></canvas>
+        <canvas class="loadout-stat-radar" width="190" height="150" aria-hidden="true"></canvas>
+      </div>
       <span>${elementBadgeMarkup(actor.elementKey)}${elementInfo(actor.elementKey).name}属性 / ${profile.type}タイプ</span>
       <strong>${profile.name}</strong>
       <small>${profile.style}</small>
-      <b>HP ${actor.maxHp}　物 ${actor.atk}　魔 ${actor.magic}</b>
+      <b>HP ${actor.maxHp}　物 ${actor.atk}　魔 ${actor.magic}　防 ${actor.def}　魔防 ${actor.res}</b>
       <em>${actor.evolutionStage ? `継承進化 ${actor.evolutionStage}/10` : `初期技 ${actor.moves[0].name}`}</em>
     `;
     card.addEventListener("click", () => {
@@ -1356,7 +1382,8 @@ function renderExpeditionLoadout() {
       updateAll();
     });
     characterGrid.appendChild(card);
-    drawPortrait(card.querySelector("canvas"), actor);
+    drawPortrait(card.querySelector(".loadout-portrait"), actor);
+    drawStatRadar(card.querySelector(".loadout-stat-radar"), actor);
   }
   const relicGrid = ui.townDialogBody.querySelector(".loadout-relic-grid");
   const noRelic = document.createElement("button");
@@ -1466,6 +1493,7 @@ function createRunStats() {
 
 function returnToTown() {
   game.mode = "town";
+  game.townPlayer = { x: 576, y: 470, dx: 0, dy: 1, movingUntil: 0 };
   game.gameOver = false;
   game.victory = false;
   ui.endOverlay.hidden = true;
@@ -1598,6 +1626,7 @@ function buildFloor() {
   const dungeon = generateDungeon();
   game.map = dungeon.map;
   game.rooms = dungeon.rooms;
+  game.floorLayoutName = dungeon.layoutName;
   game.seen = makeGrid(false);
   game.visible = makeGrid(false);
   game.mapped = makeGrid(false);
@@ -1703,7 +1732,7 @@ function buildFloor() {
     announceEvent("GATE BOSS", `${bossProfile.title} ${bossProfile.name}`, "冠", "danger");
   } else {
     const trend = floorElementTrend().map((key) => elementInfo(key).name).join("・");
-    addLog(`B${game.floor}F: 通常階段を目指そう。この区画は${trend}属性の敵が多い。`);
+    addLog(`B${game.floor}F: ${game.floorLayoutName}。通常階段を目指そう。この区画は${trend}属性の敵が多い。`);
   }
   addLog(`階層運勢「${game.floorEvent.name}」: ${game.floorEvent.detail}。`);
 }
@@ -1763,31 +1792,115 @@ function applyFloorEvent() {
 }
 
 function generateDungeon() {
-  for (let attempt = 0; attempt < 12; attempt += 1) {
+  const layouts = [
+    { name: "枝分かれする小部屋群", minRooms: 9, maxRooms: 12, minW: 4, maxW: 7, minH: 4, maxH: 6, loops: 1, branches: 3 },
+    { name: "広間が連なる洞窟", minRooms: 6, maxRooms: 8, minW: 7, maxW: 11, minH: 5, maxH: 8, loops: 2, branches: 1 },
+    { name: "回廊の多い迷宮", minRooms: 7, maxRooms: 10, minW: 5, maxW: 8, minH: 4, maxH: 6, loops: 4, branches: 2 },
+    { name: "疎らな星屑区画", minRooms: 6, maxRooms: 9, minW: 5, maxW: 9, minH: 4, maxH: 7, loops: 1, branches: 4 },
+  ];
+  const layout = layouts[randInt(0, layouts.length - 1)];
+  for (let attempt = 0; attempt < 30; attempt += 1) {
     const map = makeGrid("wall");
     const rooms = [];
-    const roomCount = randInt(7, 10);
+    const roomCount = randInt(layout.minRooms, layout.maxRooms);
 
-    for (let i = 0; i < roomCount * 8 && rooms.length < roomCount; i += 1) {
-      const w = randInt(5, 9);
-      const h = randInt(4, 7);
+    for (let i = 0; i < roomCount * 12 && rooms.length < roomCount; i += 1) {
+      const w = randInt(layout.minW, layout.maxW);
+      const h = randInt(layout.minH, layout.maxH);
       const x = randInt(1, MAP_W - w - 2);
       const y = randInt(1, MAP_H - h - 2);
       const room = { x, y, w, h };
-      if (rooms.some((other) => overlaps(room, other, 2))) continue;
+      if (rooms.some((other) => overlaps(room, other, layout.name === "疎らな星屑区画" ? 3 : 2))) continue;
       carveRoom(map, room);
-      if (rooms.length) connectRooms(map, centerOf(rooms[rooms.length - 1]), centerOf(room));
       rooms.push(room);
     }
 
-    if (rooms.length >= 5) {
+    if (rooms.length >= layout.minRooms - 1) {
+      connectRoomNetwork(map, rooms, layout.loops);
+      carveSideBranches(map, rooms, layout.branches);
       scatterTerrain(map);
-      return { map, rooms };
+      return { map, rooms, layoutName: layout.name };
     }
   }
 
   const fallback = makeGrid("floor");
-  return { map: fallback, rooms: [{ x: 1, y: 1, w: MAP_W - 2, h: MAP_H - 2 }] };
+  return {
+    map: fallback,
+    rooms: [{ x: 1, y: 1, w: MAP_W - 2, h: MAP_H - 2 }],
+    layoutName: "一枚岩の大広間",
+  };
+}
+
+function connectRoomNetwork(map, rooms, extraConnections) {
+  const connected = [rooms[randInt(0, rooms.length - 1)]];
+  const remaining = rooms.filter((room) => room !== connected[0]);
+  const linkedPairs = new Set();
+
+  while (remaining.length) {
+    let best = null;
+    for (const from of connected) {
+      for (const to of remaining) {
+        const fromCenter = centerOf(from);
+        const toCenter = centerOf(to);
+        const score = manhattan(fromCenter.x, fromCenter.y, toCenter.x, toCenter.y) + Math.random() * 5;
+        if (!best || score < best.score) best = { from, to, score };
+      }
+    }
+    connectRooms(map, centerOf(best.from), centerOf(best.to));
+    linkedPairs.add(roomPairKey(best.from, best.to));
+    connected.push(best.to);
+    remaining.splice(remaining.indexOf(best.to), 1);
+  }
+
+  const candidates = [];
+  for (let first = 0; first < rooms.length; first += 1) {
+    for (let second = first + 1; second < rooms.length; second += 1) {
+      const from = rooms[first];
+      const to = rooms[second];
+      if (linkedPairs.has(roomPairKey(from, to))) continue;
+      const a = centerOf(from);
+      const b = centerOf(to);
+      candidates.push({ from, to, distance: manhattan(a.x, a.y, b.x, b.y) + Math.random() * 8 });
+    }
+  }
+  candidates.sort((a, b) => a.distance - b.distance);
+  for (const connection of candidates.slice(0, extraConnections)) {
+    connectRooms(map, centerOf(connection.from), centerOf(connection.to));
+  }
+}
+
+function roomPairKey(first, second) {
+  const a = `${first.x},${first.y}`;
+  const b = `${second.x},${second.y}`;
+  return a < b ? `${a}|${b}` : `${b}|${a}`;
+}
+
+function carveSideBranches(map, rooms, count) {
+  const directions = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+  ];
+  for (let branch = 0; branch < count; branch += 1) {
+    const room = rooms[randInt(0, rooms.length - 1)];
+    const center = centerOf(room);
+    const direction = directions[randInt(0, directions.length - 1)];
+    const length = randInt(3, 7);
+    let x = center.x;
+    let y = center.y;
+    for (let step = 0; step < length; step += 1) {
+      x += direction.x;
+      y += direction.y;
+      if (!inBounds(x, y) || x < 2 || y < 2 || x >= MAP_W - 2 || y >= MAP_H - 2) break;
+      map[y][x] = "floor";
+    }
+    for (let pocketY = y - 1; pocketY <= y + 1; pocketY += 1) {
+      for (let pocketX = x - 1; pocketX <= x + 1; pocketX += 1) {
+        if (inBounds(pocketX, pocketY)) map[pocketY][pocketX] = "floor";
+      }
+    }
+  }
 }
 
 function carveRoom(map, room) {
@@ -1799,13 +1912,18 @@ function carveRoom(map, room) {
 }
 
 function connectRooms(map, a, b) {
-  const horizontalFirst = Math.random() < 0.5;
-  if (horizontalFirst) {
+  const route = randInt(0, 2);
+  if (route === 0) {
     carveHorizontal(map, a.x, b.x, a.y);
     carveVertical(map, a.y, b.y, b.x);
-  } else {
+  } else if (route === 1) {
     carveVertical(map, a.y, b.y, a.x);
     carveHorizontal(map, a.x, b.x, b.y);
+  } else {
+    const bendX = clamp(Math.round((a.x + b.x) / 2) + randInt(-2, 2), 1, MAP_W - 2);
+    carveHorizontal(map, a.x, bendX, a.y);
+    carveVertical(map, a.y, b.y, bendX);
+    carveHorizontal(map, bendX, b.x, b.y);
   }
 }
 
@@ -2126,7 +2244,81 @@ function spawnBoss(profile, point) {
   });
 }
 
+function townFocusedFacility() {
+  const player = game.townPlayer || { x: 576, y: 470 };
+  let focused = null;
+  let closest = Number.POSITIVE_INFINITY;
+  for (const facility of townFacilities) {
+    const distance = Math.hypot(player.x - facility.x, player.y - facility.y);
+    if (distance <= facility.radius && distance < closest) {
+      focused = facility;
+      closest = distance;
+    }
+  }
+  return focused;
+}
+
+function canStandInTown(x, y) {
+  const radius = 20;
+  if (x < 48 || x > townCanvas.width - 48 || y < 150 || y > townCanvas.height - 42) return false;
+  return !townObstacles.some((obstacle) => (
+    x + radius > obstacle.left
+    && x - radius < obstacle.right
+    && y + radius > obstacle.top
+    && y - radius < obstacle.bottom
+  ));
+}
+
+function moveTownPlayer(dx, dy) {
+  const player = game.townPlayer || (game.townPlayer = { x: 576, y: 470, dx: 0, dy: 1, movingUntil: 0 });
+  const magnitude = Math.hypot(dx, dy) || 1;
+  const speed = touchDashHeld ? 29 : 19;
+  const stepX = (dx / magnitude) * speed;
+  const stepY = (dy / magnitude) * speed;
+  let nextX = player.x;
+  let nextY = player.y;
+  if (canStandInTown(player.x + stepX, player.y + stepY)) {
+    nextX += stepX;
+    nextY += stepY;
+  } else if (canStandInTown(player.x + stepX, player.y)) {
+    nextX += stepX;
+  } else if (canStandInTown(player.x, player.y + stepY)) {
+    nextY += stepY;
+  }
+  player.dx = Math.sign(dx);
+  player.dy = Math.sign(dy);
+  const leader = getLeader();
+  leader.dx = player.dx;
+  leader.dy = player.dy;
+  if (nextX === player.x && nextY === player.y) return;
+  player.x = nextX;
+  player.y = nextY;
+  player.movingUntil = performance.now() + 190;
+  updateAll();
+}
+
+function interactTownFacility() {
+  const facility = townFocusedFacility();
+  if (!facility) return false;
+  if (facility.key === "depart") openExpeditionLoadout();
+  else openTownFacility(facility.key);
+  playSfx("pickup");
+  return true;
+}
+
+function performTownAction(action) {
+  if (action.type === "move") {
+    moveTownPlayer(action.dx, action.dy);
+    return;
+  }
+  if (["basicAttack", "useMove", "wait"].includes(action.type)) interactTownFacility();
+}
+
 function performAction(action) {
+  if (game.mode === "town") {
+    performTownAction(action);
+    return;
+  }
   if (action.type === "openMenu") {
     toggleGameMenu("moves");
     return;
@@ -3947,7 +4139,12 @@ function updateAll() {
   const inTown = game.mode === "town";
   ui.townScreen.hidden = !inTown;
   ui.gameLayout.hidden = inTown;
-  ui.touchControls.hidden = inTown;
+  ui.touchControls.hidden = false;
+  ui.touchControls.dataset.mode = inTown ? "town" : "dungeon";
+  ui.touchAButton.querySelector("small").textContent = inTown ? "しらべる" : "こうげき";
+  ui.touchAButton.setAttribute("aria-label", inTown ? "A 調べる" : "A 通常攻撃");
+  ui.touchXButton.disabled = inTown;
+  ui.touchYButton.disabled = inTown;
   if (inTown) ui.eventBanner.hidden = true;
 
   if (inTown) {
@@ -3970,8 +4167,17 @@ function updateAll() {
     ui.departButton.querySelector("span").textContent = checkpoint
       ? `B${checkpoint}Fの休憩所から再開`
       : "B1Fから100階踏破へ挑む";
+    const facility = townFocusedFacility();
+    ui.townInteraction.hidden = !facility;
+    if (facility) {
+      ui.townInteractionKey.textContent = window.matchMedia("(pointer: coarse)").matches ? "A" : "F";
+      ui.townInteractionName.textContent = facility.name;
+      ui.townInteractionDetail.textContent = facility.detail;
+      ui.townInteraction.style.setProperty("--facility-color", facility.color);
+    }
     return;
   }
+  ui.townInteraction.hidden = true;
 
   const nextRest = Math.min(100, Math.ceil((game.floor + (isRestFloor(game.floor) ? 1 : 0)) / 10) * 10);
   const stairsMapped = Boolean(game.mapped[game.stairs.y]?.[game.stairs.x]);
@@ -5687,7 +5893,7 @@ function renderCharacterSelection() {
     card.style.setProperty("--type-color", profile.color);
     card.innerHTML = `
       <div class="character-choice-head">
-        <canvas width="48" height="48"></canvas>
+        <canvas class="character-portrait" width="48" height="48"></canvas>
         <div>
           <span>${elementBadgeMarkup(preview.elementKey)}${elementInfo(preview.elementKey).name}属性 / ${profile.type}タイプ</span>
           <strong>${profile.name}</strong>
@@ -5700,6 +5906,7 @@ function renderCharacterSelection() {
         <span>魔力 <b>${preview.magic}</b></span>
         <span>防御 <b>${preview.def}</b></span>
       </div>
+      <canvas class="character-stat-radar" width="220" height="154" aria-hidden="true"></canvas>
       <div class="character-moves">${profile.moves.map((key, index) => {
         const move = moveCatalog.find((entry) => entry.key === key);
         return `<span class="${index ? "locked" : ""}">${elementInfo(move.element).symbol} ${index ? "LOCK " : ""}${move.name}</span>`;
@@ -5714,7 +5921,8 @@ function renderCharacterSelection() {
       updateAll();
       renderCharacterSelection();
     });
-    drawPortrait(card.querySelector("canvas"), preview);
+    drawPortrait(card.querySelector(".character-portrait"), preview);
+    drawStatRadar(card.querySelector(".character-stat-radar"), preview);
     grid.appendChild(card);
   }
   ui.townDialogBody.insertAdjacentHTML(
@@ -5824,27 +6032,6 @@ function drawTown(time) {
   townCtx.fillStyle = lowerShade;
   townCtx.fillRect(0, 0, width, height);
 
-  const routeBeacons = [
-    [576, 522],
-    [588, 465],
-    [602, 407],
-    [618, 350],
-    [635, 294],
-  ];
-  routeBeacons.forEach(([x, y], index) => {
-    const pulse = 0.62 + Math.sin(time / 420 + index * 0.9) * 0.22;
-    townCtx.save();
-    townCtx.globalAlpha = pulse;
-    townCtx.shadowColor = "#efb34f";
-    townCtx.shadowBlur = 18;
-    townCtx.strokeStyle = index === routeBeacons.length - 1 ? "#ef6b64" : "#ffd172";
-    townCtx.lineWidth = 2;
-    townCtx.beginPath();
-    townCtx.arc(x, y, 5 + pulse * 3, 0, Math.PI * 2);
-    townCtx.stroke();
-    townCtx.restore();
-  });
-
   for (let index = 0; index < 22; index += 1) {
     const phase = time / 920 + index * 1.71;
     const x = 250 + ((index * 97) % 650) + Math.sin(phase) * 16;
@@ -5856,9 +6043,110 @@ function drawTown(time) {
     townCtx.fill();
   }
 
+  townCtx.save();
+  townCtx.globalAlpha = 0.94;
+  drawTownPath([[576, 626], [576, 452], [576, 365]], 36);
+  drawTownPath([[576, 405], [420, 430], [224, 566]], 30);
+  drawTownPath([[576, 405], [730, 430], [930, 566]], 30);
+  drawTownPath([[576, 365], [710, 322], [910, 312]], 26);
+  drawTownPath([[576, 365], [446, 350], [286, 340]], 24);
+  drawTownPlaza(time);
+  drawTownBuilding({
+    x: 78, y: 370, width: 262, height: 168,
+    roof: "#315e67", wall: "#80918a", trim: "#75d0d1", sign: "風見倉庫",
+  });
+  drawTownBuilding({
+    x: 812, y: 370, width: 276, height: 168,
+    roof: "#7b3d37", wall: "#958273", trim: "#ef9170", sign: "星の商店",
+  });
+  drawTownBuilding({
+    x: 796, y: 105, width: 292, height: 178,
+    roof: "#3e5b43", wall: "#7f8f77", trim: "#a6cd7d", sign: "星見観測院", tower: true,
+  });
+  drawTownBoard(446, 228);
+  drawTownLineageMirror(286, 252, time);
+  drawTownGate(time);
+  drawTownFacilityMarkers(time);
+  townCtx.restore();
+
   const leader = getLeader();
-  const bob = Math.sin(time / 330) * 2;
-  drawActorBody(townCtx, leader, 310, 500 + bob, 1.5, time);
+  const player = game.townPlayer || (game.townPlayer = { x: 576, y: 470, dx: 0, dy: 1, movingUntil: 0 });
+  const walking = player.movingUntil > time;
+  const townActor = {
+    ...leader,
+    dx: player.dx,
+    dy: player.dy,
+    motion: walking
+      ? {
+          kind: "walk",
+          fromX: 0,
+          fromY: 0,
+          toX: 1,
+          toY: 0,
+          started: player.movingUntil - 190,
+          duration: 190,
+        }
+      : null,
+  };
+  const bob = walking ? 0 : Math.sin(time / 330) * 1.5;
+  townCtx.save();
+  townCtx.shadowColor = "rgba(0, 0, 0, 0.75)";
+  townCtx.shadowBlur = 10;
+  drawActorBody(townCtx, townActor, player.x - 31, player.y - 51 + bob, 1.3, time);
+  townCtx.restore();
+}
+
+function drawTownLineageMirror(x, y, time) {
+  const glow = 0.54 + Math.sin(time / 380) * 0.12;
+  townCtx.fillStyle = "rgba(12, 23, 24, 0.72)";
+  townCtx.fillRect(x - 64, y - 62, 128, 78);
+  townCtx.strokeStyle = "#87dce2";
+  townCtx.lineWidth = 7;
+  townCtx.beginPath();
+  townCtx.ellipse(x, y - 24, 31, 40, 0, 0, Math.PI * 2);
+  townCtx.stroke();
+  townCtx.fillStyle = `rgba(116, 221, 229, ${glow})`;
+  townCtx.beginPath();
+  townCtx.ellipse(x, y - 24, 23, 31, 0, 0, Math.PI * 2);
+  townCtx.fill();
+  townCtx.fillStyle = "#4f3528";
+  townCtx.fillRect(x - 8, y + 13, 16, 43);
+  townCtx.fillRect(x - 42, y + 52, 84, 9);
+  townCtx.fillStyle = "#efffff";
+  townCtx.font = "800 14px sans-serif";
+  townCtx.textAlign = "center";
+  townCtx.fillText("継承の鏡", x, y - 80);
+}
+
+function drawTownFacilityMarkers(time) {
+  const focused = townFocusedFacility();
+  for (const facility of townFacilities) {
+    const active = focused?.key === facility.key;
+    const pulse = 1 + Math.sin(time / 330 + facility.x * 0.01) * 0.13;
+    townCtx.save();
+    townCtx.globalAlpha = active ? 1 : 0.68;
+    townCtx.strokeStyle = facility.color;
+    townCtx.fillStyle = active ? `${facility.color}38` : "rgba(5, 12, 12, 0.42)";
+    townCtx.lineWidth = active ? 4 : 2;
+    townCtx.shadowColor = facility.color;
+    townCtx.shadowBlur = active ? 22 : 10;
+    townCtx.beginPath();
+    townCtx.ellipse(facility.x, facility.y, 25 * pulse, 11 * pulse, 0, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.stroke();
+    if (active) {
+      townCtx.shadowBlur = 0;
+      townCtx.fillStyle = facility.color;
+      townCtx.beginPath();
+      townCtx.arc(facility.x, facility.y - 27, 9, 0, Math.PI * 2);
+      townCtx.fill();
+      townCtx.fillStyle = "#08100f";
+      townCtx.font = "900 10px sans-serif";
+      townCtx.textAlign = "center";
+      townCtx.fillText("F", facility.x, facility.y - 23);
+    }
+    townCtx.restore();
+  }
 }
 
 function drawTownPath(points, width) {
@@ -5990,7 +6278,7 @@ function drawTownBoard(x, y) {
   townCtx.fillStyle = "#fff0bf";
   townCtx.font = "800 14px sans-serif";
   townCtx.textAlign = "center";
-  townCtx.fillText("ダンジョン門", x + 3, y - 15);
+  townCtx.fillText("塔の経路板", x + 3, y - 15);
 }
 
 function drawTownPlaza(time) {
@@ -7686,6 +7974,85 @@ function drawPortrait(targetCanvas, actor) {
   pctx.restore();
 }
 
+function drawStatRadar(targetCanvas, actor) {
+  if (!targetCanvas) return;
+  const radarCtx = targetCanvas.getContext("2d");
+  const width = targetCanvas.width;
+  const height = targetCanvas.height;
+  const centerX = width / 2;
+  const centerY = height / 2 + 3;
+  const radius = Math.min(width * 0.27, height * 0.34);
+  const color = elementInfo(actor.elementKey).color;
+  const axes = [
+    { label: "HP", value: actor.maxHp, max: 46 },
+    { label: "物理", value: actor.atk, max: 11 },
+    { label: "防御", value: actor.def, max: 7 },
+    { label: "魔防", value: actor.res, max: 7 },
+    { label: "魔力", value: actor.magic, max: 11 },
+  ];
+  const pointAt = (index, amount) => {
+    const angle = -Math.PI / 2 + (Math.PI * 2 * index) / axes.length;
+    return {
+      x: centerX + Math.cos(angle) * radius * amount,
+      y: centerY + Math.sin(angle) * radius * amount,
+    };
+  };
+
+  radarCtx.clearRect(0, 0, width, height);
+  radarCtx.fillStyle = "rgba(4, 10, 11, 0.62)";
+  radarCtx.fillRect(0, 0, width, height);
+  for (let ring = 1; ring <= 4; ring += 1) {
+    radarCtx.beginPath();
+    for (let index = 0; index < axes.length; index += 1) {
+      const point = pointAt(index, ring / 4);
+      if (index === 0) radarCtx.moveTo(point.x, point.y);
+      else radarCtx.lineTo(point.x, point.y);
+    }
+    radarCtx.closePath();
+    radarCtx.strokeStyle = ring === 4 ? "rgba(255, 244, 218, 0.34)" : "rgba(255, 255, 255, 0.12)";
+    radarCtx.lineWidth = ring === 4 ? 1.5 : 1;
+    radarCtx.stroke();
+  }
+  for (let index = 0; index < axes.length; index += 1) {
+    const point = pointAt(index, 1);
+    radarCtx.beginPath();
+    radarCtx.moveTo(centerX, centerY);
+    radarCtx.lineTo(point.x, point.y);
+    radarCtx.strokeStyle = "rgba(255, 255, 255, 0.13)";
+    radarCtx.lineWidth = 1;
+    radarCtx.stroke();
+  }
+
+  radarCtx.beginPath();
+  axes.forEach((axis, index) => {
+    const point = pointAt(index, clamp(axis.value / axis.max, 0.08, 1));
+    if (index === 0) radarCtx.moveTo(point.x, point.y);
+    else radarCtx.lineTo(point.x, point.y);
+  });
+  radarCtx.closePath();
+  radarCtx.fillStyle = `${color}52`;
+  radarCtx.strokeStyle = color;
+  radarCtx.lineWidth = 2.5;
+  radarCtx.fill();
+  radarCtx.stroke();
+  axes.forEach((axis, index) => {
+    const point = pointAt(index, clamp(axis.value / axis.max, 0.08, 1));
+    radarCtx.fillStyle = "#fff7df";
+    radarCtx.beginPath();
+    radarCtx.arc(point.x, point.y, 2.7, 0, Math.PI * 2);
+    radarCtx.fill();
+
+    const labelPoint = pointAt(index, 1.3);
+    radarCtx.fillStyle = "#e9dfc5";
+    radarCtx.font = "800 10px sans-serif";
+    radarCtx.textAlign = Math.abs(labelPoint.x - centerX) < 8
+      ? "center"
+      : labelPoint.x < centerX ? "right" : "left";
+    radarCtx.textBaseline = "middle";
+    radarCtx.fillText(`${axis.label} ${axis.value}`, labelPoint.x, labelPoint.y);
+  });
+}
+
 function drawSprite(index, x, y, width = TILE, height = TILE) {
   return drawSpriteOnContext(ctx, index, x, y, width, height);
 }
@@ -8530,6 +8897,40 @@ function handleKey(event) {
   const code = event.code;
 
   if (ui.townDialog.open || ui.helpDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open || ui.levelDialog.open) return;
+  if (game.mode === "town") {
+    const townMoves = {
+      w: { x: 0, y: -1 },
+      a: { x: -1, y: 0 },
+      s: { x: 0, y: 1 },
+      d: { x: 1, y: 0 },
+      arrowup: { x: 0, y: -1 },
+      arrowleft: { x: -1, y: 0 },
+      arrowdown: { x: 0, y: 1 },
+      arrowright: { x: 1, y: 0 },
+      y: { x: -1, y: -1 },
+      u: { x: 1, y: -1 },
+      b: { x: -1, y: 1 },
+      n: { x: 1, y: 1 },
+    };
+    const direction = townMoves[key];
+    if (direction) {
+      event.preventDefault();
+      const now = performance.now();
+      if (now < game.nextMoveAt) return;
+      game.nextMoveAt = now + (event.shiftKey ? 55 : 90);
+      const previousDash = touchDashHeld;
+      touchDashHeld ||= event.shiftKey;
+      moveTownPlayer(direction.x, direction.y);
+      touchDashHeld = previousDash;
+      return;
+    }
+    if (["enter", "f", " ", "e"].includes(key)) {
+      if (event.repeat) return;
+      event.preventDefault();
+      interactTownFacility();
+    }
+    return;
+  }
   if (key === "q") {
     if (event.repeat) return;
     event.preventDefault();

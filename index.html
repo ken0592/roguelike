@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa14a" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa15d" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa14a" />
+    <link rel="stylesheet" href="styles.css?v=pwa15d" />
   </head>
   <body>
     <div class="app-shell">
@@ -73,7 +73,14 @@
           <span><b>ランク</b><strong id="townRankLabel">見習い</strong></span>
           <span><b>星貨</b><strong id="townCoinLabel">160</strong></span>
         </div>
-        <button class="town-leader-select" type="button" data-town-action="characters">
+        <div id="townInteraction" class="town-interaction" hidden aria-live="polite">
+          <kbd id="townInteractionKey">F</kbd>
+          <span>
+            <strong id="townInteractionName">施設</strong>
+            <small id="townInteractionDetail"></small>
+          </span>
+        </div>
+        <button class="town-leader-select town-shortcut" type="button" data-town-action="characters" tabindex="-1" aria-hidden="true">
           <i id="townLeaderSwatch" aria-hidden="true"></i>
           <span>
             <small>運命を継ぐ探索者</small>
@@ -82,30 +89,30 @@
           </span>
           <b>進化</b>
         </button>
-        <button class="town-spot town-spot-board" type="button" data-town-action="board">
+        <button class="town-spot town-spot-board town-shortcut" type="button" data-town-action="board" tabindex="-1" aria-hidden="true">
           <strong>塔の経路</strong>
           <span>休憩所と門番を確認</span>
         </button>
-        <button class="town-spot town-spot-shop" type="button" data-town-action="shop">
+        <button class="town-spot town-spot-shop town-shortcut" type="button" data-town-action="shop" tabindex="-1" aria-hidden="true">
           <strong>星の商店</strong>
           <span>道具・開始レリック</span>
         </button>
-        <button class="town-spot town-spot-storage" type="button" data-town-action="storage">
+        <button class="town-spot town-spot-storage town-shortcut" type="button" data-town-action="storage" tabindex="-1" aria-hidden="true">
           <strong>風見倉庫</strong>
           <span>食料を預ける</span>
         </button>
-        <button class="town-spot town-spot-guild" type="button" data-town-action="guild">
+        <button class="town-spot town-spot-guild town-shortcut" type="button" data-town-action="guild" tabindex="-1" aria-hidden="true">
           <strong>遠征記録</strong>
           <span>進化と到達階を確認</span>
         </button>
-        <div class="town-run-brief" aria-label="今回の遠征経路">
+        <div class="town-run-brief town-shortcut" aria-label="今回の遠征経路" aria-hidden="true">
           <span><b>START</b><strong id="townStartFloor">B1F</strong></span>
           <i aria-hidden="true"></i>
           <span><b>GATE</b><strong id="townNextGate">B9F</strong></span>
           <i aria-hidden="true"></i>
           <span><b>GOAL</b><strong>B100F</strong></span>
         </div>
-        <button id="departButton" class="town-depart" type="button">
+        <button id="departButton" class="town-depart town-shortcut" type="button" tabindex="-1" aria-hidden="true">
           <span>星喰い塔 1Fへ</span>
           <strong>100階踏破に挑む</strong>
         </button>
@@ -236,9 +243,9 @@
         </div>
         <div class="touch-actions touch-abxy" aria-label="ABXYボタン">
           <button id="touchDashButton" class="button-b" type="button" aria-label="B ダッシュ"><b>B</b><small>DASH</small></button>
-          <button class="button-y" type="button" data-action="useMove" aria-label="Y 選択中の技"><b>Y</b><small>わざ</small></button>
-          <button class="button-x" type="button" data-action="openMenu" aria-label="X メニュー"><b>X</b><small>MENU</small></button>
-          <button class="button-a" type="button" data-action="basicAttack" aria-label="A 通常攻撃"><b>A</b><small>こうげき</small></button>
+          <button id="touchYButton" class="button-y" type="button" data-action="useMove" aria-label="Y 選択中の技"><b>Y</b><small>わざ</small></button>
+          <button id="touchXButton" class="button-x" type="button" data-action="openMenu" aria-label="X メニュー"><b>X</b><small>MENU</small></button>
+          <button id="touchAButton" class="button-a" type="button" data-action="basicAttack" aria-label="A 通常攻撃"><b>A</b><small>こうげき</small></button>
         </div>
       </section>
     </div>
@@ -427,6 +434,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa14a"></script>
+    <script src="app.js?v=pwa15d"></script>
   </body>
 </html>
