@@ -1184,6 +1184,19 @@ const dungeonThemes = {
   },
 };
 
+const restSanctuaryThemes = [
+  { name: "苔灯の間", subtitle: "若葉の灯が息づく中継室", base: "forest", accent: "#b8df79", glow: "#f4e589", motif: "leaf", floor: "#60745b", floorDim: "#465443", wall: "#3d5848", wallDark: "#24372e", wallLight: "#789070" },
+  { name: "水晶の間", subtitle: "青い晶柱が静かに鳴る中継室", base: "tower", accent: "#79dcf0", glow: "#e1fbff", motif: "crystal", floor: "#536f7b", floorDim: "#3d515a", wall: "#405b6b", wallDark: "#263844", wallLight: "#7e9cab" },
+  { name: "残火の間", subtitle: "消えない火種を守る中継室", base: "ruins", accent: "#ff9362", glow: "#ffe1a3", motif: "ember", floor: "#79584c", floorDim: "#574039", wall: "#66483f", wallDark: "#3b2b28", wallLight: "#a1715d" },
+  { name: "月鏡の間", subtitle: "銀の床が月影を返す中継室", base: "dream", accent: "#b9c8ff", glow: "#f1efff", motif: "moon", floor: "#64647d", floorDim: "#48495c", wall: "#4e536b", wallDark: "#2d3042", wallLight: "#858ba7" },
+  { name: "花風の間", subtitle: "星花の香りが巡る中継室", base: "forest", accent: "#ef91b3", glow: "#fff0b5", motif: "bloom", floor: "#68775d", floorDim: "#4b5745", wall: "#4d624d", wallDark: "#2d3b31", wallLight: "#83977a" },
+  { name: "機環の間", subtitle: "古い歯車が時を刻む中継室", base: "tower", accent: "#e4b969", glow: "#fff0b8", motif: "gear", floor: "#6e6963", floorDim: "#4f4b48", wall: "#5d5854", wallDark: "#353230", wallLight: "#938982" },
+  { name: "雷雲の間", subtitle: "天井の彼方で雷が眠る中継室", base: "tower", accent: "#f3df67", glow: "#d9f6ff", motif: "storm", floor: "#536473", floorDim: "#3c4a56", wall: "#414e62", wallDark: "#27303e", wallLight: "#71839c" },
+  { name: "深森の間", subtitle: "古木の根が塔を抱く中継室", base: "forest", accent: "#58d39a", glow: "#d9ffd7", motif: "root", floor: "#496656", floorDim: "#354a40", wall: "#3b5548", wallDark: "#23352d", wallLight: "#6f8978" },
+  { name: "虚月の間", subtitle: "影と星明かりが交差する中継室", base: "void", accent: "#bb80ee", glow: "#f2dcff", motif: "void", floor: "#554b68", floorDim: "#3d374c", wall: "#443954", wallDark: "#282131", wallLight: "#746487" },
+  { name: "星核の間", subtitle: "百階の鼓動が満ちる最後の中継室", base: "void", accent: "#f0c65c", glow: "#fff7cf", motif: "star", floor: "#60546a", floorDim: "#453d4d", wall: "#50435d", wallDark: "#2d2636", wallLight: "#87739a" },
+];
+
 const ranks = [
   { name: "見習い", points: 0 },
   { name: "ブロンズ", points: 120 },
@@ -1285,6 +1298,7 @@ function createGame() {
     shopView: "goods",
     forgeSelection: [],
     selectedCharacter: "kohaku",
+    loadoutStep: "character",
     roster,
     map: [],
     rooms: [],
@@ -1300,6 +1314,8 @@ function createGame() {
     secretStairs: null,
     monsterHouse: null,
     restFacilities: [],
+    restNodes: [],
+    restTheme: null,
     traps: [],
     stairsRevealed: false,
     restChoiceTaken: false,
@@ -1330,67 +1346,126 @@ function createGame() {
 
 function openExpeditionLoadout() {
   game.townView = "loadout";
+  game.loadoutStep = game.towerCheckpoint ? "checkpoint" : "character";
+  ui.townDialog.dataset.view = "loadout";
   renderExpeditionLoadout();
   if (!ui.townDialog.open) ui.townDialog.showModal();
 }
 
 function renderExpeditionLoadout() {
   const starterKeys = ["ironFang", "moonLens", "shellSeed", "heartMeteor"];
-  ui.townDialogTitle.textContent = game.towerCheckpoint ? "遠征を再開" : "運命を選ぶ";
+  const profile = characterCatalog.find((entry) => entry.key === game.selectedCharacter) || characterCatalog[0];
+  const selectedActor = createLeader(profile.key);
+  applyPersistentLineage(selectedActor);
+  const checkpoint = game.towerCheckpoint;
+
+  if (checkpoint) {
+    ui.townDialogTitle.textContent = "遠征を再開";
+    ui.townDialogBody.innerHTML = `
+      <section class="loadout-checkpoint" style="--hero-color:${profile.color}">
+        <canvas class="loadout-checkpoint-portrait" width="220" height="220" aria-hidden="true"></canvas>
+        <div>
+          <span>B${checkpoint.floor}F CHECKPOINT</span>
+          <strong>${selectedActor.name}の遠征記録</strong>
+          <small>探索者・進化・レリック・所持品は、休憩所で記録した状態から再開します。</small>
+          <b>${elementInfo(selectedActor.elementKey).name}属性　Lv.${checkpoint.leader?.level || selectedActor.level}　進化 ${checkpoint.leader?.evolutionStage || selectedActor.evolutionStage}/10</b>
+          <button type="button" class="primary-button loadout-depart">B${checkpoint.floor}Fから塔へ戻る</button>
+        </div>
+      </section>
+    `;
+    drawPortrait(ui.townDialogBody.querySelector(".loadout-checkpoint-portrait"), selectedActor);
+    ui.townDialogBody.querySelector(".loadout-depart").addEventListener("click", startExpedition);
+    return;
+  }
+
+  const characterStep = game.loadoutStep !== "relic";
+  ui.townDialogTitle.textContent = characterStep ? "探索者を選ぶ" : "初期レリックを選ぶ";
+  if (characterStep) {
+    ui.townDialogBody.innerHTML = `
+      <div class="loadout-stage-head">
+        <div class="loadout-step-track" aria-label="遠征準備">
+          <b class="active">1</b><span>探索者</span><i></i><b>2</b><span>レリック</span>
+        </div>
+        <strong>この挑戦の主人公を選ぶ</strong>
+        <small>三人は初期能力・技・進化分岐が異なります。グラフで得意分野を比べられます。</small>
+      </div>
+      <div class="loadout-character-grid loadout-character-stage"></div>
+      <div class="loadout-actions">
+        <span>${elementLegendMarkup()}</span>
+        <button type="button" class="primary-button loadout-next">レリック選択へ</button>
+      </div>
+    `;
+    const characterGrid = ui.townDialogBody.querySelector(".loadout-character-grid");
+    characterCatalog.forEach((entry, index) => {
+      const selected = entry.key === game.selectedCharacter;
+      const actor = createLeader(entry.key);
+      applyPersistentLineage(actor);
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = `loadout-character ${selected ? "selected" : ""}`;
+      card.style.setProperty("--hero-color", entry.color);
+      card.style.setProperty("--hero-index", index);
+      card.innerHTML = `
+        <span class="loadout-character-number">0${index + 1}</span>
+        <div class="loadout-character-visual">
+          <canvas class="loadout-portrait" width="220" height="220" aria-hidden="true"></canvas>
+          <div class="loadout-character-title">
+            <span>${elementBadgeMarkup(actor.elementKey)}${elementInfo(actor.elementKey).name}属性 / ${entry.type}</span>
+            <strong>${entry.name}</strong>
+            <small>${entry.style}</small>
+          </div>
+          <canvas class="loadout-stat-radar" width="230" height="172" aria-label="${entry.name}の能力グラフ"></canvas>
+        </div>
+        <div class="loadout-character-footer">
+          <b>初期技　${actor.moves[0].name}</b>
+          <em>${actor.evolutionStage ? `継承進化 ${actor.evolutionStage}/10` : "進化 0/10"}</em>
+        </div>
+        <i>${selected ? "選択中" : "選ぶ"}</i>
+      `;
+      card.addEventListener("click", () => {
+        game.selectedCharacter = entry.key;
+        game.roster[entry.key] = createLeader(entry.key);
+        saveCurrentGame(true);
+        renderExpeditionLoadout();
+        updateAll();
+      });
+      characterGrid.appendChild(card);
+      drawPortrait(card.querySelector(".loadout-portrait"), actor);
+      drawStatRadar(card.querySelector(".loadout-stat-radar"), actor);
+    });
+    ui.townDialogBody.querySelector(".loadout-next").addEventListener("click", () => {
+      game.loadoutStep = "relic";
+      renderExpeditionLoadout();
+    });
+    return;
+  }
+
   ui.townDialogBody.innerHTML = `
-    <div class="loadout-intro">
-      <span>${game.towerCheckpoint ? `B${game.towerCheckpoint.floor}F CHECKPOINT` : "NEW ASCENT"}</span>
-      <strong>${game.towerCheckpoint ? "休憩所の記録から塔へ戻る" : "探索者と最初のレリックを選ぶ"}</strong>
-      <small>${game.towerCheckpoint ? "探索者と成長は記録時の状態で再開します。" : "何も持たずに出ると、無印進化の道が現れます。"}</small>
-      <div class="element-legend" aria-label="属性一覧">${elementLegendMarkup()}</div>
+    <div class="loadout-stage-head">
+      <div class="loadout-step-track" aria-label="遠征準備">
+        <b>1</b><span>探索者</span><i></i><b class="active">2</b><span>レリック</span>
+      </div>
+      <strong>最初の運命をひとつ選ぶ</strong>
+      <small>初期レリックは序盤の戦い方を決めます。あえて持たずに出ると、無印進化が解放されます。</small>
     </div>
-    <section class="loadout-section">
-      <h3>探索者</h3>
-      <div class="loadout-character-grid"></div>
-    </section>
-    <section class="loadout-section">
-      <h3>初期レリック</h3>
+    <section class="loadout-relic-stage">
+      <div class="loadout-selected-hero" style="--hero-color:${profile.color}">
+        <canvas width="150" height="150" aria-hidden="true"></canvas>
+        <div><span>SELECTED</span><strong>${profile.name}</strong><small>${profile.style}</small></div>
+      </div>
       <div class="loadout-relic-grid"></div>
     </section>
-    <button type="button" class="primary-button loadout-depart">${game.towerCheckpoint ? `B${game.towerCheckpoint.floor}Fから再開` : "この運命でB1Fへ"}</button>
+    <div class="loadout-actions loadout-final-actions">
+      <button type="button" class="secondary-button loadout-back">探索者を選び直す</button>
+      <button type="button" class="primary-button loadout-depart">この運命でB1Fへ</button>
+    </div>
   `;
-  const characterGrid = ui.townDialogBody.querySelector(".loadout-character-grid");
-  for (const profile of characterCatalog) {
-    const selected = profile.key === game.selectedCharacter;
-    const actor = createLeader(profile.key);
-    applyPersistentLineage(actor);
-    const card = document.createElement("button");
-    card.type = "button";
-    card.className = `loadout-character ${selected ? "selected" : ""}`;
-    card.disabled = Boolean(game.towerCheckpoint);
-    card.innerHTML = `
-      <div class="loadout-character-visual">
-        <canvas class="loadout-portrait" width="128" height="128" aria-hidden="true"></canvas>
-        <canvas class="loadout-stat-radar" width="190" height="150" aria-hidden="true"></canvas>
-      </div>
-      <span>${elementBadgeMarkup(actor.elementKey)}${elementInfo(actor.elementKey).name}属性 / ${profile.type}タイプ</span>
-      <strong>${profile.name}</strong>
-      <small>${profile.style}</small>
-      <b>HP ${actor.maxHp}　物 ${actor.atk}　魔 ${actor.magic}　防 ${actor.def}　魔防 ${actor.res}</b>
-      <em>${actor.evolutionStage ? `継承進化 ${actor.evolutionStage}/10` : `初期技 ${actor.moves[0].name}`}</em>
-    `;
-    card.addEventListener("click", () => {
-      game.selectedCharacter = profile.key;
-      game.roster[profile.key] = createLeader(profile.key);
-      saveCurrentGame(true);
-      renderExpeditionLoadout();
-      updateAll();
-    });
-    characterGrid.appendChild(card);
-    drawPortrait(card.querySelector(".loadout-portrait"), actor);
-    drawStatRadar(card.querySelector(".loadout-stat-radar"), actor);
-  }
+  drawPortrait(ui.townDialogBody.querySelector(".loadout-selected-hero canvas"), selectedActor);
   const relicGrid = ui.townDialogBody.querySelector(".loadout-relic-grid");
   const noRelic = document.createElement("button");
   noRelic.type = "button";
   noRelic.className = `starter-none ${game.startingRelicKey ? "" : "selected"}`;
-  noRelic.disabled = Boolean(game.towerCheckpoint);
-  noRelic.innerHTML = "<b>無</b><strong>持たずに出る</strong><small>序盤は不利。無印進化を解放</small>";
+  noRelic.innerHTML = "<b>無</b><strong>持たずに出る</strong><small>序盤は不利。無印進化の条件を開放する</small>";
   noRelic.addEventListener("click", () => {
     game.startingRelicKey = null;
     saveCurrentGame(true);
@@ -1402,7 +1477,6 @@ function renderExpeditionLoadout() {
     const button = document.createElement("button");
     button.type = "button";
     button.className = `relic-choice ${game.startingRelicKey === key ? "selected" : ""}`;
-    button.disabled = Boolean(game.towerCheckpoint);
     button.innerHTML = relicCardMarkup(relic);
     button.addEventListener("click", () => {
       game.startingRelicKey = key;
@@ -1411,10 +1485,15 @@ function renderExpeditionLoadout() {
     });
     relicGrid.appendChild(button);
   }
+  ui.townDialogBody.querySelector(".loadout-back").addEventListener("click", () => {
+    game.loadoutStep = "character";
+    renderExpeditionLoadout();
+  });
   ui.townDialogBody.querySelector(".loadout-depart").addEventListener("click", startExpedition);
 }
 
 function startExpedition() {
+  delete ui.townDialog.dataset.view;
   if (ui.townDialog.open) ui.townDialog.close();
   const checkpoint = game.towerCheckpoint ? structuredClone(game.towerCheckpoint) : null;
   prepareNewTry();
@@ -1623,7 +1702,8 @@ function applyEvolutionBonus(actor, evolution) {
 }
 
 function buildFloor() {
-  const dungeon = generateDungeon();
+  const restFloor = isRestFloor(game.floor);
+  const dungeon = restFloor ? generateRestSanctuary(game.floor) : generateDungeon();
   game.map = dungeon.map;
   game.rooms = dungeon.rooms;
   game.floorLayoutName = dungeon.layoutName;
@@ -1638,6 +1718,8 @@ function buildFloor() {
   game.secretStairs = null;
   game.monsterHouse = null;
   game.restFacilities = [];
+  game.restNodes = [];
+  game.restTheme = dungeon.restTheme || null;
   game.traps = [];
   game.effects = [];
   game.floating = [];
@@ -1686,8 +1768,7 @@ function buildFloor() {
   const bossPoint = nearestOpen(centerOf(farRoom).x, centerOf(farRoom).y, blockers);
   const stairPoint = nearestOpen(centerOf(secondRoom).x, centerOf(secondRoom).y, [...blockers, bossPoint]);
   const bossProfile = towerBossForFloor(game.floor);
-  const bossFloor = Boolean(bossProfile);
-  const restFloor = isRestFloor(game.floor);
+  const bossFloor = !restFloor && Boolean(bossProfile);
   game.floorKind = restFloor ? (isMajorRestFloor(game.floor) ? "major-rest" : "rest") : bossFloor ? "boss" : "combat";
   game.mission = {
     target: bossProfile?.name || "階段",
@@ -1705,12 +1786,49 @@ function buildFloor() {
   game.luck = game.floorEvent.luck + (hasSkill("fortune") ? 1 : 0) + (hasRelic("luckyAsh") ? 1 : 0);
 
   if (restFloor) {
+    const major = isMajorRestFloor(game.floor);
+    game.stairs = dungeon.stairs;
+    game.mission = {
+      target: dungeon.restTheme.name,
+      x: dungeon.altar.x,
+      y: dungeon.altar.y,
+      complete: true,
+      reward: 0,
+      boss: false,
+    };
     restoreAllPp();
-    spawnDungeonMerchant(false, true, isMajorRestFloor(game.floor) ? 2 : 1);
-    game.restFacilities = createRestFacilities(isMajorRestFloor(game.floor));
-    revealAroundTeam();
-    addLog(`B${game.floor}F: ${isMajorRestFloor(game.floor) ? "星核の大休憩所" : "星火の休憩所"}へ到着した。技PPが全回復した。`);
-    setTimeout(openRestSite, 80);
+    if (major) {
+      leader.hp = leader.maxHp;
+      game.belly = 100;
+    }
+    spawnDungeonMerchant(false, true, major ? 2 : 1, dungeon.merchantRoom);
+    game.restFacilities = createRestFacilities(major);
+    game.restNodes = [
+      {
+        key: "milestone",
+        action: "milestone",
+        name: "進化の祭壇",
+        detail: "進化か強力なレリックを選ぶ",
+        icon: "進",
+        color: dungeon.restTheme.accent,
+        x: dungeon.altar.x,
+        y: dungeon.altar.y,
+      },
+      ...game.restFacilities.map((facility, index) => ({
+        ...facility,
+        action: `facility-${facility.key}`,
+        color: facility.key === "storage" ? "#8fd7c1" : dungeon.restTheme.glow,
+        ...(dungeon.facilitySpots[index] || dungeon.facilitySpots[0]),
+      })),
+    ];
+    revealRestSanctuary();
+    addLog(`B${game.floor}F: ${dungeon.restTheme.name}へ到着。技PPが全回復した。施設は歩いて利用できる。`);
+    announceEvent(
+      major ? "大休憩所" : "休憩所",
+      `${dungeon.restTheme.name}　${dungeon.restTheme.subtitle}`,
+      "休",
+      "good",
+    );
     return;
   }
 
@@ -1788,6 +1906,69 @@ function applyFloorEvent() {
         y: point.y,
       });
     }
+  }
+}
+
+function restThemeForFloor(floor) {
+  const index = clamp(Math.floor(floor / 10) - 1, 0, restSanctuaryThemes.length - 1);
+  return { ...restSanctuaryThemes[index], index };
+}
+
+function generateRestSanctuary(floor) {
+  const restTheme = restThemeForFloor(floor);
+  const map = makeGrid("wall");
+  const variants = [
+    { x: 13, y: 9, w: 10, h: 7 },
+    { x: 12, y: 8, w: 12, h: 8 },
+    { x: 14, y: 8, w: 8, h: 9 },
+  ];
+  const centerRoom = { ...variants[restTheme.index % variants.length] };
+  const ringRooms = [
+    { x: 15, y: 2, w: 6, h: 5 },
+    { x: 25, y: 3, w: 7, h: 5 },
+    { x: 27, y: 10, w: 7, h: 5 },
+    { x: 25, y: 17, w: 7, h: 4 },
+    { x: 15, y: 18, w: 6, h: 4 },
+    { x: 4, y: 17, w: 7, h: 4 },
+    { x: 2, y: 10, w: 7, h: 5 },
+    { x: 4, y: 3, w: 7, h: 5 },
+  ];
+  const rotation = (restTheme.index * 2) % ringRooms.length;
+  const ordered = ringRooms.map((_, index) => ringRooms[(index + rotation) % ringRooms.length]);
+  const rooms = [centerRoom, ...ringRooms];
+  rooms.forEach((room) => carveRoom(map, room));
+  ringRooms.forEach((room, index) => {
+    carveRestCorridor(map, centerOf(centerRoom), centerOf(room), (index + restTheme.index) % 2 === 0);
+  });
+
+  const altarRoom = ordered[0];
+  const merchantRoom = ordered[2];
+  const exitRoom = ordered[4];
+  const facilityRooms = [ordered[6], ordered[1], ordered[3], ordered[5]];
+  return {
+    map,
+    rooms,
+    layoutName: restTheme.name,
+    restTheme,
+    altar: centerOf(altarRoom),
+    merchantRoom,
+    facilitySpots: facilityRooms.map(centerOf),
+    stairs: centerOf(exitRoom),
+  };
+}
+
+function carveRestCorridor(map, from, to, horizontalFirst) {
+  const carveWide = (x, y) => {
+    if (inBounds(x, y)) map[y][x] = "floor";
+    if (horizontalFirst && inBounds(x, y + 1)) map[y + 1][x] = "floor";
+    if (!horizontalFirst && inBounds(x + 1, y)) map[y][x + 1] = "floor";
+  };
+  if (horizontalFirst) {
+    for (let x = Math.min(from.x, to.x); x <= Math.max(from.x, to.x); x += 1) carveWide(x, from.y);
+    for (let y = Math.min(from.y, to.y); y <= Math.max(from.y, to.y); y += 1) carveWide(to.x, y);
+  } else {
+    for (let y = Math.min(from.y, to.y); y <= Math.max(from.y, to.y); y += 1) carveWide(from.x, y);
+    for (let x = Math.min(from.x, to.x); x <= Math.max(from.x, to.x); x += 1) carveWide(x, to.y);
   }
 }
 
@@ -2042,7 +2223,7 @@ function spawnEnemies() {
   }
 }
 
-function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0) {
+function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0, preferredRoom = null) {
   if (bossFloor || (!forced && game.floor !== 2 && Math.random() > 0.42)) return;
   const leader = getLeader();
   const candidates = game.rooms.filter((room) => (
@@ -2052,13 +2233,21 @@ function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0) {
     && !pointInRoom(game.stairs.x, game.stairs.y, room)
     && !pointInRoom(game.mission.x, game.mission.y, room)
   ));
-  const room = candidates[randInt(0, candidates.length - 1)] || game.rooms.find((entry) => !pointInRoom(leader.x, leader.y, entry));
+  const room = preferredRoom
+    || candidates[randInt(0, candidates.length - 1)]
+    || game.rooms.find((entry) => !pointInRoom(leader.x, leader.y, entry));
   if (!room) return;
   const shopTiles = [];
   for (let y = room.y; y < room.y + room.h; y += 1) {
     for (let x = room.x; x < room.x + room.w; x += 1) shopTiles.push({ x, y });
   }
-  const point = shopTiles.find((tile) => (
+  const roomCenter = centerOf(room);
+  const preferredPoint = preferredRoom && shopTiles.find((tile) => (
+    tile.x === roomCenter.x
+    && tile.y === roomCenter.y
+    && !actorAt(tile.x, tile.y)
+  ));
+  const point = preferredPoint || shopTiles.find((tile) => (
     !actorAt(tile.x, tile.y)
     && !(tile.x === game.stairs.x && tile.y === game.stairs.y)
     && !(tile.x === game.mission.x && tile.y === game.mission.y)
@@ -2384,6 +2573,13 @@ function tryMoveLeader(dx, dy) {
   if (merchantAt(tx, ty)) {
     startBumpMotion(leader, dx, dy, 0.08);
     openGameMenu("merchant");
+    return false;
+  }
+
+  const restNode = restNodeAt(tx, ty);
+  if (restNode) {
+    startBumpMotion(leader, dx, dy, 0.08);
+    interactRestNode(restNode);
     return false;
   }
 
@@ -3896,7 +4092,9 @@ function tryUseStairs() {
     return true;
   }
   if (isRestFloor(game.floor) && !game.restChoiceTaken) {
-    openRestSite();
+    addLog("次へ進む前に、休憩所の祭壇で進化かレリックを選ぶ必要がある。");
+    announceEvent("祭壇が呼んでいる", "光る祭壇を調べて、この先へ持つ力を決めよう", "進", "mystic");
+    showToast("祭壇を調べよう");
     return true;
   }
   if (!ui.stairsDialog.open) openStairsDialog();
@@ -3961,17 +4159,11 @@ function completeTower() {
 function openRestSite() {
   if (!isRestFloor(game.floor) || game.restChoiceTaken || ui.restDialog.open) return;
   const major = isMajorRestFloor(game.floor);
-  restoreAllPp();
-  if (major) {
-    const leader = getLeader();
-    leader.hp = leader.maxHp;
-    game.belly = 100;
-  }
-  ui.restDialogKicker.textContent = `B${game.floor}F ${major ? "大休憩所" : "休憩所"}`;
-  ui.restDialogTitle.textContent = game.floor >= 100 ? "百階の星核" : major ? "星核の大休憩所" : "星火の休憩所";
-  ui.restDialogText.textContent = major
-    ? "HP・満腹度・すべての技PPが全回復した。商いを済ませ、進化かレリックを選ぼう。"
-    : "すべての技PPが全回復した。倉庫と商店を使い、次の10階へ持つ力を決めよう。";
+  const theme = game.restTheme || restThemeForFloor(game.floor);
+  ui.restDialog.style.setProperty("--rest-accent", theme.accent);
+  ui.restDialogKicker.textContent = `B${game.floor}F ${major ? "大休憩所" : "休憩所"} / ${theme.name}`;
+  ui.restDialogTitle.textContent = game.floor >= 100 ? "百階の星核に応える" : "次の十階へ持つ力";
+  ui.restDialogText.textContent = "祭壇の恩恵は一度だけ。進化を進めるか、この挑戦を変える強力なレリックを選ぼう。倉庫と商店は部屋を歩いて利用できる。";
   const leader = getLeader();
   const choices = [
     {
@@ -3982,13 +4174,6 @@ function openRestSite() {
       disabled: leader.evolutionStage >= 10,
     },
     { key: "milestone-relic", title: "強力なレリックを得る", detail: "この挑戦だけ働く3候補から1つ", icon: "遺" },
-    { key: "shop", title: "風呂敷商店", detail: "道具を買う・売る", icon: "店" },
-    ...game.restFacilities.map((facility) => ({
-      key: `facility-${facility.key}`,
-      title: facility.name,
-      detail: facility.detail,
-      icon: facility.icon,
-    })),
   ];
   ui.restDialogChoices.innerHTML = choices.map((choice) => `
     <button type="button" data-rest-choice="${choice.key}" ${choice.disabled ? "disabled" : ""}>
@@ -5477,6 +5662,7 @@ function applyUnlockedSkillsToLeader(leader) {
 
 function openTownFacility(view) {
   game.townView = view;
+  delete ui.townDialog.dataset.view;
   if (view === "shop" && !["goods", "sell", "starter"].includes(game.shopView)) game.shopView = "goods";
   renderTownFacility();
   if (!ui.townDialog.open) ui.townDialog.showModal();
@@ -6394,6 +6580,9 @@ function drawDungeon(time) {
   for (const trap of game.traps) {
     if (trap.revealed && game.seen[trap.y]?.[trap.x] && inCamera(trap.x, trap.y)) drawTrap(trap, time);
   }
+  for (const node of game.restNodes || []) {
+    if (game.seen[node.y]?.[node.x] && inCamera(node.x, node.y)) drawRestNode(node, time);
+  }
 
   for (const item of game.items) {
     if (isVisible(item.x, item.y) && inCamera(item.x, item.y)) drawItem(item, time);
@@ -6521,14 +6710,86 @@ function drawTile(x, y, type, visible) {
     ctx.stroke();
     ctx.shadowBlur = 0;
   }
+
+  if (game.floorKind?.includes("rest")) drawRestTileMotif(px, py, x, y, visible);
 }
 
 function currentDungeonTheme() {
+  if (game.floorKind?.includes("rest") && game.restTheme) {
+    const base = dungeonThemes[game.restTheme.base] || dungeonThemes.forest;
+    return {
+      ...base,
+      unknown: game.restTheme.wallDark,
+      wall: game.restTheme.wall,
+      wallDark: game.restTheme.wallDark,
+      wallLight: game.restTheme.wallLight,
+      floor: game.restTheme.floor,
+      floorDim: game.restTheme.floorDim,
+    };
+  }
   if (game.floor <= 20) return dungeonThemes.forest;
   if (game.floor <= 40) return dungeonThemes.tower;
   if (game.floor <= 60) return dungeonThemes.dream;
   if (game.floor <= 80) return dungeonThemes.ruins;
   return dungeonThemes.void;
+}
+
+function drawRestTileMotif(px, py, x, y, visible) {
+  const theme = game.restTheme;
+  if (!theme || noise(x, y, 217 + theme.index) < 0.72) return;
+  const ox = px + 10 + Math.floor(noise(x, y, 431) * 27);
+  const oy = py + 11 + Math.floor(noise(x, y, 577) * 25);
+  ctx.save();
+  ctx.globalAlpha = visible ? 0.36 : 0.16;
+  ctx.strokeStyle = theme.accent;
+  ctx.fillStyle = theme.glow;
+  ctx.lineWidth = 2;
+  if (theme.motif === "leaf" || theme.motif === "root") {
+    ctx.beginPath();
+    ctx.ellipse(ox, oy, 5, 2.5, -0.6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(ox - 6, oy + 5);
+    ctx.quadraticCurveTo(ox, oy, ox + 6, oy - 5);
+    ctx.stroke();
+  } else if (theme.motif === "crystal") {
+    ctx.beginPath();
+    ctx.moveTo(ox, oy - 7);
+    ctx.lineTo(ox + 5, oy + 5);
+    ctx.lineTo(ox, oy + 2);
+    ctx.lineTo(ox - 5, oy + 5);
+    ctx.closePath();
+    ctx.stroke();
+  } else if (theme.motif === "ember" || theme.motif === "storm") {
+    ctx.beginPath();
+    ctx.moveTo(ox + 4, oy - 7);
+    ctx.lineTo(ox - 2, oy);
+    ctx.lineTo(ox + 3, oy);
+    ctx.lineTo(ox - 4, oy + 7);
+    ctx.stroke();
+  } else if (theme.motif === "moon") {
+    ctx.beginPath();
+    ctx.arc(ox, oy, 6, 0.35, Math.PI * 1.65);
+    ctx.arc(ox + 3, oy, 4, Math.PI * 1.55, 0.45, true);
+    ctx.stroke();
+  } else if (theme.motif === "gear") {
+    ctx.beginPath();
+    ctx.arc(ox, oy, 6, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(ox, oy, 2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (theme.motif === "bloom") {
+    for (let index = 0; index < 4; index += 1) {
+      const angle = (Math.PI * index) / 2;
+      ctx.beginPath();
+      ctx.arc(ox + Math.cos(angle) * 4, oy + Math.sin(angle) * 4, 3, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  } else {
+    drawPixelStar(ctx, ox, oy, theme.motif === "star" ? 9 : 6, theme.accent);
+  }
+  ctx.restore();
 }
 
 function drawStairs(time) {
@@ -6623,6 +6884,82 @@ function drawMission(time) {
   ctx.font = "700 10px sans-serif";
   ctx.textAlign = "center";
   ctx.fillText(game.mission.threatened ? "WARN" : "HELP", px + 24, py + 43 + bob);
+}
+
+function drawRestNode(node, time) {
+  const { x: px, y: py } = toScreen(node.x, node.y);
+  const bob = Math.sin(time / 270 + node.x * 0.7) * 2;
+  const inactive = node.action === "milestone" && game.restChoiceTaken;
+  const color = inactive ? "#817a70" : node.color;
+  drawOutlinedEntity((targetCtx) => {
+    targetCtx.save();
+    if (node.action === "milestone") {
+      targetCtx.fillStyle = "#312c3b";
+      targetCtx.fillRect(8, 32, 32, 9);
+      targetCtx.fillStyle = color;
+      targetCtx.fillRect(12, 27, 24, 7);
+      targetCtx.fillStyle = inactive ? "#9b958a" : game.restTheme?.glow || "#fff2b1";
+      drawPixelStar(targetCtx, 24, 18, 14, targetCtx.fillStyle);
+      targetCtx.strokeStyle = color;
+      targetCtx.lineWidth = 2;
+      targetCtx.beginPath();
+      targetCtx.arc(24, 18, 13 + Math.sin(time / 180) * 2, 0, Math.PI * 2);
+      targetCtx.stroke();
+    } else if (node.key === "storage") {
+      targetCtx.fillStyle = "#6b482f";
+      targetCtx.fillRect(7, 20, 34, 21);
+      targetCtx.fillStyle = "#a87945";
+      targetCtx.fillRect(8, 13, 32, 12);
+      targetCtx.fillStyle = "#e4be69";
+      targetCtx.fillRect(21, 19, 7, 14);
+      targetCtx.fillRect(8, 23, 32, 3);
+      targetCtx.fillStyle = "#34271d";
+      targetCtx.fillRect(23, 25, 3, 5);
+    } else if (node.key === "healer") {
+      targetCtx.fillStyle = "#456d7c";
+      targetCtx.fillRect(8, 28, 32, 11);
+      targetCtx.fillStyle = "#83d9e4";
+      targetCtx.fillRect(12, 25, 24, 7);
+      targetCtx.strokeStyle = "#e8fbff";
+      targetCtx.lineWidth = 2;
+      for (let index = 0; index < 3; index += 1) {
+        targetCtx.beginPath();
+        targetCtx.moveTo(15 + index * 9, 23);
+        targetCtx.quadraticCurveTo(11 + index * 9, 15, 16 + index * 9, 9);
+        targetCtx.stroke();
+      }
+    } else if (node.key === "mystic") {
+      targetCtx.fillStyle = "#eadcb2";
+      targetCtx.fillRect(10, 12, 28, 28);
+      targetCtx.fillStyle = "#79588f";
+      targetCtx.fillRect(7, 10, 6, 32);
+      targetCtx.fillRect(35, 10, 6, 32);
+      targetCtx.strokeStyle = "#9a72bc";
+      targetCtx.lineWidth = 2;
+      targetCtx.beginPath();
+      targetCtx.arc(24, 25, 8, 0, Math.PI * 2);
+      targetCtx.stroke();
+      drawPixelStar(targetCtx, 24, 25, 8, "#8c65ab");
+    } else {
+      targetCtx.fillStyle = "#302544";
+      targetCtx.fillRect(8, 9, 32, 32);
+      targetCtx.fillStyle = "#f4e7b3";
+      targetCtx.fillRect(13, 14, 22, 22);
+      targetCtx.fillStyle = "#8e3f72";
+      [[17, 18], [30, 18], [17, 31], [30, 31]].forEach(([x, y]) => {
+        targetCtx.beginPath();
+        targetCtx.arc(x, y, 2, 0, Math.PI * 2);
+        targetCtx.fill();
+      });
+    }
+    targetCtx.restore();
+  }, px, py + bob, color, 2);
+  ctx.fillStyle = "rgba(7, 11, 11, 0.88)";
+  ctx.fillRect(px + 3, py + 39, 42, 9);
+  ctx.fillStyle = inactive ? "#aaa499" : color;
+  ctx.font = "900 7px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(node.name.slice(0, 6), px + 24, py + 46);
 }
 
 function drawTrap(trap, time) {
@@ -7912,6 +8249,11 @@ function drawMiniMap() {
       Math.max(4, sy + 1),
     );
   }
+  for (const node of game.restNodes || []) {
+    if (!game.mapped[node.y]?.[node.x]) continue;
+    miniCtx.fillStyle = node.action === "milestone" && game.restChoiceTaken ? "#827a72" : node.color;
+    miniCtx.fillRect(node.x * sx, node.y * sy, Math.max(4, sx + 1), Math.max(4, sy + 1));
+  }
   if (game.casino && game.mapped[game.casino.y]?.[game.casino.x]) {
     miniCtx.fillStyle = "#f1b94d";
     miniCtx.fillRect(game.casino.x * sx, game.casino.y * sy, Math.max(4, sx + 1), Math.max(4, sy + 1));
@@ -8192,6 +8534,10 @@ function getActorVisualPosition(actor, time) {
 }
 
 function revealAroundTeam() {
+  if (game.floorKind?.includes("rest")) {
+    revealRestSanctuary();
+    return;
+  }
   game.visible = makeGrid(false);
   for (const actor of livingTeam()) {
     mapVisitedArea(actor);
@@ -8218,6 +8564,18 @@ function revealAroundTeam() {
     addLog(`珍しい気配を発見。レア敵「${rareEnemy.name}」が現れた。`);
     announceEvent("RARE ENEMY", `${rareEnemy.name}を発見`, "★", "mystic");
     setScreenFlash("#ffe16d", 300);
+  }
+}
+
+function revealRestSanctuary() {
+  game.visible = makeGrid(false);
+  for (let y = 0; y < MAP_H; y += 1) {
+    for (let x = 0; x < MAP_W; x += 1) {
+      if (!isWalkable(x, y)) continue;
+      game.visible[y][x] = true;
+      game.seen[y][x] = true;
+      game.mapped[y][x] = true;
+    }
   }
 }
 
@@ -8415,6 +8773,23 @@ function itemAt(x, y) {
 
 function merchantAt(x, y) {
   return game.merchant && game.merchant.x === x && game.merchant.y === y ? game.merchant : null;
+}
+
+function restNodeAt(x, y) {
+  return game.restNodes?.find((node) => node.x === x && node.y === y) || null;
+}
+
+function interactRestNode(node) {
+  if (node.action === "milestone") {
+    if (game.restChoiceTaken) {
+      showToast("祭壇の選択は済んでいる");
+      addLog("進化の祭壇は静かな光をたたえている。");
+      return;
+    }
+    openRestSite();
+    return;
+  }
+  chooseRestAction(node.action);
 }
 
 function isMerchantShopTile(x, y) {
@@ -9163,6 +9538,9 @@ function bindEvents() {
 bindEvents();
 createGame();
 if (!loadSaveSlot(1)) saveCurrentGame(true);
+window.setTimeout(() => {
+  if (game.mode === "town" && !ui.townDialog.open && !ui.saveDialog.open) openExpeditionLoadout();
+}, 120);
 updateSoundButton();
 spriteSheet.addEventListener("load", () => {
   if (game) updateAll();

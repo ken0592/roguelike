@@ -1557,6 +1557,585 @@ button {
   }
 }
 
+/* Expedition draft */
+.town-dialog[data-view="loadout"] {
+  width: min(1160px, calc(100vw - 20px));
+  height: min(780px, calc(100dvh - 20px));
+  max-height: none;
+  border-color: rgba(238, 199, 104, 0.52);
+  background: #0c1213;
+}
+
+.town-dialog[data-view="loadout"] form {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.town-dialog[data-view="loadout"] .town-dialog-body {
+  min-height: 0;
+  max-height: none;
+  flex: 1;
+  align-content: stretch;
+  overflow: auto;
+}
+
+.loadout-stage-head {
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(280px, 1fr);
+  gap: 3px 24px;
+  align-items: center;
+  border-left: 5px solid #e8b957;
+  background: #151b1c;
+  padding: 10px 14px;
+}
+
+.loadout-stage-head > strong {
+  font-size: 1.08rem;
+}
+
+.loadout-stage-head > small {
+  grid-column: 2;
+  color: var(--muted);
+  font-size: 0.7rem;
+}
+
+.loadout-step-track {
+  grid-row: 1 / span 2;
+  display: grid;
+  grid-template-columns: 26px auto minmax(24px, 1fr) 26px auto;
+  gap: 7px;
+  align-items: center;
+  color: #9e9a8f;
+  font-size: 0.65rem;
+  font-weight: 900;
+}
+
+.loadout-step-track b {
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #696a65;
+  color: #b7b3a8;
+}
+
+.loadout-step-track b.active {
+  border-color: #f0c463;
+  background: #6c4c22;
+  color: #fff1bf;
+}
+
+.loadout-step-track i {
+  height: 1px;
+  background: #5f5748;
+}
+
+.loadout-character-stage {
+  min-height: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.loadout-character-stage .loadout-character {
+  position: relative;
+  min-height: 440px;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: 7px;
+  overflow: hidden;
+  border: 0;
+  border-left: 7px solid var(--hero-color);
+  border-radius: 0;
+  clip-path: polygon(6% 0, 100% 0, 94% 100%, 0 100%);
+  background: color-mix(in srgb, var(--hero-color) 16%, #111718);
+  padding: 14px 23px 12px;
+  isolation: isolate;
+}
+
+.loadout-character-stage .loadout-character::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border: 1px solid color-mix(in srgb, var(--hero-color) 58%, transparent);
+  background: color-mix(in srgb, var(--hero-color) 7%, transparent);
+  content: "";
+}
+
+.loadout-character-stage .loadout-character:nth-child(2) {
+  clip-path: polygon(3% 0, 97% 0, 100% 100%, 0 100%);
+}
+
+.loadout-character-stage .loadout-character:nth-child(3) {
+  clip-path: polygon(0 0, 94% 0, 100% 100%, 6% 100%);
+}
+
+.loadout-character-stage .loadout-character:hover,
+.loadout-character-stage .loadout-character:focus-visible {
+  background: color-mix(in srgb, var(--hero-color) 25%, #111718);
+}
+
+.loadout-character-stage .loadout-character.selected {
+  background: color-mix(in srgb, var(--hero-color) 31%, #111718);
+  box-shadow: inset 0 0 0 3px color-mix(in srgb, var(--hero-color) 72%, white);
+}
+
+.loadout-character-number {
+  position: absolute;
+  z-index: -1;
+  top: -14px;
+  right: 18px;
+  color: color-mix(in srgb, var(--hero-color) 28%, transparent);
+  font: 900 5.4rem/1 sans-serif;
+}
+
+.loadout-character-stage .loadout-character-visual {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: 160px auto 130px;
+  gap: 5px;
+}
+
+.loadout-character-stage .loadout-portrait {
+  width: 160px;
+  height: 160px;
+  align-self: end;
+  filter: drop-shadow(0 13px 14px rgba(0, 0, 0, 0.48));
+}
+
+.loadout-character-title {
+  display: grid;
+  gap: 3px;
+  text-align: left;
+}
+
+.loadout-character-title > span {
+  color: color-mix(in srgb, var(--hero-color) 62%, white);
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.loadout-character-title > strong {
+  color: #fff4d6;
+  font-size: 1.35rem;
+}
+
+.loadout-character-title > small {
+  min-height: 32px;
+  color: #c7c5bb;
+  font-size: 0.68rem;
+  line-height: 1.4;
+}
+
+.loadout-character-stage .loadout-stat-radar {
+  width: 100%;
+  height: 130px;
+  border: 1px solid color-mix(in srgb, var(--hero-color) 42%, transparent);
+  background: rgba(3, 8, 9, 0.48);
+}
+
+.loadout-character-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 7px;
+  border-top: 1px solid color-mix(in srgb, var(--hero-color) 38%, transparent);
+  padding-top: 7px;
+  color: #eee1c0;
+  font-size: 0.63rem;
+}
+
+.loadout-character-footer em {
+  color: color-mix(in srgb, var(--hero-color) 55%, white);
+  font-style: normal;
+}
+
+.loadout-character-stage .loadout-character > i {
+  min-height: 26px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--hero-color) 72%, #161816);
+  color: #fff8dd;
+  font-size: 0.66rem;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.loadout-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  border-top: 1px solid rgba(255, 245, 223, 0.14);
+  padding-top: 8px;
+}
+
+.loadout-actions > span {
+  min-width: 0;
+}
+
+.loadout-actions .element-legend {
+  margin: 0;
+}
+
+.loadout-actions button {
+  min-height: 42px;
+  min-width: 210px;
+  width: auto;
+}
+
+.loadout-relic-stage {
+  min-height: 0;
+  display: grid;
+  grid-template-columns: minmax(180px, 0.32fr) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.loadout-selected-hero {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 9px;
+  border-left: 6px solid var(--hero-color);
+  background: color-mix(in srgb, var(--hero-color) 17%, #111718);
+  padding: 14px;
+  text-align: center;
+}
+
+.loadout-selected-hero canvas {
+  width: 150px;
+  height: 150px;
+  filter: drop-shadow(0 12px 12px rgba(0, 0, 0, 0.45));
+}
+
+.loadout-selected-hero div {
+  display: grid;
+  gap: 4px;
+}
+
+.loadout-selected-hero span {
+  color: var(--hero-color);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.loadout-selected-hero strong {
+  color: #fff4d6;
+  font-size: 1.15rem;
+}
+
+.loadout-selected-hero small {
+  color: var(--muted);
+  font-size: 0.67rem;
+  line-height: 1.4;
+}
+
+.loadout-relic-stage .loadout-relic-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: stretch;
+}
+
+.loadout-relic-stage .starter-none,
+.loadout-relic-stage .relic-choice {
+  min-height: 118px;
+}
+
+.loadout-final-actions {
+  justify-content: flex-end;
+}
+
+.loadout-checkpoint {
+  height: 100%;
+  min-height: 380px;
+  display: grid;
+  grid-template-columns: minmax(220px, 0.7fr) minmax(280px, 1fr);
+  gap: 28px;
+  align-items: center;
+  border-left: 8px solid var(--hero-color);
+  background: color-mix(in srgb, var(--hero-color) 16%, #111718);
+  padding: 24px;
+}
+
+.loadout-checkpoint-portrait {
+  width: min(280px, 100%);
+  height: auto;
+  justify-self: center;
+}
+
+.loadout-checkpoint > div {
+  display: grid;
+  gap: 12px;
+}
+
+.loadout-checkpoint span,
+.loadout-checkpoint b {
+  color: color-mix(in srgb, var(--hero-color) 55%, white);
+  font-size: 0.7rem;
+}
+
+.loadout-checkpoint strong {
+  color: #fff3d2;
+  font-size: 1.6rem;
+}
+
+.loadout-checkpoint small {
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.rest-dialog {
+  border-color: var(--rest-accent, #e5ae48);
+}
+
+.rest-dialog-mark,
+.rest-dialog-choices button > b {
+  border-color: var(--rest-accent, #e5ae48);
+  color: var(--rest-accent, #ffe39b);
+}
+
+.rest-dialog-copy span {
+  color: var(--rest-accent, #e5ae48);
+}
+
+.rest-dialog-choices {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.rest-dialog-choices button:hover,
+.rest-dialog-choices button:focus-visible {
+  border-color: var(--rest-accent, #e5ae48);
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .town-dialog[data-view="loadout"] {
+    width: calc(100vw - 10px);
+    height: calc(100dvh - 10px);
+  }
+
+  .loadout-stage-head {
+    grid-template-columns: 1fr;
+  }
+
+  .loadout-stage-head > small {
+    grid-column: 1;
+  }
+
+  .loadout-step-track {
+    grid-row: auto;
+  }
+
+  .loadout-character-stage {
+    grid-template-columns: 1fr;
+  }
+
+  .loadout-character-stage .loadout-character,
+  .loadout-character-stage .loadout-character:nth-child(2),
+  .loadout-character-stage .loadout-character:nth-child(3) {
+    min-height: 470px;
+    clip-path: none;
+  }
+
+  .loadout-relic-stage,
+  .loadout-checkpoint {
+    grid-template-columns: 1fr;
+  }
+
+  .loadout-relic-stage .loadout-relic-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .loadout-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .town-dialog[data-view="loadout"] {
+    width: calc(100vw - 8px);
+    height: calc(100dvh - 8px);
+  }
+
+  .town-dialog[data-view="loadout"] form {
+    padding: 7px;
+  }
+
+  .town-dialog[data-view="loadout"] header {
+    min-height: 28px;
+    padding-bottom: 5px;
+  }
+
+  .town-dialog[data-view="loadout"] header span {
+    display: none;
+  }
+
+  .town-dialog[data-view="loadout"] h2 {
+    margin: 0;
+    font-size: 0.9rem;
+  }
+
+  .town-dialog[data-view="loadout"] .town-dialog-body {
+    gap: 5px;
+    padding-top: 5px;
+  }
+
+  .loadout-stage-head {
+    min-height: 34px;
+    grid-template-columns: 210px minmax(0, 1fr);
+    gap: 2px 12px;
+    padding: 4px 9px;
+  }
+
+  .loadout-stage-head > strong {
+    font-size: 0.82rem;
+  }
+
+  .loadout-stage-head > small {
+    overflow: hidden;
+    font-size: 0.58rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .loadout-step-track {
+    font-size: 0.55rem;
+  }
+
+  .loadout-step-track b {
+    width: 20px;
+    height: 20px;
+  }
+
+  .loadout-character-stage .loadout-character {
+    min-height: 0;
+    height: 232px;
+    grid-template-rows: minmax(0, 1fr) auto 20px;
+    padding: 4px 14px 4px 17px;
+  }
+
+  .loadout-character-stage .loadout-character-visual {
+    grid-template-columns: 76px minmax(0, 1fr);
+    grid-template-rows: 58px 82px;
+    gap: 2px 5px;
+  }
+
+  .loadout-character-stage .loadout-portrait {
+    grid-row: 1 / span 2;
+    width: 76px;
+    height: 76px;
+    align-self: center;
+  }
+
+  .loadout-character-title > strong {
+    font-size: 0.9rem;
+  }
+
+  .loadout-character-title > span,
+  .loadout-character-title > small {
+    font-size: 0.52rem;
+  }
+
+  .loadout-character-title > small {
+    min-height: 0;
+  }
+
+  .loadout-character-stage .loadout-stat-radar {
+    height: 82px;
+  }
+
+  .loadout-character-footer {
+    min-height: 19px;
+    padding-top: 3px;
+    font-size: 0.5rem;
+  }
+
+  .loadout-character-stage .loadout-character > i {
+    min-height: 20px;
+    font-size: 0.54rem;
+  }
+
+  .loadout-character-number {
+    font-size: 3.1rem;
+  }
+
+  .loadout-actions {
+    min-height: 31px;
+    padding-top: 3px;
+  }
+
+  .loadout-actions .element-legend {
+    flex-wrap: nowrap;
+  }
+
+  .loadout-actions > span {
+    display: none;
+  }
+
+  .loadout-actions {
+    justify-content: flex-end;
+  }
+
+  .loadout-actions button {
+    min-width: 170px;
+    min-height: 30px;
+    padding: 5px 10px;
+  }
+
+  .loadout-relic-stage {
+    grid-template-columns: 145px minmax(0, 1fr);
+  }
+
+  .loadout-selected-hero {
+    grid-template-columns: 72px minmax(0, 1fr);
+    align-content: center;
+    padding: 7px;
+    text-align: left;
+  }
+
+  .loadout-selected-hero canvas {
+    width: 72px;
+    height: 72px;
+  }
+
+  .loadout-selected-hero strong {
+    font-size: 0.88rem;
+  }
+
+  .loadout-selected-hero small {
+    font-size: 0.52rem;
+  }
+
+  .loadout-relic-stage .loadout-relic-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .loadout-relic-stage .starter-none,
+  .loadout-relic-stage .relic-choice {
+    min-height: 72px;
+  }
+
+  .loadout-relic-stage .relic-card {
+    min-height: 72px;
+    padding: 5px;
+  }
+
+  .loadout-checkpoint {
+    min-height: 0;
+    grid-template-columns: 180px minmax(0, 1fr);
+    padding: 10px;
+  }
+
+  .loadout-checkpoint-portrait {
+    width: 145px;
+  }
+
+  .loadout-checkpoint strong {
+    font-size: 1.15rem;
+  }
+}
+
 /* PWA 12: run building, relic ribbon, lineages, and furoshiki shops */
 .relic-ribbon {
   position: absolute;
