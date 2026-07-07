@@ -355,6 +355,137 @@ const ascensionBranches = {
 
 const asceticNames = ["無印", "裸星", "孤灯", "無垢", "空手", "無欲", "静界", "無冠", "真白", "無窮"];
 
+const ascensionStagePlans = {
+  kohaku: [
+    ["fang", "lumen"],
+    ["fang", "shade", "lumen"],
+    ["lumen", "shade", "ascetic"],
+    ["fang", "lumen", "shade"],
+    ["fang", "lumen", "relic"],
+    ["shade", "lumen", "ascetic"],
+    ["fang", "shade", "relic"],
+    ["lumen", "fang", "shade"],
+    ["shade", "lumen", "relic", "ascetic"],
+    ["fang", "lumen", "shade", "relic", "ascetic"],
+  ],
+  knight: [
+    ["warlord", "guardian"],
+    ["warlord", "revenant", "guardian"],
+    ["guardian", "revenant", "ascetic"],
+    ["warlord", "guardian", "revenant"],
+    ["warlord", "guardian", "relic"],
+    ["revenant", "guardian", "ascetic"],
+    ["warlord", "revenant", "relic"],
+    ["guardian", "warlord", "revenant"],
+    ["revenant", "guardian", "relic", "ascetic"],
+    ["warlord", "guardian", "revenant", "relic", "ascetic"],
+  ],
+  magician: [
+    ["archmage", "chaos"],
+    ["archmage", "void", "chaos"],
+    ["chaos", "void", "ascetic"],
+    ["archmage", "chaos", "void"],
+    ["archmage", "chaos", "relic"],
+    ["void", "chaos", "ascetic"],
+    ["archmage", "void", "relic"],
+    ["chaos", "archmage", "void"],
+    ["void", "chaos", "relic", "ascetic"],
+    ["archmage", "chaos", "void", "relic", "ascetic"],
+  ],
+};
+
+const ascensionArtTracks = {
+  kohaku: {
+    fang: [5, 18, 30, 38, 10, 29, 1, 34, 4, 23],
+    lumen: [36, 32, 13, 15, 27, 19, 37, 28, 20, 39],
+    shade: [1, 8, 20, 22, 24, 34, 28, 35, 21, 14],
+    ascetic: [0, 2, 12, 16, 25, 31, 3, 26, 33, 39],
+    relic: [7, 14, 18, 23, 33, 4, 27, 38, 11, 39],
+  },
+  knight: {
+    warlord: [2, 21, 31, 38, 4, 10, 28, 39, 23, 32],
+    guardian: [14, 15, 4, 12, 36, 13, 37, 16, 20, 26],
+    revenant: [8, 20, 28, 34, 24, 35, 1, 22, 29, 39],
+    ascetic: [0, 16, 12, 3, 25, 2, 36, 27, 14, 39],
+    relic: [7, 14, 26, 33, 4, 18, 37, 30, 11, 39],
+  },
+  magician: {
+    archmage: [36, 32, 27, 13, 14, 20, 28, 37, 33, 23],
+    chaos: [25, 9, 35, 20, 33, 17, 7, 34, 18, 21],
+    void: [8, 20, 23, 34, 1, 35, 28, 29, 39, 24],
+    ascetic: [0, 12, 16, 2, 31, 36, 26, 3, 14, 39],
+    relic: [7, 33, 14, 23, 18, 37, 27, 4, 11, 39],
+  },
+};
+
+const ascensionMovePrefixes = ["芽吹く", "双つ", "走る", "裂ける", "響く", "巡る", "荒ぶる", "冴える", "満ちる", "終の"];
+
+const ascensionMoveThemes = {
+  kohaku: {
+    fang: { suffix: "紅牙", style: "physical", element: "fire", signature: "line", hint: "前方を裂く物理技" },
+    lumen: { suffix: "星燈", style: "magic", element: "light", signature: "beam", hint: "直線を照らす魔法技" },
+    shade: { suffix: "宵渡り", style: "magic", element: "dark", signature: "trick", hint: "転位と弱体の奇襲技" },
+    ascetic: { suffix: "無印尾", style: "physical", element: "light", signature: "burst", hint: "周囲を払う均衡技" },
+    relic: { suffix: "遺星尾", style: "magic", element: "light", signature: "burst", hint: "レリックを響かせる範囲技" },
+  },
+  knight: {
+    warlord: { suffix: "覇剣", style: "physical", element: "fire", signature: "line", hint: "前方を薙ぐ物理技" },
+    guardian: { suffix: "星盾", style: "physical", element: "water", signature: "guard", hint: "守りながら押し返す技" },
+    revenant: { suffix: "亡刃", style: "physical", element: "dark", signature: "trick", hint: "影で斬り込み弱らせる技" },
+    ascetic: { suffix: "無冠剣", style: "physical", element: "light", signature: "guard", hint: "耐えて反撃する無印技" },
+    relic: { suffix: "遺物剣", style: "physical", element: "fire", signature: "line", hint: "レリックを込めた斬撃技" },
+  },
+  magician: {
+    archmage: { suffix: "星晶術", style: "magic", element: "ice", signature: "beam", hint: "長い直線を貫く魔法技" },
+    chaos: { suffix: "奇術札", style: "magic", element: "poison", signature: "burst", hint: "周囲を乱す範囲魔法" },
+    void: { suffix: "虚空呪", style: "magic", element: "dark", signature: "trick", hint: "位置と能力を崩す呪術" },
+    ascetic: { suffix: "無印星", style: "magic", element: "light", signature: "beam", hint: "素の力で放つ星術" },
+    relic: { suffix: "遺星術", style: "magic", element: "light", signature: "burst", hint: "レリックを核にする範囲術" },
+  },
+};
+
+function normalizeAscensionBranchKey(branchKey) {
+  if (!branchKey) return "ascetic";
+  return String(branchKey).startsWith("relic-") ? "relic" : branchKey;
+}
+
+function ascensionMoveKey(profileKey, branchKey, stage) {
+  return `asc-${profileKey}-${normalizeAscensionBranchKey(branchKey)}-${clamp(stage, 1, 10)}`;
+}
+
+function ascensionArtIndex(profileKey, branchKey, stage) {
+  const track = ascensionArtTracks[profileKey]?.[normalizeAscensionBranchKey(branchKey)]
+    || ascensionArtTracks.kohaku.fang;
+  return track[clamp(stage, 1, 10) - 1] ?? track[0] ?? 0;
+}
+
+function buildAscensionMoveCatalog() {
+  const entries = [];
+  for (const [profileKey, themes] of Object.entries(ascensionMoveThemes)) {
+    for (const [branchKey, theme] of Object.entries(themes)) {
+      for (let stage = 1; stage <= 10; stage += 1) {
+        entries.push({
+          key: ascensionMoveKey(profileKey, branchKey, stage),
+          name: `${ascensionMovePrefixes[stage - 1]}${theme.suffix}`,
+          hint: `${theme.hint}・第${stage}段階`,
+          maxPp: Math.max(3, 9 - Math.floor(stage / 3)),
+          style: theme.style,
+          element: theme.element,
+          signature: theme.signature,
+          range: clamp(2 + Math.floor(stage / 2), 3, 7),
+          radius: clamp(1 + Math.floor(stage / 4), 1, 3),
+          power: 5 + stage * 2,
+          stage,
+          branchKey,
+        });
+      }
+    }
+  }
+  return entries;
+}
+
+moveCatalog.push(...buildAscensionMoveCatalog());
+
 const itemCatalog = {
   apple: {
     name: "月蜜の実",
@@ -1645,7 +1776,12 @@ function applyPersistentLineage(actor) {
   actor.evolutionStage = clamp(Number(lineage.stage) || 0, 0, 10);
   actor.evolutionBranch = lineage.branch || "base";
   actor.evolutionName = lineage.name || actor.name;
-  actor.artColumn = Number.isInteger(lineage.artColumn) ? lineage.artColumn : 0;
+  if (Number.isInteger(lineage.artIndex)) {
+    actor.artIndex = lineage.artIndex;
+    delete actor.artColumn;
+  } else {
+    actor.artColumn = Number.isInteger(lineage.artColumn) ? lineage.artColumn : 0;
+  }
   actor.color = lineage.color || actor.color;
   actor.elementKey = lineage.elementKey || lineageElementKey(actor.profileKey, lineage.branch, actor.elementKey);
   actor.ascensionHistory = Array.isArray(lineage.history) ? [...lineage.history] : [];
@@ -1656,6 +1792,9 @@ function applyPersistentLineage(actor) {
   actor.magic += Number(bonus.magic) || 0;
   actor.def += Number(bonus.def) || 0;
   actor.res += Number(bonus.res) || 0;
+  if (lineage.moveKey) {
+    learnEvolutionMove(actor, { moveKey: lineage.moveKey }, false);
+  }
 }
 
 function applyPersistentEvolution(actor) {
@@ -2277,7 +2416,7 @@ function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0, p
     stock,
   };
   const productTiles = shopTiles
-    .filter((tile) => tile.x !== point.x || tile.y !== point.y)
+    .filter((tile) => (tile.x !== point.x || tile.y !== point.y) && !isShopEntranceTile(tile, shopKeys))
     .sort(() => Math.random() - 0.5);
   stock.forEach((offer, index) => {
     const tile = productTiles[index];
@@ -2298,6 +2437,14 @@ function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0, p
     });
   });
   addLog("色の違う床に星渡り商ノノの商品が並んだ。拾った品は店内で精算しよう。");
+}
+
+function isShopEntranceTile(tile, shopKeys) {
+  return dirs.slice(0, 4).some((dir) => {
+    const x = tile.x + dir.x;
+    const y = tile.y + dir.y;
+    return isWalkable(x, y) && !shopKeys.has(`${x},${y}`);
+  });
 }
 
 function createRestFacilities(major = false) {
@@ -2550,6 +2697,7 @@ function performAction(action) {
   if (action.type === "useMove") acted = useSelectedMove();
   if (action.type === "eatApple") acted = eatApple();
   if (action.type === "useItem") acted = useItem(action.kind);
+  if (action.type === "dropItem") acted = dropItemFromBag(action.kind);
 
   if (!acted) return;
   finishHeroTurn();
@@ -2758,6 +2906,7 @@ function useSelectedMove() {
   if (move.key === "blinkHex") used = useBlinkHex(leader, move);
   if (move.key === "mirrorCurse") used = useMirrorCurse(leader, move);
   if (move.key === "timeLoop") used = useTimeLoop(leader, move);
+  if (!used && String(move.key).startsWith("asc-")) used = useAscensionMove(leader, move);
   game.currentActionMultiplier = 1;
   game.currentActionElement = null;
   return used;
@@ -2958,6 +3107,79 @@ function useTimeLoop(actor, move) {
   if (restoredPp > 0) addFloatingText(actor.x, actor.y, `PP +${restoredPp}`, "#90dfff");
   setScreenFlash("#a58cff", 320);
   addLog(`${move.name}。フロア開始時の生命と術式を呼び戻し、技PPを${restoredPp}回復した。`);
+  return true;
+}
+
+function useAscensionMove(actor, move) {
+  const color = elementInfo(move.element).color;
+  const stat = move.style === "magic" ? actor.magic : actor.atk;
+  const power = Math.ceil((stat + actor.level + move.power) * game.currentActionMultiplier);
+  if (move.signature === "line" || move.signature === "beam") {
+    const targets = [];
+    for (let distance = 1; distance <= (move.range || 4); distance += 1) {
+      const x = actor.x + actor.dx * distance;
+      const y = actor.y + actor.dy * distance;
+      if (!inBounds(x, y) || !isWalkable(x, y)) break;
+      addEffect(move.signature === "beam" ? "sparkTrail" : "slash", x, y, color, actor.dx, actor.dy);
+      const target = enemyAt(x, y);
+      if (target && !targets.includes(target)) targets.push(target);
+      if (target && move.signature === "line") break;
+    }
+    addEffect(move.signature === "beam" ? "beam" : "impact", actor.x + actor.dx, actor.y + actor.dy, color, actor.dx, actor.dy);
+    targets.forEach((target, index) => {
+      damageEnemy(target, Math.max(1, power - index * 3), actor, move.name);
+      addEffect("nova", target.x, target.y, color);
+    });
+    triggerScreenShake(targets.length ? 12 : 6, 260);
+    if (!targets.length) addLog(`${move.name}は床に光跡を残した。`);
+    return true;
+  }
+
+  if (move.signature === "guard") {
+    actor.guardTurns = Math.max(actor.guardTurns || 0, 2 + Math.floor((move.stage || 1) / 3));
+    healActor(actor, Math.ceil((actor.def + actor.res + move.stage) * 0.8));
+    addEffect("shield", actor.x, actor.y, color);
+    addEffect("guardDome", actor.x, actor.y, color);
+    for (const enemy of game.enemies.filter((entry) => gridDistance(actor, entry) <= 1)) {
+      damageEnemy(enemy, Math.ceil(power * 0.65), actor, move.name);
+      pushEnemy(enemy, Math.sign(enemy.x - actor.x), Math.sign(enemy.y - actor.y));
+    }
+    addLog(`${move.name}。守りを固め、近くの敵を押し返した。`);
+    triggerScreenShake(10, 260);
+    return true;
+  }
+
+  if (move.signature === "trick") {
+    let destination = { x: actor.x, y: actor.y };
+    for (let distance = 1; distance <= Math.min(4, move.range || 4); distance += 1) {
+      const x = actor.x + actor.dx * distance;
+      const y = actor.y + actor.dy * distance;
+      if (!inBounds(x, y) || !isWalkable(x, y) || actorAt(x, y) || enemyAt(x, y)) break;
+      destination = { x, y };
+    }
+    const from = { x: actor.x, y: actor.y };
+    actor.x = destination.x;
+    actor.y = destination.y;
+    addEffect("runes", from.x, from.y, color);
+    addEffect("vortex", actor.x, actor.y, color);
+    for (const enemy of game.enemies.filter((entry) => gridDistance(actor, entry) <= (move.radius || 2) && hasLineOfSight(actor, entry))) {
+      enemy.atk = Math.max(1, enemy.atk - 1);
+      damageEnemy(enemy, Math.ceil(power * 0.72), actor, move.name);
+      addFloatingText(enemy.x, enemy.y, "乱れ", color);
+    }
+    if (actor.id === "leader") checkMerchantShopExit(from, actor);
+    revealAroundTeam();
+    triggerScreenShake(8, 230);
+    return true;
+  }
+
+  addEffect("nova", actor.x, actor.y, color);
+  addEffect("runes", actor.x, actor.y, color);
+  for (const enemy of game.enemies.filter((entry) => gridDistance(actor, entry) <= (move.radius || 2) && hasLineOfSight(actor, entry))) {
+    damageEnemy(enemy, Math.ceil(power * 0.78), actor, move.name);
+    addEffect("impact", enemy.x, enemy.y, color);
+  }
+  triggerScreenShake(13, 320);
   return true;
 }
 
@@ -3800,6 +4022,61 @@ function pickUpItem() {
   playSfx("pickup");
 }
 
+function dropItemFromBag(kind) {
+  const leader = getLeader();
+  const catalog = itemCatalog[kind];
+  if (!catalog || (game.bag[kind] || 0) <= 0) return false;
+  if (itemAt(leader.x, leader.y)) {
+    showToast("足元に別の道具がある");
+    return false;
+  }
+  if (game.stairs && leader.x === game.stairs.x && leader.y === game.stairs.y) {
+    showToast("階段の上には置けない");
+    return false;
+  }
+  if (game.secretStairs && leader.x === game.secretStairs.x && leader.y === game.secretStairs.y) {
+    showToast("祭壇の上には置けない");
+    return false;
+  }
+  const merchant = game.merchant;
+  const unpaidOffer = merchant?.unpaid
+    ?.map((offerId) => merchant.stock.find((entry) => entry.id === offerId))
+    .find((offer) => offer?.kind === kind);
+  if (unpaidOffer) {
+    if (!isMerchantShopTile(leader.x, leader.y)) {
+      showToast("未精算の商品は売り場で戻せる");
+      return false;
+    }
+    game.bag[kind] -= 1;
+    merchant.unpaid = merchant.unpaid.filter((offerId) => offerId !== unpaidOffer.id);
+    unpaidOffer.picked = false;
+    unpaidOffer.sold = false;
+    unpaidOffer.x = leader.x;
+    unpaidOffer.y = leader.y;
+    game.items.push({
+      id: cryptoId(),
+      kind,
+      x: leader.x,
+      y: leader.y,
+      shopItem: true,
+      shopOfferId: unpaidOffer.id,
+      price: unpaidOffer.price,
+    });
+    addLog(`${catalog.name}を売り場に戻した。未精算 ${merchantDebt()}星貨。`);
+    announceEvent("商品を戻した", `${catalog.name}　未精算から外れた`, "店", "good");
+    playSfx("pickup");
+    updateAll();
+    return true;
+  }
+  game.bag[kind] -= 1;
+  game.items.push({ id: cryptoId(), kind, x: leader.x, y: leader.y });
+  addLog(`${catalog.name}を足元に置いた。`);
+  announceEvent("道具を置いた", `${catalog.name}　足元メニューで拾える`, catalog.icon, "mystic");
+  playSfx("pickup");
+  updateAll();
+  return true;
+}
+
 function gearPower(gear) {
   return gear.atk * 3 + gear.def * 3 + gear.hp;
 }
@@ -4237,6 +4514,7 @@ function captureTowerCheckpoint(resumeFloor) {
       evolutionName: leader.evolutionName,
       elementKey: leader.elementKey,
       artColumn: leader.artColumn,
+      artIndex: leader.artIndex,
       ascensionHistory: [...(leader.ascensionHistory || [])],
       appliedSkills: [...(leader.appliedSkills || [])],
     },
@@ -4503,6 +4781,9 @@ function renderGameMenu(view = "moves") {
       return;
     }
     for (const [kind, item] of owned) {
+      const canDropHere = !itemAt(getLeader().x, getLeader().y)
+        && !(game.stairs && getLeader().x === game.stairs.x && getLeader().y === game.stairs.y)
+        && !(game.secretStairs && getLeader().x === game.secretStairs.x && getLeader().y === game.secretStairs.y);
       appendTownEntry(ui.gameMenuBody, {
         title: `${item.name} × ${game.bag[kind]}`,
         detail: item.detail,
@@ -4513,6 +4794,12 @@ function renderGameMenu(view = "moves") {
         onClick: () => {
           ui.gameMenuDialog.close();
           performAction({ type: "useItem", kind });
+        },
+        secondaryButtonLabel: "置く",
+        secondaryDisabled: !canDropHere,
+        secondaryOnClick: () => {
+          ui.gameMenuDialog.close();
+          performAction({ type: "dropItem", kind });
         },
       });
     }
@@ -4884,7 +5171,7 @@ function renderMilestoneChoice() {
     </div>
     <div class="milestone-grid">
       <button type="button" data-milestone="evolve" ${canEvolve ? "" : "disabled"}>
-        <b>進</b><span><strong>${canEvolve ? `第${leader.evolutionStage + 1}段階へ進化` : "最終進化済み"}</strong><small>${canEvolve ? "条件で変わる3〜4候補から選ぶ" : "これ以上は進化できない"}</small></span>
+        <b>進</b><span><strong>${canEvolve ? `第${leader.evolutionStage + 1}段階へ進化` : "最終進化済み"}</strong><small>${canEvolve ? "段階ごとに変わる候補から選ぶ" : "これ以上は進化できない"}</small></span>
       </button>
       <button type="button" data-milestone="relic">
         <b>遺</b><span><strong>強力なレリック</strong><small>RARE以上を含む3候補から1つ</small></span>
@@ -4905,26 +5192,27 @@ function renderMilestoneChoice() {
 function createAscensionChoices(actor) {
   const profile = characterCatalog.find((entry) => entry.key === actor.profileKey) || characterCatalog[0];
   const stage = clamp((actor.evolutionStage || 0) + 1, 1, 10);
-  const choices = (ascensionBranches[profile.key] || ascensionBranches.kohaku).map((branch) => ({
-    key: `${profile.key}-${branch.key}-${stage}`,
-    branch: branch.key,
-    label: branch.label,
-    path: branch.path,
-    artColumn: branch.artColumn,
-    color: branch.color,
-    elementKey: lineageElementKey(profile.key, branch.key, profile.elementKey),
-    stage,
-    name: branch.names[stage - 1],
-    detail: ascensionDetail(branch.path),
-    bonus: ascensionBonus(branch.path, stage),
-  }));
-  if (!game.startingRelicKey) {
-    choices.push({
+  const plan = ascensionStagePlans[profile.key]?.[stage - 1] || ["fang", "lumen", "shade"];
+  const choices = plan
+    .map((branchKey) => createAscensionChoice(profile, actor, branchKey, stage))
+    .filter(Boolean);
+  if (!choices.length) {
+    return (ascensionBranches[profile.key] || ascensionBranches.kohaku)
+      .slice(0, 2)
+      .map((branch) => createAscensionChoice(profile, actor, branch.key, stage))
+      .filter(Boolean);
+  }
+  return choices.slice(0, 4);
+}
+
+function createAscensionChoice(profile, actor, branchKey, stage) {
+  if (branchKey === "ascetic") {
+    if (game.startingRelicKey) return null;
+    return {
       key: `${profile.key}-ascetic-${stage}`,
       branch: "ascetic",
       label: "無印",
       path: "ascetic",
-      artColumn: 0,
       color: "#f1d487",
       elementKey: "light",
       stage,
@@ -4932,28 +5220,49 @@ function createAscensionChoices(actor) {
       detail: "初期レリックを持たずに出た者だけの、均衡と幸運の進化。",
       bonus: { hp: 6, atk: 2, magic: 2, def: 1, res: 1, luck: 1 },
       condition: "初期レリックなし",
-    });
-  } else {
-    const relic = relicCatalog.find((entry) => game.relics.includes(entry.key)) || relicCatalog.find((entry) => entry.key === game.startingRelicKey);
-    if (relic) {
-      const artColumn = relic.bonus?.magic || relic.effect === "freeMagic" ? 2 : relic.bonus?.atk || relic.effect === "physicalLeech" ? 1 : 3;
-      choices.push({
-        key: `${profile.key}-relic-${relic.key}-${stage}`,
-        branch: `relic-${relic.key}`,
-        label: "遺物共鳴",
-        path: "relic",
-        artColumn,
-        color: relic.color,
-        elementKey: actor.elementKey,
-        stage,
-        name: `${relic.name}・${stage}環`,
-        detail: `${relic.name}を所持している時だけ現れる共鳴進化。`,
-        bonus: { hp: 5, atk: 2, magic: 2, def: 1, res: 1 },
-        condition: `${relic.name}を所持`,
-      });
-    }
+      artIndex: ascensionArtIndex(profile.key, "ascetic", stage),
+      moveKey: ascensionMoveKey(profile.key, "ascetic", stage),
+    };
   }
-  return choices.slice(0, 4);
+
+  if (branchKey === "relic") {
+    const relic = relicCatalog.find((entry) => game.relics.includes(entry.key))
+      || relicCatalog.find((entry) => entry.key === game.startingRelicKey);
+    if (!relic) return null;
+    return {
+      key: `${profile.key}-relic-${relic.key}-${stage}`,
+      branch: `relic-${relic.key}`,
+      label: "遺物共鳴",
+      path: "relic",
+      color: relic.color,
+      elementKey: actor.elementKey,
+      stage,
+      name: `${relic.name}・${stage}環`,
+      detail: `${relic.name}を所持している時だけ現れる共鳴進化。`,
+      bonus: { hp: 5, atk: 2, magic: 2, def: 1, res: 1 },
+      condition: `${relic.name}を所持`,
+      artIndex: ascensionArtIndex(profile.key, "relic", stage),
+      moveKey: ascensionMoveKey(profile.key, "relic", stage),
+    };
+  }
+
+  const branch = (ascensionBranches[profile.key] || ascensionBranches.kohaku)
+    .find((entry) => entry.key === branchKey);
+  if (!branch) return null;
+  return {
+    key: `${profile.key}-${branch.key}-${stage}`,
+    branch: branch.key,
+    label: branch.label,
+    path: branch.path,
+    color: branch.color,
+    elementKey: lineageElementKey(profile.key, branch.key, profile.elementKey),
+    stage,
+    name: branch.names[stage - 1],
+    detail: ascensionDetail(branch.path),
+    bonus: ascensionBonus(branch.path, stage),
+    artIndex: ascensionArtIndex(profile.key, branch.key, stage),
+    moveKey: ascensionMoveKey(profile.key, branch.key, stage),
+  };
 }
 
 function ascensionDetail(path) {
@@ -4985,6 +5294,7 @@ function renderAscensionReward() {
   `;
   const grid = ui.gameMenuBody.querySelector(".ascension-choice-grid");
   for (const choice of game.pendingAscensionChoices) {
+    const learnedMove = moveCatalog.find((move) => move.key === choice.moveKey);
     const card = document.createElement("button");
     card.type = "button";
     card.className = "ascension-choice";
@@ -4994,10 +5304,11 @@ function renderAscensionReward() {
       <span>${elementBadgeMarkup(choice.elementKey)}${elementInfo(choice.elementKey).name}属性 / ${choice.label} / 第${choice.stage}段階</span>
       <strong>${choice.name}</strong>
       <small>${choice.detail}</small>
+      ${learnedMove ? `<em>${elementBadgeMarkup(learnedMove.element)}新技 ${learnedMove.name} / ${learnedMove.hint}</em>` : ""}
       <b>${formatAscensionBonus(choice.bonus)}</b>
       ${choice.condition ? `<em>${choice.condition}</em>` : ""}
     `;
-    const preview = { ...leader, evolutionBranch: choice.branch, evolutionStage: choice.stage, artColumn: choice.artColumn };
+    const preview = { ...leader, evolutionBranch: choice.branch, evolutionStage: choice.stage, artIndex: choice.artIndex };
     drawPortrait(card.querySelector("canvas"), preview);
     card.addEventListener("click", () => applyAscensionChoice(choice));
     grid.appendChild(card);
@@ -5014,12 +5325,34 @@ function formatAscensionBonus(bonus) {
   ].filter(Boolean).join(" ");
 }
 
+function learnEvolutionMove(actor, choice, announce = false) {
+  const move = moveCatalog.find((entry) => entry.key === choice?.moveKey);
+  if (!move) return null;
+  const knownIndex = actor.moves.findIndex((entry) => entry.key === move.key);
+  if (knownIndex >= 0) {
+    actor.moves[knownIndex].pp = actor.moves[knownIndex].maxPp;
+    if (actor === getLeader()) game.selectedMove = knownIndex;
+    return move;
+  }
+  const previousEvolutionIndex = actor.moves.findIndex((entry) => String(entry.key).startsWith("asc-"));
+  const nextMove = { ...move, pp: move.maxPp };
+  let slot = previousEvolutionIndex;
+  if (slot < 0 && actor.moves.length < 4) slot = actor.moves.length;
+  if (slot < 0) slot = actor.moves.length - 1;
+  const replaced = actor.moves[slot];
+  actor.moves[slot] = nextMove;
+  if (actor === getLeader()) game.selectedMove = slot;
+  if (announce) announceEvent("進化技", `${move.name}${replaced ? `を${replaced.name}と入れ替えた` : "を覚えた"}`, "技", "good");
+  return move;
+}
+
 function applyAscensionChoice(choice) {
   const leader = getLeader();
   leader.evolutionStage = choice.stage;
   leader.evolutionBranch = choice.branch;
   leader.evolutionName = choice.name;
-  leader.artColumn = choice.artColumn;
+  leader.artIndex = choice.artIndex;
+  delete leader.artColumn;
   leader.color = choice.color;
   leader.elementKey = choice.elementKey;
   leader.maxHp += choice.bonus.hp || 0;
@@ -5030,15 +5363,17 @@ function applyAscensionChoice(choice) {
   leader.res += choice.bonus.res || 0;
   game.luck += choice.bonus.luck || 0;
   leader.ascensionHistory = [...(leader.ascensionHistory || []), choice.key];
+  const learnedMove = learnEvolutionMove(leader, choice);
   if (!game.unlockedAscensions.includes(choice.key)) game.unlockedAscensions.push(choice.key);
   const previousLineage = game.persistentLineages[leader.profileKey] || { bonus: {} };
   game.persistentLineages[leader.profileKey] = {
     stage: leader.evolutionStage,
     branch: leader.evolutionBranch,
     name: leader.evolutionName,
-    artColumn: leader.artColumn,
+    artIndex: leader.artIndex,
     color: leader.color,
     elementKey: leader.elementKey,
+    moveKey: choice.moveKey,
     history: [...leader.ascensionHistory],
     bonus: {
       hp: (Number(previousLineage.bonus?.hp) || 0) + (choice.bonus.hp || 0),
@@ -5049,7 +5384,7 @@ function applyAscensionChoice(choice) {
     },
   };
   game.pendingAscensionChoices = [];
-  announceEvent("EVOLUTION", `${leader.name}は${choice.name}へ進化した`, "進", "good");
+  announceEvent("EVOLUTION", `${leader.name}は${choice.name}へ進化した${learnedMove ? ` / ${learnedMove.name}` : ""}`, "進", "good");
   setScreenFlash(choice.color, 650);
   triggerScreenShake(14, 420);
   playSfx("level");
@@ -6135,13 +6470,33 @@ function appendTownEntry(container, options) {
       ${options.meta ? `<small>${options.meta}</small>` : ""}
     </div>
   `;
+  const buttons = [];
   if (options.buttonLabel) {
-    const button = document.createElement("button");
-    button.type = "button";
-    button.textContent = options.buttonLabel;
-    button.disabled = Boolean(options.disabled);
-    if (options.onClick) button.addEventListener("click", options.onClick);
-    entry.appendChild(button);
+    buttons.push({
+      label: options.buttonLabel,
+      disabled: Boolean(options.disabled),
+      onClick: options.onClick,
+    });
+  }
+  if (options.secondaryButtonLabel) {
+    buttons.push({
+      label: options.secondaryButtonLabel,
+      disabled: Boolean(options.secondaryDisabled),
+      onClick: options.secondaryOnClick,
+    });
+  }
+  if (buttons.length) {
+    const actions = document.createElement("div");
+    actions.className = "town-entry-actions";
+    for (const action of buttons) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.textContent = action.label;
+      button.disabled = action.disabled;
+      if (action.onClick) button.addEventListener("click", action.onClick);
+      actions.appendChild(button);
+    }
+    entry.appendChild(actions);
   }
   container.appendChild(entry);
   if (hasIcon) drawItemIcon(entry.querySelector("canvas"), options.iconKind || "gear", options.iconGear);
@@ -7488,6 +7843,9 @@ function drawActorBody(targetCtx, actor, px, py, scale, time) {
 function drawLineageArt(targetCtx, actor, time = performance.now()) {
   if (actor.kind !== "leader") return false;
   const profile = characterCatalog.find((entry) => entry.key === actor.profileKey) || characterCatalog[0];
+  if (Number.isInteger(actor.artIndex)) {
+    return drawArtIndexCell(targetCtx, actor.artIndex, actor.evolutionStage || 0, time, actor.color);
+  }
   let column = Number.isInteger(actor.artColumn) ? actor.artColumn : 0;
   if (!Number.isInteger(actor.artColumn) && actor.evolutionBranch && actor.evolutionBranch !== "base") {
     const branch = (ascensionBranches[profile.key] || []).find((entry) => entry.key === actor.evolutionBranch);
@@ -7502,6 +7860,10 @@ function drawLineageArt(targetCtx, actor, time = performance.now()) {
   };
   const artIndex = artSets[profile.key]?.[clamp(column, 0, 3)];
   if (!Number.isInteger(artIndex)) return false;
+  return drawArtIndexCell(targetCtx, artIndex, actor.evolutionStage || 0, time, actor.color);
+}
+
+function drawArtIndexCell(targetCtx, artIndex, stage = 0, time = performance.now(), ringColor = "#fff0a1") {
   const sheet = enemyArtSheets[Math.floor(artIndex / 10)];
   if (!sheet?.complete || !sheet.naturalWidth) return false;
   const localIndex = artIndex % 10;
@@ -7509,7 +7871,7 @@ function drawLineageArt(targetCtx, actor, time = performance.now()) {
   const sourceRow = Math.floor(localIndex / 5);
   const cellWidth = sheet.naturalWidth / 5;
   const cellHeight = sheet.naturalHeight / 2;
-  const pulse = 1 + Math.sin(time / 420 + (actor.evolutionStage || 0)) * 0.018;
+  const pulse = 1 + Math.sin(time / 420 + stage) * 0.018;
   targetCtx.save();
   targetCtx.imageSmoothingEnabled = true;
   targetCtx.translate(TILE / 2, TILE / 2 + 1);
@@ -7525,8 +7887,8 @@ function drawLineageArt(targetCtx, actor, time = performance.now()) {
     TILE,
     TILE,
   );
-  if ((actor.evolutionStage || 0) > 0) {
-    targetCtx.strokeStyle = actor.color || "#fff0a1";
+  if (stage > 0) {
+    targetCtx.strokeStyle = ringColor || "#fff0a1";
     targetCtx.globalAlpha = 0.55;
     targetCtx.lineWidth = 1.5;
     targetCtx.beginPath();

@@ -3558,6 +3558,13 @@ button {
   font-size: 0.7rem;
 }
 
+.town-entry-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
 .town-entry button {
   min-width: 90px;
   height: 38px;
