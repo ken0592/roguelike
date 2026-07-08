@@ -12,6 +12,7 @@ const MAX_BAG_CAPACITY = 40;
 const STORAGE_KEY = "stardustRescueBest";
 const SAVE_KEY = "stardustRescueSaveV2";
 const SOUND_KEY = "stardustRescueSound";
+const CONTROL_STORAGE_KEY = "foxboundControlBindingsV1";
 const SAVE_SLOT_COUNT = 1;
 const SPRITE_TILE = 16;
 const SPRITE_MARGIN = 1;
@@ -117,6 +118,7 @@ const ui = {
   townLeaderSwatch: document.querySelector("#townLeaderSwatch"),
   townStartFloor: document.querySelector("#townStartFloor"),
   townNextGate: document.querySelector("#townNextGate"),
+  townChoiceDepartLabel: document.querySelector("#townChoiceDepartLabel"),
   departButton: document.querySelector("#departButton"),
   townInteraction: document.querySelector("#townInteraction"),
   townInteractionKey: document.querySelector("#townInteractionKey"),
@@ -1424,10 +1426,98 @@ const dirs = [
   { x: -1, y: 1 },
 ];
 
+const controlActionCatalog = [
+  { key: "moveUp", label: "上へ移動", defaultKey: "w", action: { type: "move", dx: 0, dy: -1 } },
+  { key: "moveDown", label: "下へ移動", defaultKey: "s", action: { type: "move", dx: 0, dy: 1 } },
+  { key: "moveLeft", label: "左へ移動", defaultKey: "a", action: { type: "move", dx: -1, dy: 0 } },
+  { key: "moveRight", label: "右へ移動", defaultKey: "d", action: { type: "move", dx: 1, dy: 0 } },
+  { key: "moveUpLeft", label: "左上へ移動", defaultKey: "y", action: { type: "move", dx: -1, dy: -1 } },
+  { key: "moveUpRight", label: "右上へ移動", defaultKey: "u", action: { type: "move", dx: 1, dy: -1 } },
+  { key: "moveDownLeft", label: "左下へ移動", defaultKey: "b", action: { type: "move", dx: -1, dy: 1 } },
+  { key: "moveDownRight", label: "右下へ移動", defaultKey: "n", action: { type: "move", dx: 1, dy: 1 } },
+  { key: "wait", label: "待機", defaultKey: " ", action: { type: "wait" } },
+  { key: "basicAttack", label: "通常攻撃", defaultKey: "f", action: { type: "basicAttack" } },
+  { key: "useMove", label: "選択中の技", defaultKey: "j", action: { type: "useMove" } },
+  { key: "openMoves", label: "技一覧", defaultKey: "q", action: { type: "openMoves" } },
+  { key: "openMenu", label: "冒険メニュー", defaultKey: "x", action: { type: "openMenu" } },
+  { key: "ground", label: "足元メニュー", defaultKey: "g", action: { type: "ground" } },
+  { key: "eatApple", label: "食料を食べる", defaultKey: "r", action: { type: "eatApple" } },
+  { key: "cycleMove", label: "技切替", defaultKey: "e", action: { type: "cycleMove" } },
+];
+
+function defaultControlBindings() {
+  return Object.fromEntries(controlActionCatalog.map((entry) => [entry.key, entry.defaultKey]));
+}
+
+function readControlBindings() {
+  const defaults = defaultControlBindings();
+  try {
+    const saved = JSON.parse(localStorage.getItem(CONTROL_STORAGE_KEY) || "{}");
+    if (!saved || typeof saved !== "object") return defaults;
+    const next = { ...defaults };
+    for (const entry of controlActionCatalog) {
+      if (typeof saved[entry.key] === "string") next[entry.key] = saved[entry.key];
+    }
+    return next;
+  } catch {
+    return defaults;
+  }
+}
+
+function saveControlBindings() {
+  try {
+    localStorage.setItem(CONTROL_STORAGE_KEY, JSON.stringify(controlBindings));
+  } catch {
+    // Key customization is optional; the game still works with defaults.
+  }
+}
+
+function normalizeControlKeyFromEvent(event) {
+  if (event.key === " ") return " ";
+  return String(event.key || "").toLowerCase();
+}
+
+function controlKeyLabel(key) {
+  const labels = {
+    " ": "Space",
+    arrowup: "↑",
+    arrowdown: "↓",
+    arrowleft: "←",
+    arrowright: "→",
+    escape: "Esc",
+  };
+  if (!key) return "未設定";
+  if (labels[key]) return labels[key];
+  if (key.length === 1) return key.toUpperCase();
+  return key.replace(/^arrow/, "").replace(/^page/, "Page ");
+}
+
+function controlActionKeyForEvent(event) {
+  const key = normalizeControlKeyFromEvent(event);
+  return controlActionCatalog.find((entry) => controlBindings[entry.key] === key)?.key || null;
+}
+
+function actionFromControlActionKey(actionKey) {
+  const entry = controlActionCatalog.find((candidate) => candidate.key === actionKey);
+  return entry ? { ...entry.action } : null;
+}
+
+function setControlBinding(actionKey, key) {
+  for (const entry of controlActionCatalog) {
+    if (entry.key !== actionKey && controlBindings[entry.key] === key) {
+      controlBindings[entry.key] = "";
+    }
+  }
+  controlBindings[actionKey] = key;
+  saveControlBindings();
+}
+
 let bestScore = readBestScore();
 let game;
 let audioContext = null;
 let soundEnabled = readSoundSetting();
+let controlBindings = readControlBindings();
+let pendingControlAction = null;
 let touchMovePointer = null;
 let touchMoveDirection = null;
 let touchMoveTimer = null;
@@ -2813,11 +2903,11 @@ function interactTownFacility() {
 }
 
 function performTownAction(action) {
-  if (action.type === "move") {
-    moveTownPlayer(action.dx, action.dy);
+  if (action.type === "openMenu") {
+    openGameMenu("controls");
     return;
   }
-  if (["basicAttack", "useMove", "wait"].includes(action.type)) interactTownFacility();
+  if (["basicAttack", "useMove", "wait", "move"].includes(action.type)) openExpeditionLoadout();
 }
 
 function performAction(action) {
@@ -3439,23 +3529,30 @@ function applyTowerWind() {
   return true;
 }
 
+function resetToNewGameAfterFailure(title, text, buttonText = "ニューゲームへ") {
+  const slot = game.saveSlot || 1;
+  saveBestScore();
+  startFreshGame(slot);
+  game.gameOver = true;
+  ui.endTitle.textContent = title;
+  ui.endText.textContent = text;
+  ui.endRestartButton.textContent = buttonText;
+  ui.endOverlay.hidden = false;
+}
+
 function failFromTowerWind() {
+  const floor = game.floor;
   const leader = getLeader();
   leader.hp = 0;
   leader.down = true;
-  game.gameOver = true;
-  game.towerCheckpoint = null;
-  discardRunInventory();
-  saveCurrentGame(true);
-  saveBestScore();
-  ui.endTitle.textContent = "塔風に弾き出された";
-  ui.endText.textContent = `B${game.floor}Fに留まりすぎた。探索中のバッグは失われた。`;
-  ui.endRestartButton.textContent = "星見広場へ戻る";
-  ui.endOverlay.hidden = false;
   announceEvent("TIME OVER", `同じ階には${FLOOR_WIND_LIMIT}ターンまでしか留まれない`, "風", "danger");
   setScreenFlash("#b48cff", 900);
   triggerScreenShake(20, 700);
   playSfx("karma");
+  resetToNewGameAfterFailure(
+    "塔風に弾き出された",
+    `B${floor}Fに留まりすぎた。死亡扱いとなり、次は完全なニューゲームから始まる。`,
+  );
 }
 
 function companionTurns() {
@@ -3576,12 +3673,12 @@ function enemyTurn() {
       }
     }
 
+    const seesTarget = enemyCanSeeTarget(enemy, target);
     const rangedRange = enemyRangedRange(enemy);
     if (
       rangedRange > 0 &&
       gridDistance(enemy, target) <= rangedRange &&
-      isVisible(enemy.x, enemy.y) &&
-      hasClearAttackPath(enemy, target)
+      seesTarget
     ) {
       enemyAttack(enemy, target, true);
       continue;
@@ -3593,8 +3690,8 @@ function enemyTurn() {
       continue;
     }
 
-    const aware = enemy.alerted || distance(enemy, target) <= 9 || isVisible(enemy.x, enemy.y);
-    if (aware) {
+    if (seesTarget) enemy.alerted = true;
+    if (enemy.alerted) {
       enemy.alerted = true;
       const moved = moveEnemyToward(enemy, target);
       if (moved && enemy.mutation?.swift && Math.random() < 0.45 && gridDistance(enemy, target) > 1) {
@@ -3610,10 +3707,17 @@ function enemyTurn() {
     const catalog = randomEnemyProfile();
     const point = randomEnemySpawnTile(8);
     if (point) {
-      game.enemies.push(createEnemy(catalog, point, true));
+      game.enemies.push(createEnemy(catalog, point, false));
       addLog("遠くから敵の気配が近づいてきた。");
     }
   }
+}
+
+function enemyCanSeeTarget(enemy, target) {
+  if (!target || target.down) return false;
+  const sightRange = enemy.boss ? 9 : enemy.mutation?.swift ? 8 : 7;
+  if (gridDistance(enemy, target) > sightRange) return false;
+  return hasClearAttackPath(enemy, target);
 }
 
 function enemyRangedRange(enemy) {
@@ -4953,16 +5057,12 @@ function restoreTowerCheckpoint(checkpoint) {
 function checkGameOver() {
   const leader = getLeader();
   if (!leader.down && leader.hp > 0) return;
-  game.gameOver = true;
-  game.towerCheckpoint = null;
-  discardRunInventory();
-  saveCurrentGame(true);
-  saveBestScore();
-  ui.endTitle.textContent = "探索失敗";
-  ui.endText.textContent = `B${game.floor}Fで力尽きた。探索中のバッグは失われた。探索pt ${game.score}。`;
-  ui.endRestartButton.textContent = "町へ戻る";
-  ui.endOverlay.hidden = false;
-  updateAll();
+  const floor = game.floor;
+  const score = game.score;
+  resetToNewGameAfterFailure(
+    "探索失敗",
+    `B${floor}Fで力尽きた。探索pt ${score}。死亡したため、進化素材・進化状態・今回のバッグはリセットされる。`,
+  );
 }
 
 function updateAll() {
@@ -4971,7 +5071,7 @@ function updateAll() {
   const inTown = game.mode === "town";
   ui.townScreen.hidden = !inTown;
   ui.gameLayout.hidden = inTown;
-  ui.touchControls.hidden = false;
+  ui.touchControls.hidden = inTown;
   ui.touchControls.dataset.mode = inTown ? "town" : "dungeon";
   ui.touchAButton.querySelector("small").textContent = inTown ? "しらべる" : "こうげき";
   ui.touchAButton.setAttribute("aria-label", inTown ? "A 調べる" : "A 通常攻撃");
@@ -4999,14 +5099,12 @@ function updateAll() {
     ui.departButton.querySelector("span").textContent = checkpoint
       ? `B${checkpoint}Fの休憩所から再開`
       : "B1Fから100階踏破へ挑む";
-    const facility = townFocusedFacility();
-    ui.townInteraction.hidden = !facility;
-    if (facility) {
-      ui.townInteractionKey.textContent = window.matchMedia("(pointer: coarse)").matches ? "A" : "F";
-      ui.townInteractionName.textContent = facility.name;
-      ui.townInteractionDetail.textContent = facility.detail;
-      ui.townInteraction.style.setProperty("--facility-color", facility.color);
+    if (ui.townChoiceDepartLabel) {
+      ui.townChoiceDepartLabel.textContent = checkpoint
+        ? `B${checkpoint}Fの休憩所から再開`
+        : "探索者と星遺物を選ぶ";
     }
+    ui.townInteraction.hidden = true;
     return;
   }
   ui.townInteraction.hidden = true;
@@ -5097,13 +5195,13 @@ function renderMoves() {
 }
 
 function openGameMenu(view = "moves") {
-  if (game.mode !== "dungeon" || game.gameOver || game.victory) return;
+  if ((game.mode !== "dungeon" && view !== "controls") || game.gameOver || game.victory) return;
   renderGameMenu(view);
   if (!ui.gameMenuDialog.open) ui.gameMenuDialog.showModal();
 }
 
 function toggleGameMenu(view = "moves") {
-  if (game.mode !== "dungeon") return;
+  if (game.mode !== "dungeon" && view !== "controls") return;
   if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
   else openGameMenu(view);
 }
@@ -5220,6 +5318,11 @@ function renderGameMenu(view = "moves") {
     return;
   }
 
+  if (view === "controls") {
+    renderControlsMenu();
+    return;
+  }
+
   if (view === "merchant") {
     renderDungeonMerchant();
     return;
@@ -5253,6 +5356,43 @@ function renderGameMenu(view = "moves") {
       <div class="menu-stat"><span>運勢の効果</span><strong>${game.floorEvent?.detail || "-"}</strong></div>
     </div>
   `;
+}
+
+function renderControlsMenu() {
+  ui.gameMenuBody.innerHTML = `
+    <div class="controls-menu-head">
+      <div>
+        <span>KEY CONFIG</span>
+        <strong>操作設定</strong>
+        <small>変更を押してから、割り当てたいキーを1つ押してください。方向キーとテンキーは補助操作として常に使えます。</small>
+      </div>
+      <button type="button" class="secondary-button controls-reset">初期設定に戻す</button>
+    </div>
+    <div class="control-bind-list"></div>
+  `;
+  const list = ui.gameMenuBody.querySelector(".control-bind-list");
+  for (const entry of controlActionCatalog) {
+    const waiting = pendingControlAction === entry.key;
+    const row = document.createElement("div");
+    row.className = `control-bind-row ${waiting ? "waiting" : ""}`;
+    row.innerHTML = `
+      <span>${entry.label}</span>
+      <kbd>${waiting ? "入力待ち" : controlKeyLabel(controlBindings[entry.key])}</kbd>
+      <button type="button">${waiting ? "Escで中止" : "変更"}</button>
+    `;
+    row.querySelector("button").addEventListener("click", () => {
+      pendingControlAction = entry.key;
+      renderControlsMenu();
+    });
+    list.appendChild(row);
+  }
+  ui.gameMenuBody.querySelector(".controls-reset").addEventListener("click", () => {
+    pendingControlAction = null;
+    controlBindings = defaultControlBindings();
+    saveControlBindings();
+    renderControlsMenu();
+    showToast("操作設定を初期化した");
+  });
 }
 
 function renderGroundMenu() {
@@ -10044,78 +10184,79 @@ function handleKey(event) {
   const key = event.key.toLowerCase();
   const code = event.code;
 
-  if (ui.townDialog.open || ui.helpDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open || ui.levelDialog.open) return;
-  if (game.mode === "town") {
-    const townMoves = {
-      w: { x: 0, y: -1 },
-      a: { x: -1, y: 0 },
-      s: { x: 0, y: 1 },
-      d: { x: 1, y: 0 },
-      arrowup: { x: 0, y: -1 },
-      arrowleft: { x: -1, y: 0 },
-      arrowdown: { x: 0, y: 1 },
-      arrowright: { x: 1, y: 0 },
-      y: { x: -1, y: -1 },
-      u: { x: 1, y: -1 },
-      b: { x: -1, y: 1 },
-      n: { x: 1, y: 1 },
-    };
-    const direction = townMoves[key];
-    if (direction) {
-      event.preventDefault();
-      const now = performance.now();
-      if (now < game.nextMoveAt) return;
-      game.nextMoveAt = now + (event.shiftKey ? 55 : 90);
-      const previousDash = touchDashHeld;
-      touchDashHeld ||= event.shiftKey;
-      moveTownPlayer(direction.x, direction.y);
-      touchDashHeld = previousDash;
+  if (pendingControlAction) {
+    if (["shift", "control", "alt", "meta"].includes(key)) return;
+    event.preventDefault();
+    if (key === "escape") {
+      pendingControlAction = null;
+      renderGameMenu("controls");
       return;
     }
+    const target = controlActionCatalog.find((entry) => entry.key === pendingControlAction);
+    setControlBinding(pendingControlAction, normalizeControlKeyFromEvent(event));
+    pendingControlAction = null;
+    renderGameMenu("controls");
+    showToast(`${target?.label || "操作"}を${controlKeyLabel(normalizeControlKeyFromEvent(event))}に設定`);
+    return;
+  }
+
+  if (
+    ui.townDialog.open
+    || ui.helpDialog.open
+    || ui.saveDialog.open
+    || ui.stairsDialog.open
+    || ui.restDialog.open
+    || ui.levelDialog.open
+    || ui.gameMenuDialog.open
+  ) return;
+  const boundActionKey = controlActionKeyForEvent(event);
+  const boundAction = boundActionKey ? actionFromControlActionKey(boundActionKey) : null;
+
+  if (game.mode === "town") {
     if (["enter", "f", " ", "e"].includes(key)) {
       if (event.repeat) return;
       event.preventDefault();
-      interactTownFacility();
+      openExpeditionLoadout();
+      return;
+    }
+    if (key === "c" || boundAction?.type === "openMenu" || boundAction?.type === "openMoves") {
+      if (event.repeat) return;
+      event.preventDefault();
+      openGameMenu("controls");
     }
     return;
   }
-  if (key === "q") {
+
+  if (boundAction?.type === "openMoves") {
     if (event.repeat) return;
     event.preventDefault();
     toggleGameMenu("moves");
     return;
   }
-  if (key === "g") {
+  if (boundAction?.type === "ground") {
     if (event.repeat) return;
     event.preventDefault();
     toggleGameMenu("ground");
     return;
   }
+  if (boundAction?.type === "openMenu") {
+    if (event.repeat) return;
+    event.preventDefault();
+    toggleGameMenu("moves");
+    return;
+  }
   if (ui.gameMenuDialog.open || game.mode !== "dungeon") return;
 
-  const actions = {
-    w: { type: "move", dx: 0, dy: -1 },
-    a: { type: "move", dx: -1, dy: 0 },
-    s: { type: "move", dx: 0, dy: 1 },
-    d: { type: "move", dx: 1, dy: 0 },
+  const fallbackActions = {
     arrowup: { type: "move", dx: 0, dy: -1 },
     arrowleft: { type: "move", dx: -1, dy: 0 },
     arrowdown: { type: "move", dx: 0, dy: 1 },
     arrowright: { type: "move", dx: 1, dy: 0 },
-    y: { type: "move", dx: -1, dy: -1 },
-    u: { type: "move", dx: 1, dy: -1 },
-    b: { type: "move", dx: -1, dy: 1 },
-    n: { type: "move", dx: 1, dy: 1 },
     home: { type: "move", dx: -1, dy: -1 },
     pageup: { type: "move", dx: 1, dy: -1 },
     end: { type: "move", dx: -1, dy: 1 },
     pagedown: { type: "move", dx: 1, dy: 1 },
-    " ": { type: "wait" },
     ".": { type: "wait" },
-    f: { type: "basicAttack" },
-    j: { type: "useMove" },
-    r: { type: "eatApple" },
-    e: { type: "cycleMove" },
   };
 
   const numpadActions = {
@@ -10130,14 +10271,14 @@ function handleKey(event) {
     Numpad5: { type: "wait" },
   };
 
-  if (/^[1-4]$/.test(key) && !code.startsWith("Numpad")) {
+  if (/^[1-4]$/.test(key) && !code.startsWith("Numpad") && !boundAction) {
     if (event.repeat) return;
     event.preventDefault();
     performAction({ type: "selectMove", index: Number(key) - 1 });
     return;
   }
 
-  const action = numpadActions[code] || actions[key];
+  const action = boundAction || numpadActions[code] || fallbackActions[key];
   if (!action) return;
   if (event.repeat && action.type !== "move") return;
   event.preventDefault();
@@ -10292,7 +10433,17 @@ function bindEvents() {
   });
 
   document.querySelectorAll("[data-town-action]").forEach((button) => {
-    button.addEventListener("click", () => openTownFacility(button.dataset.townAction));
+    button.addEventListener("click", () => {
+      if (button.dataset.townAction === "depart") {
+        openExpeditionLoadout();
+        return;
+      }
+      if (button.dataset.townAction === "controls") {
+        openGameMenu("controls");
+        return;
+      }
+      openTownFacility(button.dataset.townAction);
+    });
   });
 
   document.querySelectorAll("[data-action]").forEach((button) => {
@@ -10311,9 +10462,6 @@ function bindEvents() {
 bindEvents();
 createGame();
 if (!loadSaveSlot(1)) saveCurrentGame(true);
-window.setTimeout(() => {
-  if (game.mode === "town" && !ui.townDialog.open && !ui.saveDialog.open) openExpeditionLoadout();
-}, 120);
 updateSoundButton();
 spriteSheet.addEventListener("load", () => {
   if (game) updateAll();

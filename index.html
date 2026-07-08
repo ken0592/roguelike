@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa16c" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa16d" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa16c" />
+    <link rel="stylesheet" href="styles.css?v=pwa16d" />
   </head>
   <body>
     <div class="app-shell">
@@ -72,6 +72,39 @@
         <div class="town-status" aria-live="polite">
           <span><b>ランク</b><strong id="townRankLabel">見習い</strong></span>
           <span><b>星貨</b><strong id="townCoinLabel">160</strong></span>
+        </div>
+        <div class="town-choice-panel" aria-label="遠征準備">
+          <div class="town-choice-copy">
+            <span>RUN SETUP</span>
+            <strong>挑戦を選ぶ</strong>
+            <small>探索者と初期星遺物を選んで、B1Fから百階踏破へ向かいます。</small>
+          </div>
+          <div class="town-choice-grid">
+            <button type="button" class="town-choice-primary" data-town-action="depart">
+              <b>出発</b>
+              <span id="townChoiceDepartLabel">探索者と星遺物を選ぶ</span>
+            </button>
+            <button type="button" data-town-action="shop">
+              <b>商店</b>
+              <span>道具を買う・売る</span>
+            </button>
+            <button type="button" data-town-action="storage">
+              <b>倉庫</b>
+              <span>持ち物を預ける</span>
+            </button>
+            <button type="button" data-town-action="guild">
+              <b>記録</b>
+              <span>到達階と進化を見る</span>
+            </button>
+            <button type="button" data-town-action="board">
+              <b>塔の経路</b>
+              <span>門番と休憩所</span>
+            </button>
+            <button type="button" data-town-action="controls">
+              <b>操作</b>
+              <span>キー設定を変える</span>
+            </button>
+          </div>
         </div>
         <div id="townInteraction" class="town-interaction" hidden aria-live="polite">
           <kbd id="townInteractionKey">F</kbd>
@@ -293,6 +326,7 @@
           <button type="button" data-menu-view="evolution">進化</button>
           <button type="button" data-menu-view="mission">探索</button>
           <button type="button" data-menu-view="skills">成長</button>
+          <button type="button" data-menu-view="controls">操作</button>
         </nav>
         <div id="gameMenuBody" class="game-menu-body"></div>
       </form>
@@ -426,7 +460,7 @@
           <li>基本属性は炎・水・木・光・闇。炎→木→水→炎が有利で、光と闇は互いに弱点です。氷・毒は特殊属性です。</li>
           <li>行商人の色付き売り場では商品を床から拾い、商人へ精算します。未精算のまま売り場を出ると泥棒扱いです。</li>
           <li>バッグは初期20枠。町の商店で星貨を払うと、最大40枠まで永久に拡張できます。</li>
-          <li>主人公が倒れると冒険終了です。</li>
+          <li>主人公が倒れると冒険終了です。進化状態や今回のバッグは初期化され、次はニューゲームから始まります。</li>
         </ul>
         <p class="credit-line">素材: Kenney Roguelike/RPG Pack (CC0) / キャラクターアート: OpenAI生成</p>
       </form>
@@ -440,6 +474,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa16c"></script>
+    <script src="app.js?v=pwa16d"></script>
   </body>
 </html>

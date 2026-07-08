@@ -412,6 +412,107 @@ button {
   font-size: 0.82rem;
 }
 
+.town-choice-panel {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  top: 116px;
+  width: min(560px, calc(100% - 48px));
+  transform: translateX(-50%);
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(255, 231, 177, 0.32);
+  background:
+    linear-gradient(135deg, rgba(240, 179, 77, 0.16), transparent 38%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent),
+    rgba(8, 12, 12, 0.9);
+  padding: 16px;
+  box-shadow:
+    0 20px 54px rgba(0, 0, 0, 0.48),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+
+.town-choice-copy {
+  display: grid;
+  gap: 4px;
+  text-align: center;
+}
+
+.town-choice-copy span {
+  color: #7ddbd6;
+  font-size: 0.66rem;
+  font-weight: 900;
+}
+
+.town-choice-copy strong {
+  color: #fff2cf;
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.town-choice-copy small {
+  color: #c8bda8;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.town-choice-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.town-choice-grid button {
+  min-width: 0;
+  min-height: 58px;
+  display: grid;
+  gap: 3px;
+  align-content: center;
+  border: 1px solid rgba(255, 245, 223, 0.18);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent),
+    rgba(29, 32, 29, 0.88);
+  color: #fff7e2;
+  cursor: pointer;
+  padding: 9px 12px;
+  text-align: left;
+  box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.32);
+}
+
+.town-choice-grid button:hover,
+.town-choice-grid button:focus-visible {
+  border-color: rgba(255, 229, 176, 0.56);
+  filter: brightness(1.12);
+  transform: translateY(-1px);
+}
+
+.town-choice-grid b {
+  color: #ffe0a2;
+  font-size: 0.86rem;
+}
+
+.town-choice-grid span {
+  overflow: hidden;
+  color: #b9c9c3;
+  font-size: 0.65rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.town-choice-primary {
+  grid-column: 1 / -1;
+  min-height: 70px !important;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent 46%),
+    linear-gradient(135deg, #d9794d, #9b503b) !important;
+  border-color: rgba(255, 232, 190, 0.68) !important;
+}
+
+.town-choice-primary b {
+  color: #fff5df;
+  font-size: 1.08rem;
+}
+
 .town-leader-select {
   position: absolute;
   z-index: 3;
@@ -2856,7 +2957,7 @@ button {
 
 .game-menu-tabs {
   display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 1px;
   margin-top: 14px;
   background: rgba(255, 245, 223, 0.12);
@@ -2884,6 +2985,90 @@ button {
   max-height: 520px;
   overflow: auto;
   padding-top: 14px;
+}
+
+.controls-menu-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 150px;
+  gap: 10px;
+  align-items: center;
+  border: 1px solid rgba(94, 201, 207, 0.24);
+  background: rgba(94, 201, 207, 0.07);
+  padding: 10px;
+}
+
+.controls-menu-head div {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.controls-menu-head span {
+  color: #7edcde;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.controls-menu-head strong {
+  color: #eefcff;
+  font-size: 1.1rem;
+}
+
+.controls-menu-head small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  line-height: 1.45;
+}
+
+.control-bind-list {
+  display: grid;
+  gap: 6px;
+}
+
+.control-bind-row {
+  display: grid;
+  grid-template-columns: minmax(130px, 1fr) 84px 82px;
+  gap: 8px;
+  align-items: center;
+  border: 1px solid rgba(255, 245, 223, 0.13);
+  background: rgba(255, 255, 255, 0.025);
+  padding: 8px;
+}
+
+.control-bind-row.waiting {
+  border-color: rgba(240, 179, 77, 0.62);
+  background: rgba(240, 179, 77, 0.09);
+}
+
+.control-bind-row span {
+  min-width: 0;
+  color: #fff4df;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.control-bind-row kbd {
+  min-height: 34px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 245, 223, 0.22);
+  background: rgba(0, 0, 0, 0.24);
+  color: #8eeaf1;
+  font: 900 0.74rem/1 Inter, sans-serif;
+}
+
+.control-bind-row.waiting kbd {
+  color: #ffd889;
+}
+
+.control-bind-row button {
+  min-height: 34px;
+  border: 1px solid rgba(255, 245, 223, 0.16);
+  background: #272a27;
+  color: #fff1cf;
+  cursor: pointer;
+  font-size: 0.7rem;
+  font-weight: 900;
 }
 
 .gear-summary {
@@ -4424,6 +4609,20 @@ button {
     min-width: 82px;
   }
 
+  .town-choice-panel {
+    top: 154px;
+    width: calc(100% - 32px);
+    padding: 12px;
+  }
+
+  .town-choice-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .town-choice-copy {
+    text-align: left;
+  }
+
   .town-leader-select {
     left: 16px;
     top: 154px;
@@ -4478,6 +4677,14 @@ button {
 
   .game-menu-tabs {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .controls-menu-head {
+    grid-template-columns: 1fr;
+  }
+
+  .control-bind-row {
+    grid-template-columns: minmax(0, 1fr) 82px 78px;
   }
 
   .tactic-options {
@@ -4629,6 +4836,41 @@ button {
 
   .town-title strong {
     font-size: 1.15rem;
+  }
+
+  .town-choice-panel {
+    top: 52px;
+    width: min(430px, calc(100% - 190px));
+    min-width: 300px;
+    padding: 9px;
+    gap: 7px;
+  }
+
+  .town-choice-copy {
+    gap: 1px;
+  }
+
+  .town-choice-copy strong {
+    font-size: 1rem;
+  }
+
+  .town-choice-copy small {
+    display: none;
+  }
+
+  .town-choice-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 5px;
+  }
+
+  .town-choice-grid button {
+    min-height: 42px;
+    padding: 5px 8px;
+  }
+
+  .town-choice-primary {
+    grid-column: 1 / -1;
+    min-height: 46px !important;
   }
 
   .town-leader-select,
