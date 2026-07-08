@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa16b" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa16c" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa16b" />
+    <link rel="stylesheet" href="styles.css?v=pwa16c" />
   </head>
   <body>
     <div class="app-shell">
@@ -95,7 +95,7 @@
         </button>
         <button class="town-spot town-spot-shop town-shortcut" type="button" data-town-action="shop" tabindex="-1" aria-hidden="true">
           <strong>星の商店</strong>
-          <span>道具・開始レリック</span>
+          <span>道具・開始星遺物</span>
         </button>
         <button class="town-spot town-spot-storage town-shortcut" type="button" data-town-action="storage" tabindex="-1" aria-hidden="true">
           <strong>風見倉庫</strong>
@@ -121,7 +121,7 @@
       <main id="gameLayout" class="game-layout" hidden>
         <section class="stage-panel" aria-label="ダンジョン">
           <canvas id="gameCanvas" width="1152" height="768"></canvas>
-          <div id="relicRibbon" class="relic-ribbon" aria-label="所持レリック"></div>
+          <div id="relicRibbon" class="relic-ribbon" aria-label="所持星遺物"></div>
           <div id="toast" class="toast" hidden></div>
           <div id="eventBanner" class="event-banner dialogue-box" hidden aria-live="assertive">
             <canvas id="eventPortrait" class="dialogue-portrait" width="64" height="64" aria-hidden="true"></canvas>
@@ -213,7 +213,7 @@
               <strong id="materialLabel">素材袋 0</strong>
             </div>
             <div class="meter-line">
-              <span>レリック</span>
+              <span>星遺物</span>
               <strong id="gearLabel">0個</strong>
             </div>
             <div class="meter-line">
@@ -235,11 +235,15 @@
 
       <section id="touchControls" class="touch-controls touch-controls-single" aria-label="ゲームコントローラー" hidden>
         <div class="touch-dpad" data-dpad aria-label="十字キー。指を斜めへ滑らせると斜め移動">
+          <button class="dpad-up-left" type="button" data-action="move" data-dx="-1" data-dy="-1" aria-label="左上">↖</button>
           <button class="dpad-up" type="button" data-action="move" data-dx="0" data-dy="-1" aria-label="上">▲</button>
+          <button class="dpad-up-right" type="button" data-action="move" data-dx="1" data-dy="-1" aria-label="右上">↗</button>
           <button class="dpad-left" type="button" data-action="move" data-dx="-1" data-dy="0" aria-label="左">◀</button>
           <button class="dpad-center" type="button" data-action="wait" aria-label="待機">•</button>
           <button class="dpad-right" type="button" data-action="move" data-dx="1" data-dy="0" aria-label="右">▶</button>
+          <button class="dpad-down-left" type="button" data-action="move" data-dx="-1" data-dy="1" aria-label="左下">↙</button>
           <button class="dpad-down" type="button" data-action="move" data-dx="0" data-dy="1" aria-label="下">▼</button>
+          <button class="dpad-down-right" type="button" data-action="move" data-dx="1" data-dy="1" aria-label="右下">↘</button>
         </div>
         <div class="touch-actions touch-abxy" aria-label="ABXYボタン">
           <button id="touchDashButton" class="button-b" type="button" aria-label="B ダッシュ"><b>B</b><small>DASH</small></button>
@@ -285,7 +289,7 @@
           <button type="button" data-menu-view="bag">バッグ</button>
           <button type="button" data-menu-view="ground">足元</button>
           <button type="button" data-menu-view="materials">素材袋</button>
-          <button type="button" data-menu-view="relics">レリック</button>
+          <button type="button" data-menu-view="relics">星遺物</button>
           <button type="button" data-menu-view="evolution">進化</button>
           <button type="button" data-menu-view="mission">探索</button>
           <button type="button" data-menu-view="skills">成長</button>
@@ -344,6 +348,8 @@
       <div class="level-dialog-copy">
         <p id="levelDialogText">コハクの力が伸びた。</p>
         <div id="levelStatChanges" class="level-stat-changes"></div>
+        <div id="levelStatPoints" class="level-stat-points"></div>
+        <div id="levelMoveChoices" class="level-move-choices"></div>
         <div class="level-skill-point">
           <span>星網ポイント</span>
           <strong id="levelSkillPoints">1 pt</strong>
@@ -399,12 +405,12 @@
           <li>目的は「星喰いの塔」100階踏破。9・19・29…99階に、次の休憩所を守る門番がいます。</li>
           <li>同じ階に長く留まると「塔風」が強まります。240ターンで警告、330ターンから侵食、420ターンで挑戦失敗です。</li>
           <li>10階ごとに休憩所、20階ごとに大休憩所があります。到着すると全技PPが回復します。</li>
-          <li>門番を越えて休憩所へ着くと、進化か強力なレリックを選べます。レリックの効果はすべて同時に働きます。</li>
+          <li>門番を越えて休憩所へ着くと、進化か強力な星遺物を選べます。星遺物の効果はすべて同時に働きます。</li>
           <li>入るたびにマップ、敵、道具、隠し罠、隠し祭壇、階の運勢が変わります。通常階段は隠されません。</li>
-          <li>挑戦開始時にレベル、レリック、星網スキル盤、進化素材は初期化。進化形態とバッグ拡張は引き継がれます。</li>
+          <li>挑戦開始時にレベル、星遺物、星網スキル盤、進化素材は初期化。進化形態とバッグ拡張は引き継がれます。</li>
           <li>記録は1つ。休憩所と町で自動保存されます。</li>
-          <li>出発前に狐・亡国の騎士・マジシャンと、初期レリックを選びます。</li>
-          <li>10階ごとに進化か強力なレリックを選択。進化は全10段階で、毎段階3〜4候補あります。</li>
+          <li>出発前に狐・亡国の騎士・マジシャンと、初期星遺物を選びます。</li>
+          <li>10階ごとに進化か強力な星遺物を選択。進化は全10段階で、毎段階3〜4候補あります。</li>
           <li>隠し祭壇、モンスターハウス、流星賭場、商人からの泥棒など、危険な寄り道があります。</li>
           <li>一歩動くたびに敵も1手ずつ動きます。</li>
           <li>移動と通常攻撃は別操作です。敵の方向を左クリックすると攻撃します。</li>
@@ -412,7 +418,7 @@
           <li>通常階段は見つけた部屋でそのまま確認できます。隠し罠と星裏の祭壇は近づくか探索能力で発見します。</li>
           <li>歩くたびにHPが1回復します。逃げて回復するか、増援前に急ぐかも判断の一つです。</li>
           <li>技は使うだけでも経験値を得られ、通常攻撃より早く成長できます。ただしPPは休憩所まで有限です。</li>
-          <li>物理と魔法を交互に使う、変異種へ強くするなど、レリック同士の組み合わせが重要です。</li>
+          <li>物理と魔法を交互に使う、変異種へ強くするなど、星遺物同士の組み合わせが重要です。</li>
           <li>MUTANT表示の変異種は、重装・魔脈・疾走・吸収・爆発のいずれかの特性を持ちます。</li>
           <li>各階の運勢によって、道具の数、敵の数、回復、増援、落とし物が変化します。</li>
           <li>満腹度はゆっくり減ります。月蜜の実を拾ったら、Rで食べて回復できます。</li>
@@ -434,6 +440,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa16b"></script>
+    <script src="app.js?v=pwa16c"></script>
   </body>
 </html>

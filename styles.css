@@ -1467,7 +1467,7 @@ button {
 
 .save-slot {
   display: grid;
-  grid-template-columns: 46px minmax(0, 1fr) auto;
+  grid-template-columns: 46px minmax(0, 1fr) auto auto;
   gap: 10px;
   align-items: center;
   min-height: 74px;
@@ -1526,7 +1526,7 @@ button {
   }
 
   .save-slot {
-    grid-template-columns: 38px minmax(0, 1fr) auto;
+    grid-template-columns: 38px minmax(0, 1fr);
     min-height: 58px;
     gap: 7px;
     padding: 6px;
@@ -1551,6 +1551,8 @@ button {
   }
 
   .save-slot button {
+    grid-column: 1 / -1;
+    width: 100%;
     min-width: 76px;
     height: 34px;
     font-size: 0.72rem;
@@ -2793,6 +2795,13 @@ button {
   font-weight: 900;
 }
 
+.save-slot .save-slot-reset {
+  min-width: 112px;
+  border-color: rgba(239, 107, 100, 0.48);
+  background: rgba(239, 107, 100, 0.15);
+  color: #ffd5ce;
+}
+
 .chapter-roadmap {
   display: grid;
   gap: 6px;
@@ -3047,6 +3056,59 @@ button {
 .skill-board-head p {
   margin: 0;
   line-height: 1.45;
+}
+
+.stat-allocation-panel {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.3fr) repeat(5, minmax(64px, 0.7fr));
+  gap: 8px;
+  align-items: stretch;
+  margin-top: 10px;
+  border: 1px solid rgba(113, 221, 226, 0.2);
+  background: rgba(105, 205, 213, 0.06);
+  padding: 8px;
+}
+
+.stat-allocation-panel > div {
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  min-width: 0;
+}
+
+.stat-allocation-panel span,
+.stat-allocation-panel small,
+.stat-allocation-panel em {
+  color: var(--muted);
+  font-size: 0.62rem;
+  font-style: normal;
+}
+
+.stat-allocation-panel strong {
+  color: #8eeaf1;
+  font-size: 1.1rem;
+}
+
+.stat-allocation-panel button {
+  min-width: 0;
+  border: 1px solid rgba(113, 221, 226, 0.28);
+  background: rgba(9, 18, 19, 0.78);
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  gap: 2px;
+  padding: 7px 4px;
+  cursor: pointer;
+}
+
+.stat-allocation-panel button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.stat-allocation-panel b {
+  color: #8eeaf1;
+  font-size: 0.72rem;
 }
 
 .skill-board {
@@ -3985,10 +4047,14 @@ button {
 }
 
 .dpad-up { left: 52px; top: 2px; }
+.dpad-up-left { left: 15px; top: 15px; color: rgba(217, 222, 219, 0.78); }
+.dpad-up-right { right: 15px; top: 15px; color: rgba(217, 222, 219, 0.78); }
 .dpad-left { left: 2px; top: 52px; }
 .dpad-center { left: 52px; top: 52px; color: #68706c; }
 .dpad-right { right: 2px; top: 52px; }
+.dpad-down-left { left: 15px; bottom: 15px; color: rgba(217, 222, 219, 0.78); }
 .dpad-down { left: 52px; bottom: 2px; }
+.dpad-down-right { right: 15px; bottom: 15px; color: rgba(217, 222, 219, 0.78); }
 
 .touch-abxy {
   position: relative;
@@ -4424,6 +4490,19 @@ button {
 
   .skill-board-head {
     grid-template-columns: 100px minmax(0, 1fr);
+  }
+
+  .stat-allocation-panel {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+
+  .stat-allocation-panel > div {
+    grid-column: 1 / -1;
+  }
+
+  .level-stat-point-buttons,
+  .level-move-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .skill-board {
@@ -5468,6 +5547,85 @@ button {
 
 .level-stat-changes strong {
   font-size: 0.86rem;
+}
+
+.level-stat-points,
+.level-move-choices {
+  margin-top: 10px;
+  border: 1px solid rgba(255, 245, 223, 0.12);
+  background: rgba(0, 0, 0, 0.16);
+  padding: 10px;
+}
+
+.level-stat-points:empty,
+.level-move-choices:empty {
+  display: none;
+}
+
+.level-stat-points-head,
+.level-move-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.level-stat-points-head span,
+.level-stat-points-head small,
+.level-move-head span {
+  color: var(--muted);
+  font-size: 0.62rem;
+}
+
+.level-stat-points-head small {
+  flex: 1;
+  text-align: right;
+}
+
+.level-stat-points-head strong,
+.level-move-head strong {
+  color: #ffe08a;
+  font-size: 0.86rem;
+}
+
+.level-stat-point-buttons {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.level-stat-point-buttons button {
+  min-width: 0;
+  border: 1px solid rgba(113, 221, 226, 0.28);
+  background: rgba(105, 205, 213, 0.08);
+  color: var(--text);
+  padding: 7px 4px;
+  cursor: pointer;
+}
+
+.level-stat-point-buttons button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.level-stat-point-buttons b,
+.level-stat-point-buttons span,
+.level-stat-point-buttons em {
+  display: block;
+  font-style: normal;
+  font-size: 0.58rem;
+}
+
+.level-stat-point-buttons b {
+  color: #8eeaf1;
+  font-size: 0.72rem;
+}
+
+.level-move-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
 }
 
 .level-skill-point {

@@ -54,8 +54,8 @@ const townFacilities = [
   { key: "board", name: "塔の経路板", detail: "門番と休憩所を確認", x: 446, y: 350, radius: 64, color: "#efc867" },
   { key: "guild", name: "星見観測院", detail: "遠征記録を見る", x: 910, y: 312, radius: 72, color: "#9dcc7c" },
   { key: "storage", name: "風見倉庫", detail: "道具を預ける", x: 224, y: 566, radius: 72, color: "#76cdd4" },
-  { key: "shop", name: "星の商店", detail: "道具とレリックを整える", x: 930, y: 566, radius: 72, color: "#ef8b70" },
-  { key: "depart", name: "星喰い塔 出発門", detail: "探索者と初期レリックを選んで出発", x: 576, y: 616, radius: 72, color: "#f0c862" },
+  { key: "shop", name: "星の商店", detail: "道具と星遺物を整える", x: 930, y: 566, radius: 72, color: "#ef8b70" },
+  { key: "depart", name: "星喰い塔 出発門", detail: "探索者と初期星遺物を選んで出発", x: 576, y: 616, radius: 72, color: "#f0c862" },
 ];
 const townObstacles = [
   { left: 210, top: 164, right: 362, bottom: 316 },
@@ -142,6 +142,8 @@ const ui = {
   levelDialogTitle: document.querySelector("#levelDialogTitle"),
   levelDialogText: document.querySelector("#levelDialogText"),
   levelStatChanges: document.querySelector("#levelStatChanges"),
+  levelStatPoints: document.querySelector("#levelStatPoints"),
+  levelMoveChoices: document.querySelector("#levelMoveChoices"),
   levelSkillPoints: document.querySelector("#levelSkillPoints"),
   levelLaterButton: document.querySelector("#levelLaterButton"),
   levelSpendButton: document.querySelector("#levelSpendButton"),
@@ -426,21 +428,21 @@ const ascensionMoveThemes = {
     lumen: { suffix: "星燈", style: "magic", element: "light", signature: "beam", hint: "直線を照らす魔法技" },
     shade: { suffix: "宵渡り", style: "magic", element: "dark", signature: "trick", hint: "転位と弱体の奇襲技" },
     ascetic: { suffix: "無印尾", style: "physical", element: "light", signature: "burst", hint: "周囲を払う均衡技" },
-    relic: { suffix: "遺星尾", style: "magic", element: "light", signature: "burst", hint: "レリックを響かせる範囲技" },
+    relic: { suffix: "遺星尾", style: "magic", element: "light", signature: "burst", hint: "星遺物を響かせる範囲技" },
   },
   knight: {
     warlord: { suffix: "覇剣", style: "physical", element: "fire", signature: "line", hint: "前方を薙ぐ物理技" },
     guardian: { suffix: "星盾", style: "physical", element: "water", signature: "guard", hint: "守りながら押し返す技" },
     revenant: { suffix: "亡刃", style: "physical", element: "dark", signature: "trick", hint: "影で斬り込み弱らせる技" },
     ascetic: { suffix: "無冠剣", style: "physical", element: "light", signature: "guard", hint: "耐えて反撃する無印技" },
-    relic: { suffix: "遺物剣", style: "physical", element: "fire", signature: "line", hint: "レリックを込めた斬撃技" },
+    relic: { suffix: "遺物剣", style: "physical", element: "fire", signature: "line", hint: "星遺物を込めた斬撃技" },
   },
   magician: {
     archmage: { suffix: "星晶術", style: "magic", element: "ice", signature: "beam", hint: "長い直線を貫く魔法技" },
     chaos: { suffix: "奇術札", style: "magic", element: "poison", signature: "burst", hint: "周囲を乱す範囲魔法" },
     void: { suffix: "虚空呪", style: "magic", element: "dark", signature: "trick", hint: "位置と能力を崩す呪術" },
     ascetic: { suffix: "無印星", style: "magic", element: "light", signature: "beam", hint: "素の力で放つ星術" },
-    relic: { suffix: "遺星術", style: "magic", element: "light", signature: "burst", hint: "レリックを核にする範囲術" },
+    relic: { suffix: "遺星術", style: "magic", element: "light", signature: "burst", hint: "星遺物を核にする範囲術" },
   },
 };
 
@@ -592,6 +594,62 @@ const itemCatalog = {
     color: "#efc75f",
     icon: "運",
   },
+  focusMint: {
+    name: "澄香ミント",
+    category: "きのみ",
+    detail: "選択中の技PPを4回復する。",
+    sprite: spriteIds.herb,
+    color: "#70d8c8",
+    icon: "技",
+  },
+  mindBerry: {
+    name: "星詠みの実",
+    category: "きのみ",
+    detail: "この挑戦中、魔力を1上げる。",
+    sprite: spriteIds.herb,
+    color: "#8fc6ff",
+    icon: "魔",
+  },
+  wardBerry: {
+    name: "薄明の実",
+    category: "きのみ",
+    detail: "この挑戦中、魔防を1上げる。",
+    sprite: spriteIds.herb,
+    color: "#c6b7ff",
+    icon: "環",
+  },
+  ironNut: {
+    name: "黒鉄ぐるみ",
+    category: "きのみ",
+    detail: "最大HPを5、防御を1上げる。",
+    sprite: spriteIds.badge,
+    color: "#9ba8a6",
+    icon: "硬",
+  },
+  pierceSeed: {
+    name: "貫きの種",
+    category: "タネ",
+    detail: "正面4マスを貫き、最初の敵にダメージ。",
+    sprite: spriteIds.ember,
+    color: "#e3c169",
+    icon: "貫",
+  },
+  stormOrb: {
+    name: "雷鳴の珠",
+    category: "ふしぎだま",
+    detail: "見えている敵すべてに小ダメージ。",
+    sprite: spriteIds.orb,
+    color: "#f2dd69",
+    icon: "雷",
+  },
+  mapScroll: {
+    name: "星図の巻物",
+    category: "巻物",
+    detail: "訪れていない部屋の形と通常階段を地図へ記す。",
+    sprite: spriteIds.badge,
+    color: "#dcbf83",
+    icon: "図",
+  },
   moonShard: {
     name: "月澄の欠片",
     category: "進化素材",
@@ -654,6 +712,13 @@ const itemIconCells = {
   guardBerry: [4, 1],
   powerBerry: [0, 2],
   fortuneOrb: [1, 2],
+  focusMint: [0, 1],
+  mindBerry: [1, 0],
+  wardBerry: [4, 1],
+  ironNut: [3, 0],
+  pierceSeed: [4, 0],
+  stormOrb: [2, 0],
+  mapScroll: [3, 1],
   moonShard: [2, 2],
   emberCore: [3, 2],
   shadowFang: [4, 2],
@@ -718,6 +783,18 @@ const relicCatalog = [
   { key: "luckyAsh", name: "幸運の灰", icon: "運", rarity: "UNCOMMON", color: "#d9ca66", detail: "変異種と珍しい道具の出現率が上がる。", effect: "luck" },
   { key: "arcaneVein", name: "魔脈結晶", icon: "魔", rarity: "RARE", color: "#7dbbf2", detail: "魔法技の消費PPが時々0になる。", effect: "freeMagic" },
   { key: "warDrum", name: "星戦の鼓", icon: "戦", rarity: "RARE", color: "#ef755b", detail: "物理技で敵を倒すとHPを5回復。", effect: "physicalLeech" },
+  { key: "firstDawn", name: "初明かりの刃", icon: "初", rarity: "COMMON", color: "#f3b65c", detail: "各階で最初に与えるダメージ +8。", effect: "firstStrike" },
+  { key: "starVessel", name: "星杯の器", icon: "杯", rarity: "COMMON", color: "#70d4df", detail: "全技の最大PP +2。", bonus: { pp: 2 } },
+  { key: "oakMedal", name: "古樹のメダル", icon: "樹", rarity: "COMMON", color: "#81b760", detail: "最大HP +7、防御 +1。", bonus: { hp: 7, def: 1 } },
+  { key: "mageThread", name: "魔糸のリボン", icon: "糸", rarity: "COMMON", color: "#9cccf2", detail: "魔力 +1、魔防 +1。", bonus: { magic: 1, res: 1 } },
+  { key: "duelistCoin", name: "決闘者の古貨", icon: "貨", rarity: "UNCOMMON", color: "#e4b45e", detail: "HP満タン時、与ダメージ +3。", effect: "fullHpDamage" },
+  { key: "thornMantle", name: "星棘のマント", icon: "棘", rarity: "UNCOMMON", color: "#95c568", detail: "隣接攻撃を受けると小さく反撃する。", effect: "thornMail" },
+  { key: "campfireCoal", name: "旅火の炭", icon: "火", rarity: "UNCOMMON", color: "#ee865d", detail: "階段を降りるたびHPを8回復。", effect: "stairHeal" },
+  { key: "crackedShield", name: "割れ盾の誓い", icon: "誓", rarity: "UNCOMMON", color: "#8bb5d0", detail: "HP35%以下で受けるダメージを軽減。", effect: "lowHpGuard" },
+  { key: "foxMask", name: "白狐の仮面", icon: "狐", rarity: "RARE", color: "#f0dca2", detail: "物理・魔力 +2、運 +1。", bonus: { atk: 2, magic: 2, luck: 1 } },
+  { key: "voidLedger", name: "宵闇の帳簿", icon: "帳", rarity: "RARE", color: "#a575e2", detail: "倒すたび探索ptが少し増えるが、最大HP -6。", bonus: { hp: -6 }, effect: "scoreOnKill" },
+  { key: "frostNeedle", name: "霜針の星飾り", icon: "霜", rarity: "RARE", color: "#8bdff2", detail: "氷属性の技ダメージ +4。", effect: "iceDamage" },
+  { key: "venomLamp", name: "毒灯の小瓶", icon: "毒", rarity: "RARE", color: "#a6c943", detail: "毒属性の技ダメージ +4。", effect: "poisonDamage" },
   { key: "zeroFragment", name: "零星の欠片", icon: "零", rarity: "BOSS", color: "#ffdd83", detail: "全能力 +2。最深部へ近づくほどさらに輝く。", bonus: { atk: 2, magic: 2, def: 2, res: 2 } },
 ];
 
@@ -1372,6 +1449,13 @@ function createStarterBag() {
     guardBerry: 0,
     powerBerry: 0,
     fortuneOrb: 0,
+    focusMint: 0,
+    mindBerry: 0,
+    wardBerry: 0,
+    ironNut: 0,
+    pierceSeed: 0,
+    stormOrb: 0,
+    mapScroll: 0,
   };
 }
 
@@ -1408,6 +1492,8 @@ function createGame() {
     selectedMove: 0,
     focusTurns: 0,
     skillPoints: 1,
+    statPoints: 0,
+    relicFloorState: {},
     unlockedSkills: [],
     relics: [],
     startingRelicKey: null,
@@ -1475,6 +1561,26 @@ function createGame() {
   updateAll();
 }
 
+function startFreshGame(slot = 1) {
+  try {
+    localStorage.removeItem(saveSlotKey(slot));
+  } catch {
+    // Local storage can fail in private contexts; the in-memory reset still works.
+  }
+  createGame();
+  game.saveSlot = slot;
+  game.persistentEvolutionKey = "base";
+  game.persistentEvolutionStage = 0;
+  game.persistentLineages = {};
+  game.unlockedAscensions = [];
+  game.towerCheckpoint = null;
+  game.startingRelicKey = null;
+  game.selectedCharacter = "kohaku";
+  prepareNewTry();
+  saveCurrentGame(true);
+  updateAll();
+}
+
 function openExpeditionLoadout() {
   game.townView = "loadout";
   game.loadoutStep = game.towerCheckpoint ? "checkpoint" : "character";
@@ -1489,6 +1595,9 @@ function renderExpeditionLoadout() {
   const selectedActor = createLeader(profile.key);
   applyPersistentLineage(selectedActor);
   const checkpoint = game.towerCheckpoint;
+  const inheritedProgress = game.persistentEvolutionKey !== "base"
+    || Object.keys(game.persistentLineages || {}).length > 0
+    || game.unlockedAscensions.length > 0;
 
   if (checkpoint) {
     ui.townDialogTitle.textContent = "遠征を再開";
@@ -1498,7 +1607,7 @@ function renderExpeditionLoadout() {
         <div>
           <span>B${checkpoint.floor}F CHECKPOINT</span>
           <strong>${selectedActor.name}の遠征記録</strong>
-          <small>探索者・進化・レリック・所持品は、休憩所で記録した状態から再開します。</small>
+          <small>探索者・進化・星遺物・所持品は、休憩所で記録した状態から再開します。</small>
           <b>${elementInfo(selectedActor.elementKey).name}属性　Lv.${checkpoint.leader?.level || selectedActor.level}　進化 ${checkpoint.leader?.evolutionStage || selectedActor.evolutionStage}/10</b>
           <button type="button" class="primary-button loadout-depart">B${checkpoint.floor}Fから塔へ戻る</button>
         </div>
@@ -1510,20 +1619,20 @@ function renderExpeditionLoadout() {
   }
 
   const characterStep = game.loadoutStep !== "relic";
-  ui.townDialogTitle.textContent = characterStep ? "探索者を選ぶ" : "初期レリックを選ぶ";
+  ui.townDialogTitle.textContent = characterStep ? "探索者を選ぶ" : "初期星遺物を選ぶ";
   if (characterStep) {
     ui.townDialogBody.innerHTML = `
       <div class="loadout-stage-head">
         <div class="loadout-step-track" aria-label="遠征準備">
-          <b class="active">1</b><span>探索者</span><i></i><b>2</b><span>レリック</span>
+          <b class="active">1</b><span>探索者</span><i></i><b>2</b><span>星遺物</span>
         </div>
         <strong>この挑戦の主人公を選ぶ</strong>
         <small>三人は初期能力・技・進化分岐が異なります。グラフで得意分野を比べられます。</small>
       </div>
       <div class="loadout-character-grid loadout-character-stage"></div>
       <div class="loadout-actions">
-        <span>${elementLegendMarkup()}</span>
-        <button type="button" class="primary-button loadout-next">レリック選択へ</button>
+        ${inheritedProgress ? '<button type="button" class="secondary-button loadout-new-game">ニューゲーム</button>' : ""}
+        <button type="button" class="primary-button loadout-next">星遺物選択へ</button>
       </div>
     `;
     const characterGrid = ui.townDialogBody.querySelector(".loadout-character-grid");
@@ -1568,16 +1677,28 @@ function renderExpeditionLoadout() {
       game.loadoutStep = "relic";
       renderExpeditionLoadout();
     });
+    const newGameButton = ui.townDialogBody.querySelector(".loadout-new-game");
+    if (newGameButton) {
+      newGameButton.addEventListener("click", () => {
+        const confirmed = window.confirm("進化データも含めて最初から始めますか？");
+        if (!confirmed) return;
+        startFreshGame(game.saveSlot || 1);
+        game.townView = "loadout";
+        game.loadoutStep = "character";
+        ui.townDialog.dataset.view = "loadout";
+        renderExpeditionLoadout();
+      });
+    }
     return;
   }
 
   ui.townDialogBody.innerHTML = `
     <div class="loadout-stage-head">
       <div class="loadout-step-track" aria-label="遠征準備">
-        <b>1</b><span>探索者</span><i></i><b class="active">2</b><span>レリック</span>
+        <b>1</b><span>探索者</span><i></i><b class="active">2</b><span>星遺物</span>
       </div>
       <strong>最初の運命をひとつ選ぶ</strong>
-      <small>初期レリックは序盤の戦い方を決めます。あえて持たずに出ると、無印進化が解放されます。</small>
+      <small>初期星遺物は序盤の戦い方を決めます。あえて持たずに出ると、無印進化が解放されます。</small>
     </div>
     <section class="loadout-relic-stage">
       <div class="loadout-selected-hero" style="--hero-color:${profile.color}">
@@ -1655,6 +1776,7 @@ function prepareNewTry() {
   game.team = [leader];
   game.selectedMove = 0;
   game.skillPoints = 1;
+  game.statPoints = 0;
   game.unlockedSkills = [];
   game.relics = [];
   game.pendingRelicChoices = [];
@@ -1754,6 +1876,12 @@ function createLeader(characterKey = "kohaku") {
     guardTurns: 0,
     moves: [{ ...firstMove, pp: firstMove.maxPp }],
   };
+}
+
+function createKnownMove(move) {
+  const ppBonus = game?.relics?.includes("starVessel") ? 2 : 0;
+  const maxPp = (move.maxPp || 0) + ppBonus;
+  return { ...move, maxPp, pp: maxPp };
 }
 
 function expRequirementForLevel(level) {
@@ -1863,6 +1991,7 @@ function buildFloor() {
   game.effects = [];
   game.floating = [];
   game.focusTurns = 0;
+  game.relicFloorState = {};
   game.aimDirection = null;
   game.screenFlash = null;
   game.screenShake = null;
@@ -1947,7 +2076,7 @@ function buildFloor() {
         key: "milestone",
         action: "milestone",
         name: "進化の祭壇",
-        detail: "進化か強力なレリックを選ぶ",
+        detail: "進化か強力な星遺物を選ぶ",
         icon: "進",
         color: dungeon.restTheme.accent,
         x: dungeon.altar.x,
@@ -2117,6 +2246,9 @@ function generateDungeon() {
     { name: "広間が連なる洞窟", minRooms: 6, maxRooms: 8, minW: 7, maxW: 11, minH: 5, maxH: 8, loops: 2, branches: 1 },
     { name: "回廊の多い迷宮", minRooms: 7, maxRooms: 10, minW: 5, maxW: 8, minH: 4, maxH: 6, loops: 4, branches: 2 },
     { name: "疎らな星屑区画", minRooms: 6, maxRooms: 9, minW: 5, maxW: 9, minH: 4, maxH: 7, loops: 1, branches: 4 },
+    { name: "大広間を抱く空洞", minRooms: 5, maxRooms: 7, minW: 5, maxW: 8, minH: 4, maxH: 6, loops: 2, branches: 2, greatRoom: true, spacing: 2 },
+    { name: "細長い巡礼回廊", minRooms: 5, maxRooms: 7, minW: 4, maxW: 7, minH: 4, maxH: 6, loops: 1, branches: 3, branchMin: 8, branchMax: 17, longCorridors: 3 },
+    { name: "十字に裂けた鉱道", minRooms: 6, maxRooms: 9, minW: 4, maxW: 8, minH: 4, maxH: 6, loops: 3, branches: 5, branchMin: 5, branchMax: 12, longCorridors: 2 },
   ];
   const layout = layouts[randInt(0, layouts.length - 1)];
   for (let attempt = 0; attempt < 30; attempt += 1) {
@@ -2125,19 +2257,21 @@ function generateDungeon() {
     const roomCount = randInt(layout.minRooms, layout.maxRooms);
 
     for (let i = 0; i < roomCount * 12 && rooms.length < roomCount; i += 1) {
-      const w = randInt(layout.minW, layout.maxW);
-      const h = randInt(layout.minH, layout.maxH);
+      const greatRoom = layout.greatRoom && rooms.length === 0;
+      const w = greatRoom ? randInt(14, 20) : randInt(layout.minW, layout.maxW);
+      const h = greatRoom ? randInt(9, 13) : randInt(layout.minH, layout.maxH);
       const x = randInt(1, MAP_W - w - 2);
       const y = randInt(1, MAP_H - h - 2);
       const room = { x, y, w, h };
-      if (rooms.some((other) => overlaps(room, other, layout.name === "疎らな星屑区画" ? 3 : 2))) continue;
+      if (rooms.some((other) => overlaps(room, other, layout.spacing ?? (layout.name === "疎らな星屑区画" ? 3 : 2)))) continue;
       carveRoom(map, room);
       rooms.push(room);
     }
 
     if (rooms.length >= layout.minRooms - 1) {
       connectRoomNetwork(map, rooms, layout.loops);
-      carveSideBranches(map, rooms, layout.branches);
+      carveSideBranches(map, rooms, layout.branches, layout.branchMin || 3, layout.branchMax || 7);
+      if (layout.longCorridors) carveLongCorridors(map, rooms, layout.longCorridors);
       scatterTerrain(map);
       return { map, rooms, layoutName: layout.name };
     }
@@ -2195,7 +2329,7 @@ function roomPairKey(first, second) {
   return a < b ? `${a}|${b}` : `${b}|${a}`;
 }
 
-function carveSideBranches(map, rooms, count) {
+function carveSideBranches(map, rooms, count, minLength = 3, maxLength = 7) {
   const directions = [
     { x: 1, y: 0 },
     { x: -1, y: 0 },
@@ -2206,7 +2340,7 @@ function carveSideBranches(map, rooms, count) {
     const room = rooms[randInt(0, rooms.length - 1)];
     const center = centerOf(room);
     const direction = directions[randInt(0, directions.length - 1)];
-    const length = randInt(3, 7);
+    const length = randInt(minLength, maxLength);
     let x = center.x;
     let y = center.y;
     for (let step = 0; step < length; step += 1) {
@@ -2218,6 +2352,35 @@ function carveSideBranches(map, rooms, count) {
     for (let pocketY = y - 1; pocketY <= y + 1; pocketY += 1) {
       for (let pocketX = x - 1; pocketX <= x + 1; pocketX += 1) {
         if (inBounds(pocketX, pocketY)) map[pocketY][pocketX] = "floor";
+      }
+    }
+  }
+}
+
+function carveLongCorridors(map, rooms, count) {
+  const directions = [
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+  ];
+  for (let index = 0; index < count; index += 1) {
+    const room = rooms[randInt(0, rooms.length - 1)];
+    const direction = directions[randInt(0, directions.length - 1)];
+    let x = clamp(randInt(room.x, room.x + room.w - 1), 2, MAP_W - 3);
+    let y = clamp(randInt(room.y, room.y + room.h - 1), 2, MAP_H - 3);
+    const length = randInt(10, 22);
+    for (let step = 0; step < length; step += 1) {
+      x += direction.x;
+      y += direction.y;
+      if (x < 2 || y < 2 || x >= MAP_W - 2 || y >= MAP_H - 2) break;
+      map[y][x] = "floor";
+      if (step > 5 && step % 7 === 0 && Math.random() < 0.55) {
+        for (let py = y - 1; py <= y + 1; py += 1) {
+          for (let px = x - 1; px <= x + 1; px += 1) {
+            if (inBounds(px, py) && Math.random() < 0.7) map[py][px] = "floor";
+          }
+        }
       }
     }
   }
@@ -2284,9 +2447,9 @@ function spawnHiddenTraps() {
 
 function spawnItems() {
   const count = clamp(
-    4 + Math.floor(game.floor / 4) + (game.floorEvent?.itemBonus || 0) + (hasSkill("salvage") ? 1 : 0),
-    4,
-    10,
+    2 + Math.floor(game.floor / 10) + Math.ceil((game.floorEvent?.itemBonus || 0) / 2) + (hasSkill("salvage") ? 1 : 0),
+    2,
+    6,
   );
   for (let i = 0; i < count; i += 1) {
     const kind = weighted([
@@ -2302,6 +2465,13 @@ function spawnItems() {
       { value: "guidingOrb", weight: 5 },
       { value: "guardBerry", weight: 6 },
       { value: "powerBerry", weight: 4 },
+      { value: "focusMint", weight: 8 },
+      { value: "mindBerry", weight: 3 },
+      { value: "wardBerry", weight: 3 },
+      { value: "ironNut", weight: 3 },
+      { value: "pierceSeed", weight: 7 },
+      { value: "stormOrb", weight: 4 },
+      { value: "mapScroll", weight: 4 },
       { value: "fortuneOrb", weight: 3 },
       { value: "badge", weight: 2 },
       { value: "stardust", weight: 10 },
@@ -2399,9 +2569,9 @@ function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0, p
   const materialKind = evolutionMaterialKeys[randInt(0, evolutionMaterialKeys.length - 2)];
   const stock = [
     { id: cryptoId(), kind: "apple", price: 55, sold: false, picked: false },
-    { id: cryptoId(), kind: Math.random() < 0.5 ? "oran" : "elixir", price: 85, sold: false, picked: false },
+    { id: cryptoId(), kind: weighted([{ value: "oran", weight: 4 }, { value: "elixir", weight: 3 }, { value: "focusMint", weight: 3 }, { value: "pierceSeed", weight: 2 }]), price: 85, sold: false, picked: false },
     { id: cryptoId(), kind: materialKind, price: 145, sold: false, picked: false, material: true },
-    { id: cryptoId(), kind: Math.random() < 0.5 ? "reviver" : "fortuneOrb", price: 180 + game.floor * 2, sold: false, picked: false },
+    { id: cryptoId(), kind: weighted([{ value: "reviver", weight: 3 }, { value: "fortuneOrb", weight: 3 }, { value: "stormOrb", weight: 2 }, { value: "mapScroll", weight: 2 }]), price: 180 + game.floor * 2, sold: false, picked: false },
   ];
   game.merchant = {
     id: cryptoId(),
@@ -3497,6 +3667,14 @@ function damageEnemy(enemy, amount, source, label) {
   if (enemy.boss && hasRelic("bossClaw")) amount = Math.ceil(amount * 1.25);
   if (enemy.mutated && hasRelic("mutationSeal")) amount = Math.ceil(amount * 1.35);
   if (hasRelic("hungryCrown") && game.belly <= 30) amount += 6;
+  if (source.id === "leader" && hasRelic("firstDawn") && !game.relicFloorState.firstStrikeUsed) {
+    amount += 8;
+    game.relicFloorState.firstStrikeUsed = true;
+    addFloatingText(source.x, source.y, "FIRST", "#ffe08a");
+  }
+  if (source.id === "leader" && hasRelic("duelistCoin") && source.hp >= source.maxHp) amount += 3;
+  if (source.id === "leader" && hasRelic("frostNeedle") && attackElement === "ice") amount += 4;
+  if (source.id === "leader" && hasRelic("venomLamp") && attackElement === "poison") amount += 4;
   enemy.hp -= amount;
   enemy.alerted = true;
   addEffect("hit", enemy.x, enemy.y, source.color || palette.brass);
@@ -3514,6 +3692,11 @@ function damageEnemy(enemy, amount, source, label) {
     game.score += enemy.exp;
     game.runStats.kills += 1;
     if (enemy.mutated) game.runStats.mutants += 1;
+    if (source.id === "leader" && hasRelic("voidLedger")) {
+      const bonusScore = 8 + Math.floor(game.floor / 3);
+      game.score += bonusScore;
+      addFloatingText(enemy.x, enemy.y, `+${bonusScore}pt`, "#c69dff");
+    }
     addLog(`${label}。${enemy.name}を倒した。+${enemy.exp}pt${effectiveness > 1 ? "（効果抜群）" : ""}`);
     gainExp(enemy.exp);
     if (hasRelic("echoBell")) {
@@ -3588,7 +3771,10 @@ function enemyAttack(enemy, actor, ranged = false) {
   const attackPower = ranged ? Math.ceil(enemy.atk * 0.72) : enemy.atk;
   const effectiveness = elementEffectiveness(enemy.elementKey, actor.elementKey);
   const rawDamage = Math.max(1, Math.ceil((attackPower + randInt(-1, 2) - defense) * effectiveness));
-  const damage = actor.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
+  let damage = actor.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
+  if (actor.id === "leader" && hasRelic("crackedShield") && actor.hp <= actor.maxHp * 0.35) {
+    damage = Math.max(1, Math.ceil(damage * 0.7));
+  }
   const moveName = enemyMoveName(enemy, ranged);
   actor.hp = Math.max(0, actor.hp - damage);
   enemy.alerted = true;
@@ -3615,6 +3801,9 @@ function enemyAttack(enemy, actor, ranged = false) {
     const healed = Math.min(enemy.maxHp - enemy.hp, Math.max(1, Math.floor(damage / 2)));
     enemy.hp += healed;
     if (healed) addFloatingText(enemy.x, enemy.y, `+${healed}`, "#e477a1");
+  }
+  if (!ranged && actor.id === "leader" && hasRelic("thornMantle") && game.enemies.includes(enemy)) {
+    damageEnemy(enemy, Math.max(1, Math.ceil(damage / 4)), actor, "星棘の反撃");
   }
   if (actor.id === "leader") {
     setScreenFlash("#ef6b64", 260);
@@ -3662,20 +3851,18 @@ function gainExp(amount) {
         def: actor.def,
         res: actor.res,
         skillPoints: game.skillPoints,
+        statPoints: game.statPoints,
       };
       actor.exp -= actor.nextExp;
       actor.level += 1;
       actor.nextExp = expRequirementForLevel(actor.level);
-      actor.maxHp += 4;
+      actor.maxHp += 3;
       actor.hp = actor.maxHp;
-      const magicBuild = actor.id === "leader" && game.runStats.magicUses > game.runStats.physicalUses;
-      if (magicBuild) actor.magic += 1;
-      else actor.atk += 1;
-      if (actor.level % 2 === 0) {
-        if (magicBuild) actor.res += 1;
-        else actor.def += 1;
+      for (const move of actor.moves || []) move.pp = move.maxPp;
+      if (actor.id === "leader") {
+        game.skillPoints += 1;
+        game.statPoints += 1;
       }
-      if (actor.id === "leader") game.skillPoints += 1;
       if (actor.id === "leader" && [4, 8, 12].includes(actor.level)) {
         const profile = characterCatalog.find((entry) => entry.key === actor.profileKey) || characterCatalog[0];
         game.pendingMoveChoices = profile.moves.filter(
@@ -3693,11 +3880,13 @@ function gainExp(amount) {
           def: actor.def - before.def,
           res: actor.res - before.res,
           skillPoints: game.skillPoints - before.skillPoints,
+          statPoints: game.statPoints - before.statPoints,
+          ppRecovered: true,
         });
       }
       addEffect("heal", actor.x, actor.y, actor.color);
       addLog(`${actor.name}はLv.${actor.level}になった。`);
-      const bonusText = actor.id === "leader" ? "　スキルポイント +1" : "";
+      const bonusText = actor.id === "leader" ? "　PP全回復 / スキル+1 / ステータス+1" : "　PP全回復";
       announceEvent("レベルアップ", `${actor.name} Lv.${actor.level}${bonusText}`, "Lv", "good");
       playSfx("level");
     }
@@ -3738,7 +3927,8 @@ function openLevelUpDialog() {
     def: sum.def + entry.def,
     res: sum.res + entry.res,
     skillPoints: sum.skillPoints + entry.skillPoints,
-  }), { hp: 0, atk: 0, magic: 0, def: 0, res: 0, skillPoints: 0 });
+    statPoints: sum.statPoints + entry.statPoints,
+  }), { hp: 0, atk: 0, magic: 0, def: 0, res: 0, skillPoints: 0, statPoints: 0 });
   const leader = getLeader();
   ui.levelDialogTitle.textContent = `Lv.${last.level}`;
   ui.levelDialogText.textContent = changes.length > 1
@@ -3757,8 +3947,115 @@ function openLevelUpDialog() {
     </div>
   `).join("");
   ui.levelSkillPoints.textContent = `${game.skillPoints} pt`;
+  renderLevelStatPointControls(total.statPoints);
+  renderLevelMoveChoices();
   drawPortrait(ui.levelPortrait, leader);
   ui.levelDialog.showModal();
+}
+
+function renderLevelStatPointControls(gained = 0) {
+  if (!ui.levelStatPoints) return;
+  const stats = [
+    { key: "hp", label: "HP", icon: "心", detail: "+5" },
+    { key: "atk", label: "物理", icon: "牙", detail: "+1" },
+    { key: "magic", label: "魔力", icon: "魔", detail: "+1" },
+    { key: "def", label: "防御", icon: "盾", detail: "+1" },
+    { key: "res", label: "魔防", icon: "環", detail: "+1" },
+  ];
+  ui.levelStatPoints.innerHTML = `
+    <div class="level-stat-points-head">
+      <span>振り分けステータス</span>
+      <strong>${game.statPoints} pt</strong>
+      <small>${gained > 0 ? `今回 +${gained}。` : ""}ここで振らずに後で星網から振ることもできます。</small>
+    </div>
+    <div class="level-stat-point-buttons">
+      ${stats.map((stat) => `
+        <button type="button" data-stat-point="${stat.key}" ${game.statPoints <= 0 ? "disabled" : ""}>
+          <b>${stat.icon}</b><span>${stat.label}</span><em>${stat.detail}</em>
+        </button>
+      `).join("")}
+    </div>
+  `;
+  ui.levelStatPoints.querySelectorAll("[data-stat-point]").forEach((button) => {
+    button.addEventListener("click", () => spendStatPoint(button.dataset.statPoint));
+  });
+}
+
+function renderLevelMoveChoices() {
+  if (!ui.levelMoveChoices) return;
+  const leader = getLeader();
+  if (game.pendingMovePicks <= 0 || !game.pendingMoveChoices.length) {
+    ui.levelMoveChoices.innerHTML = "";
+    return;
+  }
+  ui.levelMoveChoices.innerHTML = `
+    <div class="level-move-head">
+      <span>新しい技</span>
+      <strong>${game.pendingMovePicks}つ選べる</strong>
+    </div>
+    <div class="level-move-grid"></div>
+  `;
+  const grid = ui.levelMoveChoices.querySelector(".level-move-grid");
+  for (const key of game.pendingMoveChoices) {
+    const move = moveCatalog.find((entry) => entry.key === key);
+    if (!move) continue;
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `move-choice ${move.style}`;
+    button.innerHTML = `
+      <b style="color:${elementInfo(move.element).color}">${elementInfo(move.element).symbol}</b>
+      <span><strong>${elementBadgeMarkup(move.element)}${move.name}</strong><small>${elementInfo(move.element).name}属性　${move.hint}</small><em>PP ${move.maxPp}</em></span>
+    `;
+    button.addEventListener("click", () => learnMoveChoice(key));
+    grid.appendChild(button);
+  }
+}
+
+function spendStatPoint(key) {
+  if (game.statPoints <= 0) {
+    showToast("振り分けポイントがない");
+    return false;
+  }
+  const leader = getLeader();
+  const labels = { hp: "HP", atk: "物理", magic: "魔力", def: "防御", res: "魔防" };
+  if (!labels[key]) return false;
+  if (key === "hp") {
+    leader.maxHp += 5;
+    leader.hp = Math.min(leader.maxHp, leader.hp + 5);
+  } else {
+    leader[key] += 1;
+  }
+  game.statPoints -= 1;
+  addEffect("runes", leader.x, leader.y, leader.color);
+  announceEvent("ステータス強化", `${labels[key]}を伸ばした`, "成", "good");
+  playSfx("upgrade");
+  renderLevelStatPointControls();
+  if (ui.gameMenuDialog.open && game.menuView === "skills") renderSkillBoard();
+  updateAll();
+  return true;
+}
+
+function learnMoveChoice(key) {
+  const leader = getLeader();
+  const move = moveCatalog.find((entry) => entry.key === key);
+  if (!move || game.pendingMovePicks <= 0 || !game.pendingMoveChoices.includes(key)) return false;
+  const learnedMove = createKnownMove(move);
+  if (leader.moves.length >= 4) {
+    leader.moves[game.selectedMove] = learnedMove;
+  } else {
+    leader.moves.push(learnedMove);
+  }
+  game.pendingMovePicks = Math.max(0, game.pendingMovePicks - 1);
+  game.pendingMoveChoices = game.pendingMoveChoices.filter((entry) => entry !== key);
+  announceEvent("技を習得", `${leader.name}は${move.name}を覚えた`, "技", "good");
+  playSfx("level");
+  renderLevelMoveChoices();
+  if (ui.gameMenuDialog.open && game.menuView === "moveReward") {
+    if (game.pendingMovePicks > 0 && game.pendingMoveChoices.length) renderMoveReward();
+    else ui.gameMenuDialog.close();
+  }
+  updateAll();
+  return true;
 }
 
 function closeLevelUpDialog(openSkills = false) {
@@ -3813,7 +4110,7 @@ function findDropTile(x, y) {
 }
 
 function maybeDropItem(x, y) {
-  const chance = clamp(0.1 + game.luck * 0.018, 0.04, 0.22);
+  const chance = clamp(0.075 + game.luck * 0.014, 0.03, 0.18);
   if (Math.random() > chance || itemAt(x, y)) return;
   const kind = weighted([
     { value: "oran", weight: 22 },
@@ -3821,6 +4118,10 @@ function maybeDropItem(x, y) {
     { value: "sleepSeed", weight: 16 },
     { value: "elixir", weight: 14 },
     { value: "apple", weight: 14 },
+    { value: "focusMint", weight: 10 },
+    { value: "pierceSeed", weight: 7 },
+    { value: "stormOrb", weight: 4 },
+    { value: "mapScroll", weight: 3 },
     { value: "reviver", weight: 4 },
     { value: "stardust", weight: 12 },
   ]);
@@ -3858,7 +4159,7 @@ function revealSecretRewardStairs(actor) {
   if (actor.x !== secret.x || actor.y !== secret.y) return;
   secret.revealed = true;
   addEffect("runes", secret.x, secret.y, "#d8a4ff");
-  announceEvent("HIDDEN SANCTUM", "進化か、強力なレリックを選べる", "秘", "mystic");
+  announceEvent("HIDDEN SANCTUM", "進化か、強力な星遺物を選べる", "秘", "mystic");
   addLog("隠し階段の先に、星の祭壇を見つけた。");
   window.setTimeout(() => openMilestoneChoice("secret"), 80);
 }
@@ -4151,9 +4452,16 @@ function addRelic(key, announce = true) {
   leader.magic += bonus.magic || 0;
   leader.def += bonus.def || 0;
   leader.res += bonus.res || 0;
+  game.luck += bonus.luck || 0;
+  if (bonus.pp) {
+    for (const move of leader.moves || []) {
+      move.maxPp += bonus.pp;
+      move.pp += bonus.pp;
+    }
+  }
   if (announce) {
-    addLog(`レリック「${relic.name}」を獲得。${relic.detail}`);
-    announceEvent("RELIC ACQUIRED", `${relic.name}　${relic.detail}`, relic.icon, "good");
+    addLog(`星遺物「${relic.name}」を獲得。${relic.detail}`);
+    announceEvent("星遺物獲得", `${relic.name}　${relic.detail}`, relic.icon, "good");
     playSfx("upgrade");
   }
   return true;
@@ -4257,6 +4565,61 @@ function useItem(kind) {
     game.luck += 2;
     detail = "この階の運 +2";
     addEffect("burst", leader.x, leader.y, catalog.color);
+  } else if (kind === "focusMint") {
+    const move = leader.moves[game.selectedMove];
+    if (!move || move.pp >= move.maxPp) {
+      showToast("選択中の技PPは満タン");
+      return false;
+    }
+    const before = move.pp;
+    move.pp = Math.min(move.maxPp, move.pp + 4);
+    detail = `${move.name} PP +${move.pp - before}`;
+    addEffect("runes", leader.x, leader.y, catalog.color);
+  } else if (kind === "mindBerry") {
+    leader.magic += 1;
+    detail = "この挑戦中、魔力 +1";
+    addEffect("heal", leader.x, leader.y, catalog.color);
+  } else if (kind === "wardBerry") {
+    leader.res += 1;
+    detail = "この挑戦中、魔防 +1";
+    addEffect("shield", leader.x, leader.y, catalog.color);
+  } else if (kind === "ironNut") {
+    leader.maxHp += 5;
+    leader.hp = Math.min(leader.maxHp, leader.hp + 5);
+    leader.def += 1;
+    detail = "最大HP +5、防御 +1";
+    addEffect("shield", leader.x, leader.y, catalog.color);
+  } else if (kind === "pierceSeed") {
+    const target = enemyInFacingLine(leader, 4);
+    if (!target) {
+      showToast("正面4マスに敵がいない");
+      return false;
+    }
+    addEffect("beam", leader.x, leader.y, catalog.color, leader.dx, leader.dy);
+    damageEnemy(target, 14 + Math.floor(game.floor / 10), leader, catalog.name);
+    detail = `${target.name}へ貫通ダメージ`;
+  } else if (kind === "stormOrb") {
+    const targets = game.enemies.filter((enemy) => isVisible(enemy.x, enemy.y));
+    if (!targets.length) {
+      showToast("見えている敵がいない");
+      return false;
+    }
+    for (const target of targets) {
+      damageEnemy(target, 7 + Math.floor(game.floor / 12), leader, catalog.name);
+      addEffect("sparkTrail", target.x, target.y, catalog.color);
+    }
+    detail = `${targets.length}体へ雷撃`;
+  } else if (kind === "mapScroll") {
+    for (const room of game.rooms) {
+      for (let y = room.y; y < room.y + room.h; y += 1) {
+        for (let x = room.x; x < room.x + room.w; x += 1) {
+          if (inBounds(x, y) && game.map[y][x] !== "wall") game.mapped[y][x] = true;
+        }
+      }
+    }
+    game.stairsRevealed = true;
+    detail = "部屋の形と通常階段を地図へ記した";
+    addEffect("runes", leader.x, leader.y, catalog.color);
   }
 
   game.bag[kind] -= 1;
@@ -4369,7 +4732,7 @@ function tryUseStairs() {
     return true;
   }
   if (isRestFloor(game.floor) && !game.restChoiceTaken) {
-    addLog("次へ進む前に、休憩所の祭壇で進化かレリックを選ぶ必要がある。");
+    addLog("次へ進む前に、休憩所の祭壇で進化か星遺物を選ぶ必要がある。");
     announceEvent("祭壇が呼んでいる", "光る祭壇を調べて、この先へ持つ力を決めよう", "進", "mystic");
     showToast("祭壇を調べよう");
     return true;
@@ -4410,6 +4773,10 @@ function proceedThroughStairs() {
     actor.down = false;
   }
   buildFloor();
+  if (hasRelic("campfireCoal")) {
+    const healed = healActor(getLeader(), 8);
+    if (healed > 0) addFloatingText(getLeader().x, getLeader().y, `+${healed}`, "#f0b85d");
+  }
   announceEvent("次の階へ", `B${game.floor}F　${game.floorKind === "boss" ? "門番戦" : game.floorKind.includes("rest") ? "休憩所" : "探索開始"}`, "階", "mystic");
   playSfx("stairs");
   updateAll();
@@ -4440,7 +4807,7 @@ function openRestSite() {
   ui.restDialog.style.setProperty("--rest-accent", theme.accent);
   ui.restDialogKicker.textContent = `B${game.floor}F ${major ? "大休憩所" : "休憩所"} / ${theme.name}`;
   ui.restDialogTitle.textContent = game.floor >= 100 ? "百階の星核に応える" : "次の十階へ持つ力";
-  ui.restDialogText.textContent = "祭壇の恩恵は一度だけ。進化を進めるか、この挑戦を変える強力なレリックを選ぼう。倉庫と商店は部屋を歩いて利用できる。";
+  ui.restDialogText.textContent = "祭壇の恩恵は一度だけ。進化を進めるか、この挑戦を変える強力な星遺物を選ぼう。倉庫と商店は部屋を歩いて利用できる。";
   const leader = getLeader();
   const choices = [
     {
@@ -4450,7 +4817,7 @@ function openRestSite() {
       icon: "進",
       disabled: leader.evolutionStage >= 10,
     },
-    { key: "milestone-relic", title: "強力なレリックを得る", detail: "この挑戦だけ働く3候補から1つ", icon: "遺" },
+    { key: "milestone-relic", title: "強力な星遺物を得る", detail: "この挑戦だけ働く3候補から1つ", icon: "遺" },
   ];
   ui.restDialogChoices.innerHTML = choices.map((choice) => `
     <button type="button" data-rest-choice="${choice.key}" ${choice.disabled ? "disabled" : ""}>
@@ -4521,6 +4888,7 @@ function captureTowerCheckpoint(resumeFloor) {
     relics: [...game.relics],
     unlockedSkills: [...game.unlockedSkills],
     skillPoints: game.skillPoints,
+    statPoints: game.statPoints,
     runStats: { ...game.runStats },
     evolutionBag: { ...game.evolutionBag },
     belly: game.belly,
@@ -4569,6 +4937,7 @@ function restoreTowerCheckpoint(checkpoint) {
   game.relics = Array.isArray(checkpoint.relics) ? [...checkpoint.relics] : [];
   game.unlockedSkills = Array.isArray(checkpoint.unlockedSkills) ? [...checkpoint.unlockedSkills] : [];
   game.skillPoints = Math.max(0, Number(checkpoint.skillPoints) || 0);
+  game.statPoints = Math.max(0, Number(checkpoint.statPoints) || 0);
   game.runStats = { ...createRunStats(), ...(checkpoint.runStats || {}) };
   game.evolutionBag = {
     ...Object.fromEntries(evolutionMaterialKeys.map((key) => [key, 0])),
@@ -4954,7 +5323,7 @@ function renderGroundMenu() {
   if (onSecret) {
     appendTownEntry(ui.gameMenuBody, {
       title: game.secretStairs.used ? "静まった隠し祭壇" : "星裏の隠し祭壇",
-      detail: game.secretStairs.used ? "祭壇の力はすでに受け取った。" : "進化か、強力なレリックを追加で選べる。",
+      detail: game.secretStairs.used ? "祭壇の力はすでに受け取った。" : "進化か、強力な星遺物を追加で選べる。",
       meta: "通常の階段とは別の寄り道",
       iconKind: "stairs",
       buttonLabel: game.secretStairs.used ? "使用済み" : "祈る",
@@ -5022,13 +5391,13 @@ function renderRelicMenu() {
   ui.gameMenuBody.innerHTML = `
     <div class="relic-head">
       <div class="relic-head-mark">遺</div>
-      <div><span>この挑戦だけの力</span><strong>所持レリック ${game.relics.length}</strong><small>装備枠はありません。獲得した効果はすべて同時に働きます。</small></div>
+      <div><span>この挑戦だけの力</span><strong>所持星遺物 ${game.relics.length}</strong><small>装備枠はありません。獲得した効果はすべて同時に働きます。</small></div>
     </div>
     <div class="relic-grid"></div>
   `;
   const grid = ui.gameMenuBody.querySelector(".relic-grid");
   if (!game.relics.length) {
-    grid.innerHTML = '<p class="town-note">まだレリックはありません。休憩所前の門番を倒すと、3つから1つ選べます。</p>';
+    grid.innerHTML = '<p class="town-note">まだ星遺物はありません。休憩所前の門番を倒すと、3つから1つ選べます。</p>';
     return;
   }
   for (const key of game.relics) {
@@ -5041,7 +5410,7 @@ function renderRelicMenu() {
 function renderRelicRibbon() {
   if (!ui.relicRibbon) return;
   if (!game.relics.length) {
-    ui.relicRibbon.innerHTML = '<span class="relic-ribbon-empty">RELICS 0</span>';
+    ui.relicRibbon.innerHTML = '<span class="relic-ribbon-empty">星遺物 0</span>';
     return;
   }
   const visible = game.relics.slice(0, 9);
@@ -5050,7 +5419,7 @@ function renderRelicRibbon() {
     if (!relic) return "";
     const index = relicCatalog.findIndex((entry) => entry.key === key);
     const column = index % 5;
-    const row = Math.floor(index / 5);
+    const row = Math.floor(index / 5) % 4;
     return `<button type="button" title="${relic.name}: ${relic.detail}" aria-label="${relic.name}">
       <i style="--relic-x:${column * 25}%;--relic-y:${row * 33.3333}%"></i>
     </button>`;
@@ -5064,7 +5433,7 @@ function renderRelicReward() {
   ui.gameMenuBody.innerHTML = `
     <div class="relic-reward-head">
       <span>門番撃破報酬</span>
-      <strong>レリックを1つ選ぶ</strong>
+      <strong>星遺物を1つ選ぶ</strong>
       <small>どれを取るかで、この先の物理・魔法・生存戦略が変わります。</small>
     </div>
     <div class="relic-choice-grid"></div>
@@ -5099,7 +5468,7 @@ function renderRelicReward() {
 function relicCardMarkup(relic) {
   const index = Math.max(0, relicCatalog.findIndex((entry) => entry.key === relic.key));
   const column = index % 5;
-  const row = Math.floor(index / 5);
+  const row = Math.floor(index / 5) % 4;
   return `<article class="relic-card" style="--relic-color:${relic.color}">
     <i class="relic-art" style="--relic-x:${column * 25}%;--relic-y:${row * 33.3333}%"></i>
     <div><span>${relic.rarity}</span><strong>${relic.name}</strong><small>${relic.detail}</small></div>
@@ -5137,19 +5506,7 @@ function renderMoveReward() {
       <b style="color:${elementInfo(move.element).color}">${elementInfo(move.element).symbol}</b>
       <span><strong>${elementBadgeMarkup(move.element)}${move.name}</strong><small>${elementInfo(move.element).name}属性　${move.hint}</small><em>PP ${move.maxPp}</em></span>
     `;
-    button.addEventListener("click", () => {
-      leader.moves.push({ ...move, pp: move.maxPp });
-      game.pendingMovePicks = Math.max(0, game.pendingMovePicks - 1);
-      game.pendingMoveChoices = game.pendingMoveChoices.filter((entry) => entry !== key);
-      announceEvent("技を習得", `${leader.name}は${move.name}を覚えた`, "技", "good");
-      playSfx("level");
-      if (game.pendingMovePicks > 0 && game.pendingMoveChoices.length) renderMoveReward();
-      else {
-        game.pendingMoveChoices = [];
-        if (ui.gameMenuDialog.open) ui.gameMenuDialog.close();
-      }
-      updateAll();
-    });
+    button.addEventListener("click", () => learnMoveChoice(key));
     grid.appendChild(button);
   }
 }
@@ -5167,14 +5524,14 @@ function renderMilestoneChoice() {
     <div class="milestone-head">
       <span>${sourceLabel}</span>
       <strong>この先へ持っていく力を選ぶ</strong>
-      <small>進化は姿と能力を変え、レリックは今回の戦略を大きく曲げます。</small>
+      <small>進化は姿と能力を変え、星遺物は今回の戦略を大きく曲げます。</small>
     </div>
     <div class="milestone-grid">
       <button type="button" data-milestone="evolve" ${canEvolve ? "" : "disabled"}>
         <b>進</b><span><strong>${canEvolve ? `第${leader.evolutionStage + 1}段階へ進化` : "最終進化済み"}</strong><small>${canEvolve ? "段階ごとに変わる候補から選ぶ" : "これ以上は進化できない"}</small></span>
       </button>
       <button type="button" data-milestone="relic">
-        <b>遺</b><span><strong>強力なレリック</strong><small>RARE以上を含む3候補から1つ</small></span>
+        <b>遺</b><span><strong>強力な星遺物</strong><small>RARE以上を含む3候補から1つ</small></span>
       </button>
     </div>
   `;
@@ -5217,9 +5574,9 @@ function createAscensionChoice(profile, actor, branchKey, stage) {
       elementKey: "light",
       stage,
       name: `${asceticNames[stage - 1]}${profile.name}`,
-      detail: "初期レリックを持たずに出た者だけの、均衡と幸運の進化。",
+      detail: "初期星遺物を持たずに出た者だけの、均衡と幸運の進化。",
       bonus: { hp: 6, atk: 2, magic: 2, def: 1, res: 1, luck: 1 },
-      condition: "初期レリックなし",
+      condition: "初期星遺物なし",
       artIndex: ascensionArtIndex(profile.key, "ascetic", stage),
       moveKey: ascensionMoveKey(profile.key, "ascetic", stage),
     };
@@ -5335,7 +5692,7 @@ function learnEvolutionMove(actor, choice, announce = false) {
     return move;
   }
   const previousEvolutionIndex = actor.moves.findIndex((entry) => String(entry.key).startsWith("asc-"));
-  const nextMove = { ...move, pp: move.maxPp };
+  const nextMove = createKnownMove(move);
   let slot = previousEvolutionIndex;
   if (slot < 0 && actor.moves.length < 4) slot = actor.moves.length;
   if (slot < 0) slot = actor.moves.length - 1;
@@ -5522,6 +5879,8 @@ function itemSellPrice(kind) {
     apple: 20, bigApple: 38, oran: 28, elixir: 46, reviver: 80,
     blastSeed: 35, sleepSeed: 30, slumberOrb: 42, warpOrb: 35,
     guidingOrb: 45, guardBerry: 34, powerBerry: 42, fortuneOrb: 65,
+    focusMint: 34, mindBerry: 48, wardBerry: 44, ironNut: 52,
+    pierceSeed: 38, stormOrb: 58, mapScroll: 46,
   };
   return prices[kind] || 18;
 }
@@ -5731,7 +6090,7 @@ function playCasino(bet, fromRest = false) {
     const choices = rollRelicChoices(1, bet >= 180 ? "RARE" : "UNCOMMON");
     const relic = relicCatalog.find((entry) => entry.key === choices[0]);
     if (relic) addRelic(relic.key);
-    result = `大当たり。${relic?.name || "珍しいレリック"}を得た。`;
+    result = `大当たり。${relic?.name || "珍しい星遺物"}を得た。`;
   } else if (roll >= 0.62) {
     const payout = bet * 2;
     game.coins += payout;
@@ -5841,7 +6200,7 @@ function renderEvolutionBoard() {
         return `<span class="${active ? "active" : ""}"><b>${index + 1}</b><small>${historyKey ? historyKey.split("-").slice(1, -1).join(" ") : "未到達"}</small></span>`;
       }).join("")}
     </div>
-    <p class="town-note">10階ごと、または隠し階段の祭壇で進化できます。初期レリックなしと、特定レリック所持には専用の候補があります。</p>
+    <p class="town-note">10階ごと、または隠し階段の祭壇で進化できます。初期星遺物なしと、特定星遺物所持には専用の候補があります。</p>
     <div class="evolution-preview">${(ascensionBranches[leader.profileKey] || []).map((branch) => `
       <span><b>${elementInfo(lineageElementKey(leader.profileKey, branch.key, leader.elementKey)).name} / ${branch.label}</b>${branch.names[0]} → ${branch.names[9]}</span>
     `).join("")}<span><b>発見済み</b>${game.unlockedAscensions.length}形態</span></div>
@@ -5893,8 +6252,19 @@ function renderSkillBoard() {
       <div><span>使用できるポイント</span><strong>${game.skillPoints}</strong></div>
       <p>この挑戦だけの星網盤です。下から上へつなぎ、物理・生存・魔法のどこへ寄せるかを選びます。</p>
     </div>
+    <div class="stat-allocation-panel">
+      <div><span>ステータス振り分け</span><strong>${game.statPoints} pt</strong><small>レベルアップで得た分を好きな能力へ入れられます。</small></div>
+      <button type="button" data-stat-point="hp" ${game.statPoints <= 0 ? "disabled" : ""}><b>心</b><span>HP</span><em>+5</em></button>
+      <button type="button" data-stat-point="atk" ${game.statPoints <= 0 ? "disabled" : ""}><b>牙</b><span>物理</span><em>+1</em></button>
+      <button type="button" data-stat-point="magic" ${game.statPoints <= 0 ? "disabled" : ""}><b>魔</b><span>魔力</span><em>+1</em></button>
+      <button type="button" data-stat-point="def" ${game.statPoints <= 0 ? "disabled" : ""}><b>盾</b><span>防御</span><em>+1</em></button>
+      <button type="button" data-stat-point="res" ${game.statPoints <= 0 ? "disabled" : ""}><b>環</b><span>魔防</span><em>+1</em></button>
+    </div>
     <div class="skill-board-compact"></div>
   `;
+  ui.gameMenuBody.querySelectorAll("[data-stat-point]").forEach((button) => {
+    button.addEventListener("click", () => spendStatPoint(button.dataset.statPoint));
+  });
   const board = ui.gameMenuBody.querySelector(".skill-board-compact");
   for (const laneKey of ["physical", "core", "magic"]) {
     const info = laneInfo[laneKey];
@@ -6009,7 +6379,7 @@ function renderTownShop() {
     <div class="town-shop-tabs" role="tablist" aria-label="商店メニュー">
       <button type="button" data-shop-view="goods" class="${game.shopView === "goods" ? "active" : ""}">道具</button>
       <button type="button" data-shop-view="sell" class="${game.shopView === "sell" ? "active" : ""}">売却</button>
-      <button type="button" data-shop-view="starter" class="${game.shopView === "starter" ? "active" : ""}">初期レリック</button>
+      <button type="button" data-shop-view="starter" class="${game.shopView === "starter" ? "active" : ""}">初期星遺物</button>
     </div>
     <div class="town-shop-content"></div>
   `;
@@ -6084,12 +6454,15 @@ function renderTownShop() {
     return;
   }
 
-  content.innerHTML = `<p class="town-note">現在の所持金: ${game.coins}星貨。装備品はなく、拾ったレリックがその挑戦中の能力になります。</p>`;
+  content.innerHTML = `<p class="town-note">現在の所持金: ${game.coins}星貨。装備品はなく、拾った星遺物がその挑戦中の能力になります。</p>`;
   const offers = [
     { kind: "apple", price: 35 },
     { kind: "oran", price: 45 },
+    { kind: "focusMint", price: 55 },
+    { kind: "pierceSeed", price: 65 },
     { kind: "reviver", price: 120 },
     { kind: "guidingOrb", price: 75 },
+    { kind: "mapScroll", price: 88 },
   ];
   for (const offer of offers) {
     const item = itemCatalog[offer.kind];
@@ -6450,7 +6823,7 @@ function renderCharacterSelection() {
     "beforeend",
     `<div class="evolution-preview">${(ascensionBranches[game.selectedCharacter] || []).map((branch) => `
       <span><b>${elementInfo(lineageElementKey(game.selectedCharacter, branch.key)).name} / ${branch.label}</b>${branch.names[0]} → ${branch.names[9]}</span>
-    `).join("")}<span><b>条件分岐</b>無印進化 / レリック共鳴進化</span></div>`,
+    `).join("")}<span><b>条件分岐</b>無印進化 / 星遺物共鳴進化</span></div>`,
   );
 }
 
@@ -7249,27 +7622,32 @@ function drawRestNode(node, time) {
   drawOutlinedEntity((targetCtx) => {
     targetCtx.save();
     if (node.action === "milestone") {
-      targetCtx.fillStyle = "#312c3b";
-      targetCtx.fillRect(8, 32, 32, 9);
+      targetCtx.fillStyle = inactive ? "#403b3a" : "#312546";
+      targetCtx.fillRect(6, 34, 36, 8);
       targetCtx.fillStyle = color;
-      targetCtx.fillRect(12, 27, 24, 7);
+      targetCtx.fillRect(12, 28, 24, 7);
+      targetCtx.fillStyle = inactive ? "#6f6a63" : "#f2d16e";
+      targetCtx.fillRect(18, 17, 12, 12);
+      targetCtx.fillStyle = inactive ? "#9b958a" : "#fff7bd";
+      targetCtx.fillRect(21, 10, 6, 25);
       targetCtx.fillStyle = inactive ? "#9b958a" : game.restTheme?.glow || "#fff2b1";
-      drawPixelStar(targetCtx, 24, 18, 14, targetCtx.fillStyle);
+      drawPixelStar(targetCtx, 24, 13, 13, targetCtx.fillStyle);
       targetCtx.strokeStyle = color;
       targetCtx.lineWidth = 2;
       targetCtx.beginPath();
-      targetCtx.arc(24, 18, 13 + Math.sin(time / 180) * 2, 0, Math.PI * 2);
+      targetCtx.arc(24, 16, 15 + Math.sin(time / 180) * 2, 0, Math.PI * 2);
       targetCtx.stroke();
     } else if (node.key === "storage") {
-      targetCtx.fillStyle = "#6b482f";
-      targetCtx.fillRect(7, 20, 34, 21);
-      targetCtx.fillStyle = "#a87945";
-      targetCtx.fillRect(8, 13, 32, 12);
-      targetCtx.fillStyle = "#e4be69";
-      targetCtx.fillRect(21, 19, 7, 14);
-      targetCtx.fillRect(8, 23, 32, 3);
-      targetCtx.fillStyle = "#34271d";
-      targetCtx.fillRect(23, 25, 3, 5);
+      targetCtx.fillStyle = "#213244";
+      targetCtx.fillRect(5, 22, 38, 19);
+      targetCtx.fillStyle = "#3c80a2";
+      targetCtx.fillRect(8, 14, 32, 13);
+      targetCtx.fillStyle = "#bdefff";
+      targetCtx.fillRect(10, 20, 28, 3);
+      targetCtx.fillStyle = "#f2d16e";
+      targetCtx.fillRect(21, 22, 7, 14);
+      targetCtx.fillStyle = "#14212d";
+      targetCtx.fillRect(23, 27, 3, 5);
     } else if (node.key === "healer") {
       targetCtx.fillStyle = "#456d7c";
       targetCtx.fillRect(8, 28, 32, 11);
@@ -7309,12 +7687,13 @@ function drawRestNode(node, time) {
     }
     targetCtx.restore();
   }, px, py + bob, color, 2);
-  ctx.fillStyle = "rgba(7, 11, 11, 0.88)";
-  ctx.fillRect(px + 3, py + 39, 42, 9);
+  const label = node.action === "milestone" ? (inactive ? "祭壇済" : "進化/遺") : node.key === "storage" ? "倉庫" : node.name.slice(0, 6);
+  ctx.fillStyle = "rgba(7, 11, 11, 0.9)";
+  ctx.fillRect(px + 2, py + 38, 44, 10);
   ctx.fillStyle = inactive ? "#aaa499" : color;
   ctx.font = "900 7px sans-serif";
   ctx.textAlign = "center";
-  ctx.fillText(node.name.slice(0, 6), px + 24, py + 46);
+  ctx.fillText(label, px + 24, py + 46);
 }
 
 function drawTrap(trap, time) {
@@ -7432,11 +7811,14 @@ function drawItemIcon(target, kind, gear) {
       iconCtx.fillRect(35, 8, 3, 10);
       iconCtx.fillRect(31, 12, 11, 3);
     }
-  } else if (["oran", "guardBerry", "powerBerry"].includes(kind)) {
+  } else if (["oran", "guardBerry", "powerBerry", "focusMint", "mindBerry", "wardBerry"].includes(kind)) {
     const berryColors = {
       oran: ["#5aa5eb", "#bfeaff"],
       guardBerry: ["#729eaa", "#d5f2f4"],
       powerBerry: ["#d85f50", "#ffd0a6"],
+      focusMint: ["#56c9ae", "#caffef"],
+      mindBerry: ["#6daef1", "#d8edff"],
+      wardBerry: ["#9d83df", "#efe6ff"],
     };
     const [berryColor, berryLight] = berryColors[kind];
     iconCtx.fillStyle = "#6faa5d";
@@ -7460,11 +7842,13 @@ function drawItemIcon(target, kind, gear) {
     iconCtx.fillRect(15, 20, 5, 12);
     iconCtx.fillStyle = "#238e9b";
     iconCtx.fillRect(22, 27, 11, 5);
-  } else if (["reviver", "blastSeed", "sleepSeed"].includes(kind)) {
+  } else if (["reviver", "blastSeed", "sleepSeed", "pierceSeed", "ironNut"].includes(kind)) {
     const colors = {
       reviver: ["#f5c957", "#fff4a8"],
       blastSeed: ["#ef5d4f", "#ffb34f"],
       sleepSeed: ["#8c70cf", "#d9c9ff"],
+      pierceSeed: ["#d6a858", "#fff0a8"],
+      ironNut: ["#7d8988", "#d8e1df"],
     };
     const [body, shine] = colors[kind];
     iconCtx.fillStyle = body;
@@ -7480,7 +7864,7 @@ function drawItemIcon(target, kind, gear) {
     if (kind === "reviver") {
       iconCtx.fillRect(21, 13, 6, 19);
       iconCtx.fillRect(15, 20, 18, 6);
-    } else if (kind === "blastSeed") {
+    } else if (kind === "blastSeed" || kind === "pierceSeed") {
       iconCtx.fillRect(22, 14, 6, 18);
       iconCtx.fillRect(17, 20, 5, 8);
       iconCtx.fillRect(27, 10, 4, 10);
@@ -7493,7 +7877,7 @@ function drawItemIcon(target, kind, gear) {
       iconCtx.arc(29, 19, 9, 0, Math.PI * 2);
       iconCtx.fill();
     }
-  } else if (["slumberOrb", "warpOrb", "guidingOrb", "fortuneOrb"].includes(kind)) {
+  } else if (["slumberOrb", "warpOrb", "guidingOrb", "fortuneOrb", "stormOrb"].includes(kind)) {
     const body = itemColor(kind);
     iconCtx.fillStyle = "#d6f7f2";
     iconCtx.beginPath();
@@ -7513,6 +7897,10 @@ function drawItemIcon(target, kind, gear) {
       iconCtx.fillRect(29, 17, 6, 14);
     } else if (kind === "guidingOrb") {
       drawPixelStar(iconCtx, 24, 24, 12, light);
+    } else if (kind === "stormOrb") {
+      iconCtx.fillRect(22, 11, 7, 13);
+      iconCtx.fillRect(17, 23, 11, 5);
+      iconCtx.fillRect(20, 28, 7, 10);
     } else {
       iconCtx.fillRect(21, 12, 6, 24);
       iconCtx.fillRect(14, 19, 20, 6);
@@ -7576,7 +7964,18 @@ function drawItemIcon(target, kind, gear) {
       iconCtx.fillStyle = light;
       drawPixelStar(iconCtx, 24, 24, 7, light);
     }
-  } else if (kind === "badge") {
+  } else if (kind === "badge" || kind === "mapScroll") {
+    if (kind === "mapScroll") {
+      iconCtx.fillStyle = "#e7cf9a";
+      iconCtx.fillRect(10, 10, 28, 28);
+      iconCtx.fillStyle = "#765d35";
+      iconCtx.fillRect(13, 14, 22, 3);
+      iconCtx.fillRect(13, 22, 16, 3);
+      iconCtx.fillRect(13, 30, 20, 3);
+      drawPixelStar(iconCtx, 32, 18, 6, "#f4d86b");
+      iconCtx.restore();
+      return;
+    }
     iconCtx.fillStyle = "#7d69c5";
     iconCtx.fillRect(13, 8, 8, 16);
     iconCtx.fillRect(27, 8, 8, 16);
@@ -8575,8 +8974,8 @@ function directionFromPointer(event) {
   const cosine = Math.cos(angle);
   const sine = Math.sin(angle);
   return {
-    x: Math.abs(cosine) < 0.38 ? 0 : Math.sign(cosine),
-    y: Math.abs(sine) < 0.38 ? 0 : Math.sign(sine),
+    x: Math.abs(cosine) < 0.28 ? 0 : Math.sign(cosine),
+    y: Math.abs(sine) < 0.28 ? 0 : Math.sign(sine),
   };
 }
 
@@ -9535,6 +9934,7 @@ function loadSaveSlot(slot) {
   game.bagCapacity = clamp(Number(saved.bagCapacity) || BASE_BAG_CAPACITY, BASE_BAG_CAPACITY, MAX_BAG_CAPACITY);
   game.karma = Math.max(0, Number(saved.karma) || 0);
   game.skillPoints = 1;
+  game.statPoints = Math.max(0, Number(game.towerCheckpoint?.statPoints) || 0);
   game.unlockedSkills = [];
   game.runStats = createRunStats();
   game.gearBag = [];
@@ -9614,15 +10014,26 @@ function renderSaveSlots(initial = ui.saveDialog.dataset.initial === "true") {
       if (saved) {
         loadSaveSlot(slot);
       } else {
-        if (!initial) createGame();
-        game.saveSlot = slot;
-        saveCurrentGame(true);
-        updateAll();
+        startFreshGame(slot);
       }
       ui.saveDialog.close();
       showToast(saved ? `セーブ${slot}を読み込んだ` : `セーブ${slot}で冒険を始める`);
     });
     entry.appendChild(button);
+    if (saved) {
+      const freshButton = document.createElement("button");
+      freshButton.type = "button";
+      freshButton.className = "save-slot-reset";
+      freshButton.textContent = "ニューゲーム";
+      freshButton.addEventListener("click", () => {
+        const confirmed = window.confirm("この記録を消して、進化データも含めて最初から始めますか？");
+        if (!confirmed) return;
+        startFreshGame(slot);
+        ui.saveDialog.close();
+        showToast("ニューゲームを開始した");
+      });
+      entry.appendChild(freshButton);
+    }
     ui.saveSlotList.appendChild(entry);
   }
 }
