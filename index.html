@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa16e" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa16f" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa16e" />
+    <link rel="stylesheet" href="styles.css?v=pwa16f" />
   </head>
   <body>
     <div class="app-shell">
@@ -324,6 +324,7 @@
           <button type="button" data-menu-view="materials">素材袋</button>
           <button type="button" data-menu-view="relics">星遺物</button>
           <button type="button" data-menu-view="evolution">進化</button>
+          <button type="button" data-menu-view="codex">図鑑</button>
           <button type="button" data-menu-view="mission">探索</button>
           <button type="button" data-menu-view="skills">成長</button>
           <button type="button" data-menu-view="controls">操作</button>
@@ -440,6 +441,7 @@
           <li>同じ階に長く留まると「塔風」が強まります。240ターンで警告、330ターンから侵食、420ターンで挑戦失敗です。</li>
           <li>10階ごとに休憩所、20階ごとに大休憩所があります。到着すると全技PPが回復します。</li>
           <li>門番を越えて休憩所へ着くと、進化か強力な星遺物を選べます。星遺物の効果はすべて同時に働きます。</li>
+          <li>各10階区画の入口ではルートを選べます。敵数、道具、商店、変異種、隠し祭壇の出やすさが変わります。</li>
           <li>入るたびにマップ、敵、道具、隠し罠、隠し祭壇、階の運勢が変わります。通常階段は隠されません。</li>
           <li>挑戦開始時にレベル、星遺物、星網スキル盤、進化素材は初期化。進化形態とバッグ拡張は引き継がれます。</li>
           <li>記録は1つ。休憩所と町で自動保存されます。</li>
@@ -452,8 +454,10 @@
           <li>通常階段は見つけた部屋でそのまま確認できます。隠し罠と星裏の祭壇は近づくか探索能力で発見します。</li>
           <li>歩くたびにHPが1回復します。逃げて回復するか、増援前に急ぐかも判断の一つです。</li>
           <li>技は使うだけでも経験値を得られ、通常攻撃より早く成長できます。ただしPPは休憩所まで有限です。</li>
+          <li>特定の属性順で技を使うと属性コンボが発生します。光と闇、木と毒、火と木などは特に狙い目です。</li>
           <li>物理と魔法を交互に使う、変異種へ強くするなど、星遺物同士の組み合わせが重要です。</li>
           <li>敵の頭上には次の意図が出ます。斬は近接攻撃、遠は遠距離技、追は追跡、巡は巡回です。</li>
+          <li>図鑑では進化先の姿、敵の出現帯、門番の作戦、ルート効果を確認できます。</li>
           <li>一部の星遺物は、技の属性順、カルマ、バッグ空きなどで威力が変わります。</li>
           <li>MUTANT表示の変異種は、重装・魔脈・疾走・吸収・爆発のいずれかの特性を持ちます。</li>
           <li>各階の運勢によって、道具の数、敵の数、回復、増援、落とし物が変化します。</li>
@@ -471,11 +475,11 @@
     <div id="endOverlay" class="end-overlay" hidden>
       <div class="end-box" role="dialog" aria-modal="true" aria-labelledby="endTitle">
         <h2 id="endTitle">冒険終了</h2>
-        <p id="endText"></p>
+        <div id="endText"></div>
         <button id="endRestartButton" class="primary-button" type="button">もう一度</button>
       </div>
     </div>
 
-    <script src="app.js?v=pwa16e"></script>
+    <script src="app.js?v=pwa16f"></script>
   </body>
 </html>
