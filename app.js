@@ -793,6 +793,10 @@ const relicCatalog = [
   { key: "thornMantle", name: "星棘のマント", icon: "棘", rarity: "UNCOMMON", color: "#95c568", detail: "隣接攻撃を受けると小さく反撃する。", effect: "thornMail" },
   { key: "campfireCoal", name: "旅火の炭", icon: "火", rarity: "UNCOMMON", color: "#ee865d", detail: "階段を降りるたびHPを8回復。", effect: "stairHeal" },
   { key: "crackedShield", name: "割れ盾の誓い", icon: "誓", rarity: "UNCOMMON", color: "#8bb5d0", detail: "HP35%以下で受けるダメージを軽減。", effect: "lowHpGuard" },
+  { key: "triadCompass", name: "三相の羅針", icon: "三", rarity: "RARE", color: "#8de0bf", detail: "炎→木→水→炎の順で技を使うと威力 +45%、HPを3回復。", effect: "elementCycle" },
+  { key: "karmaBrand", name: "咎星の刻印", icon: "咎", rarity: "RARE", color: "#b26ce8", detail: "カルマが高いほど闇・毒技の威力上昇。最大 +60%。", effect: "karmaDarkness" },
+  { key: "stormKite", name: "避雷の凧", icon: "凧", rarity: "UNCOMMON", color: "#7fd4ed", detail: "敵の遠距離攻撃ダメージを30%軽減。", effect: "rangedGuard" },
+  { key: "emptySatchel", name: "空袋の誓い", icon: "袋", rarity: "UNCOMMON", color: "#d9bd78", detail: "バッグ空きが10枠以上なら、技の威力 +20%。拾いすぎないほど強い。", effect: "emptyBagPower" },
   { key: "foxMask", name: "白狐の仮面", icon: "狐", rarity: "RARE", color: "#f0dca2", detail: "物理・魔力 +2、運 +1。", bonus: { atk: 2, magic: 2, luck: 1 } },
   { key: "voidLedger", name: "宵闇の帳簿", icon: "帳", rarity: "RARE", color: "#a575e2", detail: "倒すたび探索ptが少し増えるが、最大HP -6。", bonus: { hp: -6 }, effect: "scoreOnKill" },
   { key: "frostNeedle", name: "霜針の星飾り", icon: "霜", rarity: "RARE", color: "#8bdff2", detail: "氷属性の技ダメージ +4。", effect: "iceDamage" },
@@ -3129,17 +3133,36 @@ function useSelectedMove() {
 
   const previousStyle = game.lastActionStyle;
   const alternated = hasRelic("prismCore") && previousStyle && previousStyle !== move.style;
+  const previousCycleElement = game.relicFloorState.triadElement || null;
+  const cycleNext = { fire: "wood", wood: "water", water: "fire" };
+  const triadBoost = hasRelic("triadCompass")
+    && previousCycleElement
+    && cycleNext[previousCycleElement] === move.element;
+  const karmaBoost = hasRelic("karmaBrand") && ["dark", "poison"].includes(move.element)
+    ? Math.min(0.6, game.karma * 0.06)
+    : 0;
+  const emptyBagBoost = hasRelic("emptySatchel") && game.bagCapacity - bagTotal() >= 10;
   const echoed = move.style === "magic" && hasSkill("spellEcho") && Math.random() < 0.24;
   const freeCast = move.style === "magic" && hasRelic("arcaneVein") && Math.random() < 0.28;
   game.lastActionStyle = move.style;
   game.currentActionMultiplier = (alternated ? 1.35 : 1)
+    * (triadBoost ? 1.45 : 1)
+    * (karmaBoost ? 1 + karmaBoost : 1)
+    * (emptyBagBoost ? 1.2 : 1)
     * (echoed ? 1.55 : 1)
     * (move.style === "physical" && hasSkill("shell") ? 1.12 : 1);
   game.currentActionElement = move.element;
   game.runStats[move.style === "magic" ? "magicUses" : "physicalUses"] += 1;
+  const bonusNotes = [
+    alternated ? "七彩共鳴" : "",
+    triadBoost ? "三相連鎖" : "",
+    karmaBoost ? `咎星 +${Math.round(karmaBoost * 100)}%` : "",
+    emptyBagBoost ? "空袋" : "",
+    echoed ? "術式残響" : "",
+  ].filter(Boolean).join("　");
   announceEvent(
     move.name,
-    `【${elementInfo(move.element).name}】${move.hint}　PP ${move.pp - (freeCast ? 0 : 1)}/${move.maxPp}${alternated ? "　七彩共鳴" : ""}${echoed ? "　術式残響" : ""}`,
+    `【${elementInfo(move.element).name}】${move.hint}　PP ${move.pp - (freeCast ? 0 : 1)}/${move.maxPp}${bonusNotes ? `　${bonusNotes}` : ""}`,
     elementInfo(move.element).symbol,
     "mystic",
   );
@@ -3148,10 +3171,15 @@ function useSelectedMove() {
   game.runStats.techniques += 1;
   gainExp(2 + Math.floor(game.floor / 20));
   if (freeCast) addFloatingText(leader.x, leader.y, "PP 0", "#8ee7ff");
-  if (alternated || echoed) {
-    addEffect("runes", leader.x, leader.y, alternated ? "#ffe27d" : "#bba4ff");
+  if (triadBoost) {
+    healActor(leader, 3);
+    addFloatingText(leader.x, leader.y, "三相 +HP", "#9ee6b9");
+  }
+  if (alternated || triadBoost || karmaBoost || emptyBagBoost || echoed) {
+    addEffect("runes", leader.x, leader.y, triadBoost ? "#9ee6b9" : karmaBoost ? "#c68cff" : alternated ? "#ffe27d" : "#bba4ff");
     triggerScreenShake(alternated ? 7 : 5, 220);
   }
+  game.relicFloorState.triadElement = ["fire", "wood", "water"].includes(move.element) ? move.element : null;
   playSfx("move");
   let used = false;
   if (move.key === "spark") used = useSpark(leader, move);
@@ -3879,6 +3907,10 @@ function enemyAttack(enemy, actor, ranged = false) {
   if (actor.id === "leader" && hasRelic("crackedShield") && actor.hp <= actor.maxHp * 0.35) {
     damage = Math.max(1, Math.ceil(damage * 0.7));
   }
+  if (ranged && actor.id === "leader" && hasRelic("stormKite")) {
+    damage = Math.max(1, Math.ceil(damage * 0.7));
+    addFloatingText(actor.x, actor.y, "避雷", "#8ee7ff");
+  }
   const moveName = enemyMoveName(enemy, ranged);
   actor.hp = Math.max(0, actor.hp - damage);
   enemy.alerted = true;
@@ -3940,6 +3972,37 @@ function enemyMoveName(enemy, ranged) {
   const baseName = moveNames[enemy.elementKey] || (ranged ? "魔力弾" : "強襲");
   if (!enemy.mutation) return baseName;
   return `${enemy.mutation.name}・${baseName}`;
+}
+
+function enemyIntent(enemy) {
+  if ((enemy.sleepTurns || 0) > 0) {
+    return { icon: "Z", label: "眠り", color: "#d8c9ff" };
+  }
+  const target = nearestLivingAlly(enemy);
+  if (!target) return null;
+  const seesTarget = enemyCanSeeTarget(enemy, target);
+  const range = enemyRangedRange(enemy);
+  if (
+    enemy.boss
+    && (enemy.specialCooldown || 0) === 0
+    && gridDistance(enemy, target) <= 5
+    && hasClearAttackPath(enemy, target)
+  ) {
+    return { icon: "技", label: enemy.special || "特殊技", color: "#ffcf6e", urgent: true };
+  }
+  if (range > 0 && gridDistance(enemy, target) <= range && seesTarget) {
+    return { icon: "遠", label: enemyMoveName(enemy, true), color: elementInfo(enemy.elementKey).color, urgent: true };
+  }
+  if (gridDistance(enemy, target) === 1 && hasClearAttackPath(enemy, target)) {
+    return { icon: "斬", label: enemyMoveName(enemy, false), color: elementInfo(enemy.elementKey).color, urgent: true };
+  }
+  if (seesTarget && !enemy.alerted) {
+    return { icon: "!", label: "発見", color: "#ffe27d", urgent: true };
+  }
+  if (enemy.alerted) {
+    return { icon: "追", label: "追跡", color: "#ff9a70" };
+  }
+  return { icon: "巡", label: "巡回", color: "#b8c0bc", dim: true };
 }
 
 function gainExp(amount) {
@@ -8569,7 +8632,28 @@ function drawEnemy(enemy, time) {
     ctx.textAlign = "center";
     ctx.fillText("Z", px + 37, py + 10 + wobble);
   }
+  drawEnemyIntent(enemy, px, py, wobble);
   drawEnemyHp(enemy, px, py);
+}
+
+function drawEnemyIntent(enemy, px, py, wobble) {
+  const intent = enemyIntent(enemy);
+  if (!intent) return;
+  const x = px + 5;
+  const y = py - 19 + wobble;
+  const width = intent.urgent ? 25 : 21;
+  ctx.save();
+  ctx.globalAlpha = intent.dim ? 0.72 : 1;
+  ctx.fillStyle = intent.urgent ? "rgba(26, 11, 8, 0.94)" : "rgba(7, 10, 9, 0.88)";
+  ctx.fillRect(x, y, width, 15);
+  ctx.strokeStyle = intent.color;
+  ctx.lineWidth = intent.urgent ? 2 : 1.4;
+  ctx.strokeRect(x, y, width, 15);
+  ctx.fillStyle = intent.color;
+  ctx.font = "900 9px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(intent.icon, x + width / 2, y + 11);
+  ctx.restore();
 }
 
 function prepareMapTokenAtlas() {
