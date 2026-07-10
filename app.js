@@ -242,11 +242,11 @@ function moveAimShape(move) {
   if (move.key === "shieldCrash") return { kind: "melee", range: 1, label: "正面1" };
   if (move.key === "ironSlash") return { kind: "line", range: 2, label: "前方2" };
   if (move.key === "spark") return { kind: "line", range: 4, label: "前方4" };
-  if (move.key === "arcBolt") return { kind: "line", range: 6, label: "直線6" };
+  if (move.key === "arcBolt") return { kind: "beam", range: 6, label: "貫通6" };
   if (move.key === "blinkHex") return { kind: "line", range: 4, label: "転位4" };
   if (move.signature === "burst") return { kind: "burst", range: 2, label: "周囲2" };
   if (move.signature === "guard") return { kind: "self", range: 0, label: "自分" };
-  if (move.signature === "beam") return { kind: "line", range: 6, label: "直線6" };
+  if (move.signature === "beam") return { kind: "beam", range: 6, label: "貫通6" };
   if (move.signature === "line") return { kind: "line", range: 4, label: "前方4" };
   if (move.signature === "trick") return { kind: "line", range: 4, label: "前方4" };
   return { kind: "line", range: 4, label: "前方4" };
@@ -258,6 +258,26 @@ function moveRangeBadgeMarkup(move) {
 
 function moveMetaMarkup(move) {
   return `<span class="move-tags">${moveStyleBadgeMarkup(move.style)}${moveRangeBadgeMarkup(move)}</span>`;
+}
+
+function characterPassiveInfo(profileKey) {
+  return {
+    kohaku: {
+      name: "狐星調和",
+      detail: "異なる属性の技を続けると威力+10%、HPを1回復。",
+      icon: "狐",
+    },
+    knight: {
+      name: "王城剣",
+      detail: "物理技と通常攻撃の威力が上がり、ガード中はさらに堅い。",
+      icon: "剣",
+    },
+    magician: {
+      name: "星術収束",
+      detail: "魔法技の威力が上がり、時々PPを1戻す。",
+      icon: "術",
+    },
+  }[profileKey] || { name: "冒険者", detail: "標準的な探索能力。", icon: "星" };
 }
 
 function elementLegendMarkup() {
@@ -849,6 +869,12 @@ const relicCatalog = [
   { key: "voidLedger", name: "宵闇の帳簿", icon: "帳", rarity: "RARE", color: "#a575e2", detail: "倒すたび探索ptが少し増えるが、最大HP -6。", bonus: { hp: -6 }, effect: "scoreOnKill" },
   { key: "frostNeedle", name: "霜針の星飾り", icon: "霜", rarity: "RARE", color: "#8bdff2", detail: "氷属性の技ダメージ +4。", effect: "iceDamage" },
   { key: "venomLamp", name: "毒灯の小瓶", icon: "毒", rarity: "RARE", color: "#a6c943", detail: "毒属性の技ダメージ +4。", effect: "poisonDamage" },
+  { key: "lineSigil", name: "一直線の星印", icon: "線", rarity: "UNCOMMON", color: "#7fcfe8", detail: "直線・貫通技の威力 +18%。", effect: "linePower" },
+  { key: "burstBloom", name: "円花の結晶", icon: "円", rarity: "UNCOMMON", color: "#91d57d", detail: "周囲技の威力 +18%。周囲技を使うとHPを2回復。", effect: "burstPower" },
+  { key: "openingCharm", name: "開幕の護符", icon: "開", rarity: "COMMON", color: "#f3c66a", detail: "各階の最初の18ターン、技威力 +20%。", effect: "openingPower" },
+  { key: "scarletPearl", name: "緋連の真珠", icon: "連", rarity: "RARE", color: "#ed7185", detail: "敵を3体倒すたび、選択中の技PPを2回復。", effect: "killChainPp" },
+  { key: "quietHourglass", name: "静刻の砂時計", icon: "刻", rarity: "RARE", color: "#b9a4ef", detail: "同じ階の150ターン目まで、受けるダメージを少し軽減。", effect: "earlyGuard" },
+  { key: "thiefRibbon", name: "盗星のリボン", icon: "盗", rarity: "RARE", color: "#d9b06f", detail: "泥棒後、次の門番まで技威力 +25%。", effect: "theftPower" },
   { key: "zeroFragment", name: "零星の欠片", icon: "零", rarity: "BOSS", color: "#ffdd83", detail: "全能力 +2。最深部へ近づくほどさらに輝く。", bonus: { atk: 2, magic: 2, def: 2, res: 2 } },
 ];
 
@@ -1873,6 +1899,7 @@ function renderExpeditionLoadout() {
       const selected = entry.key === game.selectedCharacter;
       const actor = createLeader(entry.key);
       applyPersistentLineage(actor);
+      const passive = characterPassiveInfo(entry.key);
       const card = document.createElement("button");
       card.type = "button";
       card.className = `loadout-character ${selected ? "selected" : ""}`;
@@ -1893,6 +1920,7 @@ function renderExpeditionLoadout() {
           <b>初期技　${actor.moves[0].name}</b>
           <em>${actor.evolutionStage ? `継承進化 ${actor.evolutionStage}/10` : "進化 0/10"}</em>
         </div>
+        <p class="loadout-passive"><b>${passive.icon}</b><span><strong>${passive.name}</strong><small>${passive.detail}</small></span></p>
         <i>${selected ? "選択中" : "選ぶ"}</i>
       `;
       card.addEventListener("click", () => {
@@ -2980,9 +3008,20 @@ function createEnemy(catalog, point, alerted = false) {
     idleAmplitude: 2.4 + Math.random() * 1.8,
     idleSpeed: 250 + Math.random() * 130,
     alerted,
+    ability: enemyAbilityForCatalog(catalog, elementKey, mutation),
+    abilityCooldown: randInt(1, 4),
   };
   recordEnemySeen(enemy.key);
   return enemy;
+}
+
+function enemyAbilityForCatalog(catalog, elementKey, mutation) {
+  if (mutation?.volatile || ["goblinBomber", "clockworkImp", "clockworkDrone"].includes(catalog.familyKey)) return "bomb";
+  if (["toxicToad", "plagueCrow", "cursedLantern", "frostOwl"].includes(catalog.familyKey)) return "heal";
+  if (["stitchedRogue", "mimicChest", "darkJackal"].includes(catalog.familyKey)) return "steal";
+  if (["serpentPriest", "mossTreant", "voidEye"].includes(catalog.familyKey)) return "summon";
+  if (elementKey === "poison" && game.floor >= 35) return "heal";
+  return null;
 }
 
 function spawnBoss(profile, point) {
@@ -3342,6 +3381,12 @@ function useSelectedMove() {
     ? Math.min(0.6, game.karma * 0.06)
     : 0;
   const emptyBagBoost = hasRelic("emptySatchel") && game.bagCapacity - bagTotal() >= 10;
+  const moveShape = moveAimShape(move);
+  const linePower = hasRelic("lineSigil") && ["line", "beam"].includes(moveShape.kind);
+  const burstPower = hasRelic("burstBloom") && moveShape.kind === "burst";
+  const openingPower = hasRelic("openingCharm") && game.turn < 18;
+  const theftPower = hasRelic("thiefRibbon") && game.runStats.thefts > 0;
+  const passiveBoost = characterMovePassive(leader, move, previousElement, previousStyle);
   const echoed = move.style === "magic" && hasSkill("spellEcho") && Math.random() < 0.24;
   const freeCast = move.style === "magic" && hasRelic("arcaneVein") && Math.random() < 0.28;
   game.lastActionStyle = move.style;
@@ -3350,6 +3395,12 @@ function useSelectedMove() {
     * (triadBoost ? 1.45 : 1)
     * (karmaBoost ? 1 + karmaBoost : 1)
     * (emptyBagBoost ? 1.2 : 1)
+    * (linePower ? 1.18 : 1)
+    * (burstPower ? 1.18 : 1)
+    * (openingPower ? 1.2 : 1)
+    * (theftPower ? 1.25 : 1)
+    * (passiveBoost.multiplier || 1)
+    * (1 + (move.powerBonus || 0))
     * (echoed ? 1.55 : 1)
     * (move.style === "physical" && hasSkill("shell") ? 1.12 : 1);
   game.currentActionElement = move.element;
@@ -3360,6 +3411,12 @@ function useSelectedMove() {
     triadBoost ? "三相連鎖" : "",
     karmaBoost ? `咎星 +${Math.round(karmaBoost * 100)}%` : "",
     emptyBagBoost ? "空袋" : "",
+    linePower ? "一直線 +18%" : "",
+    burstPower ? "円花 +18%" : "",
+    openingPower ? "開幕 +20%" : "",
+    theftPower ? "盗星 +25%" : "",
+    passiveBoost.note || "",
+    move.powerBonus ? `技強化 +${Math.round(move.powerBonus * 100)}%` : "",
     echoed ? "術式残響" : "",
   ].filter(Boolean).join("　");
   announceEvent(
@@ -3373,6 +3430,18 @@ function useSelectedMove() {
   game.runStats.techniques += 1;
   gainExp(2 + Math.floor(game.floor / 20));
   if (freeCast) addFloatingText(leader.x, leader.y, "PP 0", "#8ee7ff");
+  if (passiveBoost.heal) {
+    healActor(leader, passiveBoost.heal);
+    addFloatingText(leader.x, leader.y, `${passiveBoost.name} +HP`, leader.color);
+  }
+  if (burstPower) {
+    healActor(leader, 2);
+    addFloatingText(leader.x, leader.y, "円花 +HP", "#9ee6b9");
+  }
+  if (!freeCast && passiveBoost.ppRefund && Math.random() < passiveBoost.ppRefund) {
+    move.pp = Math.min(move.maxPp, move.pp + 1);
+    addFloatingText(leader.x, leader.y, `${passiveBoost.name} PP+1`, "#8ee7ff");
+  }
   if (triadBoost) {
     healActor(leader, 3);
     addFloatingText(leader.x, leader.y, "三相 +HP", "#9ee6b9");
@@ -3382,7 +3451,7 @@ function useSelectedMove() {
     addFloatingText(leader.x, leader.y, `${elementCombo.name} +HP`, elementCombo.color);
   }
   if (elementCombo) game.runStats.elementCombos += 1;
-  if (alternated || elementCombo || triadBoost || karmaBoost || emptyBagBoost || echoed) {
+  if (alternated || elementCombo || triadBoost || karmaBoost || emptyBagBoost || linePower || burstPower || openingPower || theftPower || echoed) {
     addEffect("runes", leader.x, leader.y, elementCombo?.color || (triadBoost ? "#9ee6b9" : karmaBoost ? "#c68cff" : alternated ? "#ffe27d" : "#bba4ff"));
     triggerScreenShake(alternated ? 7 : 5, 220);
   }
@@ -3406,6 +3475,23 @@ function useSelectedMove() {
   game.currentActionMultiplier = 1;
   game.currentActionElement = null;
   return used;
+}
+
+function characterMovePassive(actor, move, previousElement, previousStyle) {
+  const passive = characterPassiveInfo(actor.profileKey);
+  if (actor.profileKey === "kohaku" && previousElement && previousElement !== move.element) {
+    return { name: passive.name, multiplier: 1.1, heal: 1, note: `${passive.name} +10%` };
+  }
+  if (actor.profileKey === "knight" && move.style === "physical") {
+    return { name: passive.name, multiplier: actor.guardTurns > 0 ? 1.2 : 1.12, note: `${passive.name} +${actor.guardTurns > 0 ? 20 : 12}%` };
+  }
+  if (actor.profileKey === "magician" && move.style === "magic") {
+    return { name: passive.name, multiplier: 1.12, ppRefund: 0.22, note: `${passive.name} +12%` };
+  }
+  if (previousStyle && actor.profileKey === "kohaku" && previousStyle !== move.style) {
+    return { name: passive.name, multiplier: 1.06, note: `${passive.name} +6%` };
+  }
+  return { name: passive.name, multiplier: 1 };
 }
 
 function useSpark(actor, move) {
@@ -3976,6 +4062,8 @@ function enemyTurn() {
     const target = nearestLivingAlly(enemy);
     if (!target) continue;
 
+    if (applyEnemyAbility(enemy, target)) continue;
+
     if (enemy.boss) {
       enemy.specialCooldown = Math.max(0, (enemy.specialCooldown || 0) - 1);
       if (
@@ -4027,6 +4115,115 @@ function enemyTurn() {
       addLog("遠くから敵の気配が近づいてきた。");
     }
   }
+}
+
+function applyEnemyAbility(enemy, target) {
+  enemy.abilityCooldown = Math.max(0, (enemy.abilityCooldown || 0) - 1);
+  if (!enemy.ability || enemy.abilityCooldown > 0) return false;
+  const seesTarget = enemyCanSeeTarget(enemy, target);
+  if (enemy.ability === "bomb") {
+    if (enemy.chargingBomb && gridDistance(enemy, target) <= 2 && hasClearAttackPath(enemy, target)) {
+      enemy.chargingBomb = false;
+      enemy.abilityCooldown = 5;
+      explodeEnemyBomb(enemy, target);
+      return true;
+    }
+    if (seesTarget && gridDistance(enemy, target) <= 3) {
+      enemy.chargingBomb = true;
+      enemy.abilityCooldown = 1;
+      enemy.alerted = true;
+      addEffect("runes", enemy.x, enemy.y, "#ff9d5d");
+      addFloatingText(enemy.x, enemy.y, "溜め", "#ffcf6e");
+      addLog(`${enemy.name}が爆発技を溜めはじめた。離れよう。`);
+      return true;
+    }
+  }
+  if (enemy.ability === "heal") {
+    const wounded = game.enemies
+      .filter((ally) => ally.id !== enemy.id && gridDistance(enemy, ally) <= 3 && ally.hp < ally.maxHp * 0.7)
+      .sort((a, b) => (a.hp / a.maxHp) - (b.hp / b.maxHp))[0];
+    if (wounded && isVisible(enemy.x, enemy.y)) {
+      const healed = Math.min(wounded.maxHp - wounded.hp, 7 + Math.floor(game.floor / 12));
+      wounded.hp += healed;
+      enemy.abilityCooldown = 4;
+      addTargetedEffect("beam", enemy.x, enemy.y, wounded.x, wounded.y, "#9ee88c", 540);
+      addFloatingText(wounded.x, wounded.y, `+${healed}`, "#9ee88c");
+      addLog(`${enemy.name}が${wounded.name}を回復した。`);
+      return true;
+    }
+  }
+  if (enemy.ability === "steal" && gridDistance(enemy, target) === 1 && target.id === "leader") {
+    const stolen = stealSmallItemOrCoins(enemy);
+    if (stolen) {
+      enemy.abilityCooldown = 6;
+      return true;
+    }
+  }
+  if (enemy.ability === "summon" && seesTarget && game.enemies.length < 24 && Math.random() < 0.35) {
+    const point = randomEnemySpawnTile(5);
+    if (point) {
+      const minion = createEnemy(randomEnemyProfile(), point, true);
+      minion.name = `呼ばれた${minion.name}`;
+      game.enemies.push(minion);
+      enemy.abilityCooldown = 7;
+      addEffect("vortex", point.x, point.y, enemy.color);
+      addLog(`${enemy.name}が仲間を呼んだ。`);
+      return true;
+    }
+  }
+  return false;
+}
+
+function explodeEnemyBomb(enemy, target) {
+  const targets = livingTeam().filter((actor) => gridDistance(actor, enemy) <= 2);
+  addEffect("nova", enemy.x, enemy.y, "#ff9d5d");
+  triggerScreenShake(12, 330);
+  for (const actor of targets) {
+    const defense = actor.res;
+    const damage = Math.max(3, 9 + Math.floor(game.floor / 8) - defense);
+    actor.hp = Math.max(0, actor.hp - damage);
+    addFloatingText(actor.x, actor.y, `-${damage}`, "#ff8c65");
+    addEffect("impact", actor.x, actor.y, "#ffffff");
+    if (actor.id === "leader") {
+      game.lastDamageSource = {
+        kind: "enemy",
+        name: enemy.name,
+        label: `${enemy.name}の爆発技`,
+        detail: `${damage}ダメージ`,
+      };
+      playSfx("hurt");
+      if (actor.hp <= 0) {
+        if (tryReviveActor(actor)) continue;
+        actor.down = true;
+        checkGameOver();
+      }
+    } else if (actor.hp <= 0) {
+      actor.down = true;
+    }
+  }
+  addLog(`${enemy.name}の爆発技。周囲へ衝撃が走った。`);
+}
+
+function stealSmallItemOrCoins(enemy) {
+  const held = Object.entries(game.bag).find(([kind, count]) => count > 0 && itemCatalog[kind] && !itemCatalog[kind].automatic);
+  if (held) {
+    const [kind] = held;
+    game.bag[kind] -= 1;
+    enemy.stolenItem = kind;
+    addEffect("sparkTrail", enemy.x, enemy.y, "#f1d488");
+    addLog(`${enemy.name}に${itemCatalog[kind].name}を盗まれた。倒せば取り返せる。`);
+    announceEvent("盗み", `${itemCatalog[kind].name}を奪われた`, "盗", "danger", enemy);
+    return true;
+  }
+  if (game.coins > 0) {
+    const amount = Math.min(game.coins, 25 + Math.floor(game.floor / 2));
+    game.coins -= amount;
+    enemy.stolenCoins = (enemy.stolenCoins || 0) + amount;
+    addLog(`${enemy.name}に${amount}星貨を盗まれた。`);
+    announceEvent("盗み", `${amount}星貨を奪われた`, "盗", "danger", enemy);
+    return true;
+  }
+  return false;
 }
 
 function enemyCanSeeTarget(enemy, target) {
@@ -4125,7 +4322,9 @@ function actorStrikeEnemy(actor, enemy, label) {
   const focusBonus = actor.id !== "leader" && game.focusTurns > 0 ? 3 : 0;
   const strongHit = actor.id === "leader" && hasSkill("hunter") && Math.random() < 0.18 ? 5 : 0;
   const executeBonus = actor.id === "leader" && hasSkill("execution") && enemy.hp / enemy.maxHp <= 0.4 ? 3 : 0;
-  const damage = Math.max(1, actor.atk + focusBonus + strongHit + executeBonus + randInt(-1, 2) - enemy.def);
+  const knightBonus = actor.profileKey === "knight" ? 2 + (actor.guardTurns > 0 ? 2 : 0) : 0;
+  const damage = Math.max(1, actor.atk + focusBonus + strongHit + executeBonus + knightBonus + randInt(-1, 2) - enemy.def);
+  if (knightBonus && actor.id === "leader") addFloatingText(actor.x, actor.y, "王城剣", "#ffb078");
   if (strongHit) announceEvent("強撃", `${enemy.name}の急所を捉えた`, "狩", "good");
   damageEnemy(enemy, damage, actor, label);
 }
@@ -4137,13 +4336,18 @@ function damageEnemy(enemy, amount, source, label) {
     : source.elementKey;
   const effectiveness = elementEffectiveness(attackElement, enemy.elementKey);
   amount = Math.max(1, Math.ceil(amount * effectiveness));
-  if (enemy.boss && enemy.bossGimmick === "shield" && enemy.hp > enemy.maxHp * 0.52) {
+  if (enemy.boss && enemy.bossGimmick === "shield" && enemy.hp > enemy.maxHp * 0.52 && effectiveness <= 1) {
     amount = Math.max(1, Math.ceil(amount * 0.65));
     addFloatingText(enemy.x, enemy.y, "氷鏡", "#a8eaff");
+  } else if (enemy.boss && enemy.bossGimmick === "shield" && enemy.hp > enemy.maxHp * 0.52 && effectiveness > 1) {
+    addFloatingText(enemy.x, enemy.y, "鏡破り", elementInfo(attackElement).color);
   }
   if (enemy.boss && enemy.bossGimmick === "crystal" && attackElement === enemy.elementKey) {
     amount = Math.max(1, Math.ceil(amount * 0.5));
     addFloatingText(enemy.x, enemy.y, "同調耐性", "#d8e8ff");
+  } else if (enemy.boss && enemy.bossGimmick === "crystal" && effectiveness > 1) {
+    amount = Math.ceil(amount * 1.18);
+    addFloatingText(enemy.x, enemy.y, "晶核破り", elementInfo(attackElement).color);
   }
   if (enemy.boss && hasRelic("bossClaw")) amount = Math.ceil(amount * 1.25);
   if (enemy.mutated && hasRelic("mutationSeal")) amount = Math.ceil(amount * 1.35);
@@ -4185,8 +4389,25 @@ function damageEnemy(enemy, amount, source, label) {
       const move = getLeader().moves[game.selectedMove];
       if (move) move.pp = Math.min(move.maxPp, move.pp + 1);
     }
+    if (source.id === "leader" && hasRelic("scarletPearl") && game.runStats.kills % 3 === 0) {
+      const move = getLeader().moves[game.selectedMove];
+      if (move) {
+        move.pp = Math.min(move.maxPp, move.pp + 2);
+        addFloatingText(source.x, source.y, "緋連 PP+2", "#ff9aaa");
+      }
+    }
     if (hasRelic("warDrum") && game.lastActionStyle === "physical") healActor(getLeader(), 5);
     if (enemy.mutation?.volatile && gridDistance(enemy, getLeader()) <= 1) triggerMutationExplosion(enemy);
+    if (enemy.stolenItem) {
+      const point = findDropTile(enemy.x, enemy.y);
+      game.items.push({ id: cryptoId(), kind: enemy.stolenItem, x: point.x, y: point.y });
+      addLog(`${enemy.name}から盗まれた${itemCatalog[enemy.stolenItem]?.name || "道具"}を取り返した。`);
+    }
+    if (enemy.stolenCoins) {
+      game.coins += enemy.stolenCoins;
+      addFloatingText(enemy.x, enemy.y, `+${enemy.stolenCoins}G`, "#f1d488");
+      addLog(`${enemy.name}から盗まれた${enemy.stolenCoins}星貨を取り返した。`);
+    }
     if (enemy.boss) {
       dropEvolutionMaterial("bossCore", enemy.x, enemy.y, true);
       completeBossMission(enemy);
@@ -4267,6 +4488,10 @@ function enemyAttack(enemy, actor, ranged = false) {
     damage = Math.max(1, Math.ceil(damage * 0.7));
     addFloatingText(actor.x, actor.y, "避雷", "#8ee7ff");
   }
+  if (actor.id === "leader" && hasRelic("quietHourglass") && game.turn < 150) {
+    damage = Math.max(1, Math.ceil(damage * 0.84));
+    addFloatingText(actor.x, actor.y, "静刻", "#cab8ff");
+  }
   const moveName = enemyMoveName(enemy, ranged);
   if (actor.id === "leader") {
     game.lastDamageSource = {
@@ -4346,6 +4571,19 @@ function enemyIntent(enemy) {
   if (!target) return null;
   const seesTarget = enemyCanSeeTarget(enemy, target);
   const range = enemyRangedRange(enemy);
+  if (enemy.chargingBomb) {
+    return { icon: "爆", label: "爆発準備", color: "#ff9d5d", urgent: true };
+  }
+  if (enemy.ability === "heal" && (enemy.abilityCooldown || 0) === 0) {
+    const wounded = game.enemies.some((ally) => ally.id !== enemy.id && gridDistance(enemy, ally) <= 3 && ally.hp < ally.maxHp * 0.7);
+    if (wounded) return { icon: "癒", label: "回復", color: "#9ee88c", urgent: true };
+  }
+  if (enemy.ability === "steal" && gridDistance(enemy, target) === 1) {
+    return { icon: "盗", label: "盗む", color: "#f1d488", urgent: true };
+  }
+  if (enemy.ability === "summon" && seesTarget && (enemy.abilityCooldown || 0) === 0) {
+    return { icon: "呼", label: "呼ぶ", color: "#dca2ff", urgent: true };
+  }
   if (
     enemy.boss
     && (enemy.specialCooldown || 0) === 0
@@ -6036,12 +6274,18 @@ function renderRelicRibbon() {
 }
 
 function renderRelicReward() {
+  const sourceLabel = game.milestoneSource === "secret"
+    ? "隠し祭壇"
+    : game.milestoneSource
+      ? "休憩所の選択"
+      : "門番撃破報酬";
   ui.gameMenuBody.innerHTML = `
     <div class="relic-reward-head">
-      <span>門番撃破報酬</span>
+      <span>${sourceLabel}</span>
       <strong>星遺物を1つ選ぶ</strong>
       <small>どれを取るかで、この先の物理・魔法・生存戦略が変わります。</small>
     </div>
+    <p class="relic-reward-note">左上の星遺物リボンに追加され、効果は装備枠なしで全部同時に働きます。</p>
     <div class="relic-choice-grid"></div>
   `;
   const grid = ui.gameMenuBody.querySelector(".relic-choice-grid");
@@ -6139,6 +6383,12 @@ function renderMilestoneChoice() {
       <button type="button" data-milestone="relic">
         <b>遺</b><span><strong>強力な星遺物</strong><small>RARE以上を含む3候補から1つ</small></span>
       </button>
+      <button type="button" data-milestone="move">
+        <b>技</b><span><strong>選択中の技を強化</strong><small>${leader.moves[game.selectedMove]?.name || "技"}の威力とPPを伸ばす</small></span>
+      </button>
+      <button type="button" data-milestone="supply">
+        <b>袋</b><span><strong>補給とバッグ拡張</strong><small>HP/PP回復、バッグ容量+2、満腹度回復</small></span>
+      </button>
     </div>
   `;
   ui.gameMenuBody.querySelector('[data-milestone="evolve"]').addEventListener("click", () => {
@@ -6150,6 +6400,37 @@ function renderMilestoneChoice() {
     game.rewardPending = true;
     renderGameMenu("relicReward");
   });
+  ui.gameMenuBody.querySelector('[data-milestone="move"]').addEventListener("click", () => chooseMilestoneMoveUpgrade());
+  ui.gameMenuBody.querySelector('[data-milestone="supply"]').addEventListener("click", () => chooseMilestoneSupply());
+}
+
+function chooseMilestoneMoveUpgrade() {
+  const leader = getLeader();
+  const move = leader.moves[game.selectedMove];
+  if (!move) return;
+  move.maxPp += 2;
+  move.pp = move.maxPp;
+  move.powerBonus = Math.min(0.45, (move.powerBonus || 0) + 0.15);
+  if (game.milestoneSource === "rest") game.restChoiceTaken = true;
+  addEffect("runes", leader.x, leader.y, elementInfo(move.element).color);
+  addLog(`${move.name}を磨いた。威力+15%、最大PP+2。`);
+  announceEvent("技強化", `${move.name}　威力+15% / PP+2`, "技", "good");
+  playSfx("upgrade");
+  finalizeMilestoneChoice();
+}
+
+function chooseMilestoneSupply() {
+  const leader = getLeader();
+  leader.hp = leader.maxHp;
+  restoreAllPp();
+  game.belly = 100;
+  game.bagCapacity = Math.min(MAX_BAG_CAPACITY, game.bagCapacity + 2);
+  if (game.milestoneSource === "rest") game.restChoiceTaken = true;
+  addEffect("healBurst", leader.x, leader.y, "#9ee88c");
+  addLog(`補給を選んだ。HP/PP/満腹度が回復し、バッグ容量が${game.bagCapacity}になった。`);
+  announceEvent("補給", `バッグ容量 ${game.bagCapacity}/${MAX_BAG_CAPACITY}`, "袋", "good");
+  playSfx("pickup");
+  finalizeMilestoneChoice();
 }
 
 function routeChoiceNeeded() {
@@ -6374,8 +6655,12 @@ function chooseFloorEvent(key) {
 function createAscensionChoices(actor) {
   const profile = characterCatalog.find((entry) => entry.key === actor.profileKey) || characterCatalog[0];
   const stage = clamp((actor.evolutionStage || 0) + 1, 1, 10);
-  const plan = ascensionStagePlans[profile.key]?.[stage - 1] || ["fang", "lumen", "shade"];
-  const choices = plan
+  const behaviorPlan = behaviorAscensionBranches(profile.key);
+  const plan = [
+    ...behaviorPlan,
+    ...(ascensionStagePlans[profile.key]?.[stage - 1] || ["fang", "lumen", "shade"]),
+  ];
+  const choices = [...new Set(plan)]
     .map((branchKey) => createAscensionChoice(profile, actor, branchKey, stage))
     .filter(Boolean);
   if (game.karma >= 6 && !choices.some((choice) => choice.branch === "karma")) {
@@ -6389,6 +6674,23 @@ function createAscensionChoices(actor) {
       .filter(Boolean);
   }
   return choices.slice(0, 4);
+}
+
+function behaviorAscensionBranches(profileKey) {
+  const stats = game.runStats || createRunStats();
+  const keys = [];
+  const physicalLead = stats.physicalUses - stats.magicUses;
+  const magicLead = stats.magicUses - stats.physicalUses;
+  const physicalBranch = { kohaku: "fang", knight: "warlord", magician: "chaos" }[profileKey] || "fang";
+  const magicBranch = { kohaku: "lumen", knight: "guardian", magician: "archmage" }[profileKey] || "lumen";
+  const trickBranch = { kohaku: "shade", knight: "revenant", magician: "void" }[profileKey] || "shade";
+  if (physicalLead >= 8 || stats.kills >= 18) keys.push(physicalBranch);
+  if (magicLead >= 8 || stats.elementCombos >= 3) keys.push(magicBranch);
+  if (stats.thefts > 0 || stats.trapsTriggered >= 3 || stats.itemUses >= 8) keys.push(trickBranch);
+  if (!game.startingRelicKey && stats.floorsCleared >= 8) keys.push("ascetic");
+  if (game.relics.length >= 3) keys.push("relic");
+  if (game.karma >= 6) keys.push("karma");
+  return keys;
 }
 
 function createAscensionChoice(profile, actor, branchKey, stage) {
@@ -9509,8 +9811,10 @@ function drawEnemyIntent(enemy, px, py, wobble) {
   if (!intent) return;
   const x = px + 5;
   const y = py - 19 + wobble;
-  const width = intent.urgent ? 25 : 21;
   ctx.save();
+  ctx.font = "900 9px sans-serif";
+  const labelWidth = Math.ceil(ctx.measureText(intent.label || "").width);
+  const width = clamp((intent.urgent ? 24 : 20) + labelWidth, 24, 64);
   ctx.globalAlpha = intent.dim ? 0.72 : 1;
   ctx.fillStyle = intent.urgent ? "rgba(26, 11, 8, 0.94)" : "rgba(7, 10, 9, 0.88)";
   ctx.fillRect(x, y, width, 15);
@@ -9518,9 +9822,13 @@ function drawEnemyIntent(enemy, px, py, wobble) {
   ctx.lineWidth = intent.urgent ? 2 : 1.4;
   ctx.strokeRect(x, y, width, 15);
   ctx.fillStyle = intent.color;
-  ctx.font = "900 9px sans-serif";
-  ctx.textAlign = "center";
-  ctx.fillText(intent.icon, x + width / 2, y + 11);
+  ctx.textAlign = "left";
+  ctx.fillText(intent.icon, x + 4, y + 11);
+  if (width > 34) {
+    ctx.fillStyle = "#fff3cf";
+    ctx.font = "800 8px sans-serif";
+    ctx.fillText(intent.label, x + 18, y + 11);
+  }
   ctx.restore();
 }
 
@@ -10122,21 +10430,86 @@ function drawAimCorners(x, y, color, lineWidth) {
 function drawAimLabel(tile, move, targetEnemy) {
   const { x: px, y: py } = toScreen(tile.x, tile.y);
   const style = moveStyleInfo(move?.style);
-  const attackText = targetEnemy ? `左: ${targetEnemy.name}` : "左: 通常";
-  const moveText = move ? `右: ${style.short}${moveAimShape(move).label}` : "";
+  const leader = getLeader();
+  const attackTarget = enemyAt(leader.x + Math.sign(tile.x - leader.x), leader.y + Math.sign(tile.y - leader.y));
+  const attackPrediction = targetEnemy && gridDistance(leader, tile) <= 1
+    ? estimateBasicAttackDamage(leader, targetEnemy)
+    : attackTarget && gridDistance(leader, tile) > 1
+      ? estimateBasicAttackDamage(leader, attackTarget)
+      : null;
+  const movePrediction = targetEnemy && moveCanReachTarget(leader, move, tile)
+    ? estimateMoveDamage(leader, move, targetEnemy)
+    : null;
+  const attackText = attackPrediction
+    ? `左 ${attackPrediction.damage}${attackPrediction.mark}`
+    : "左 隣1";
+  const moveText = movePrediction
+    ? `右 ${movePrediction.damage}${movePrediction.mark}`
+    : move ? `右 ${style.short}${moveAimShape(move).label}` : "";
   const text = `${attackText}  ${moveText}`;
+  const second = targetEnemy
+    ? `${targetEnemy.name} HP${targetEnemy.hp}/${targetEnemy.maxHp}`
+    : "カーソル方向へ攻撃";
   ctx.font = "900 10px sans-serif";
-  const width = Math.min(148, Math.ceil(ctx.measureText(text).width + 16));
+  const width = Math.min(184, Math.ceil(Math.max(ctx.measureText(text).width, ctx.measureText(second).width) + 16));
   const x = clamp(px + 24 - width / 2, 4, canvas.width - width - 4);
-  const y = clamp(py - 14, 6, canvas.height - 22);
+  const y = clamp(py - 28, 6, canvas.height - 36);
   ctx.fillStyle = "rgba(5, 9, 9, 0.92)";
-  ctx.fillRect(x, y, width, 18);
+  ctx.fillRect(x, y, width, 32);
   ctx.strokeStyle = targetEnemy ? "#ff6f62" : style.color;
   ctx.lineWidth = 1;
-  ctx.strokeRect(x + 0.5, y + 0.5, width - 1, 17);
+  ctx.strokeRect(x + 0.5, y + 0.5, width - 1, 31);
   ctx.fillStyle = targetEnemy ? "#ffd1cc" : "#fff0c0";
   ctx.textAlign = "center";
   ctx.fillText(text, x + width / 2, y + 13);
+  ctx.fillStyle = targetEnemy ? "#f6dfcf" : "#cfc8bd";
+  ctx.font = "800 9px sans-serif";
+  ctx.fillText(second, x + width / 2, y + 26);
+}
+
+function moveCanReachTarget(actor, move, tile) {
+  if (!move) return false;
+  const dx = Math.sign(tile.x - actor.x);
+  const dy = Math.sign(tile.y - actor.y);
+  return aimPreviewCells(actor, move, { x: dx, y: dy }).some((cell) => cell.x === tile.x && cell.y === tile.y);
+}
+
+function estimateBasicAttackDamage(actor, enemy) {
+  const knightBonus = actor.profileKey === "knight" ? 2 + (actor.guardTurns > 0 ? 2 : 0) : 0;
+  const base = Math.max(1, actor.atk + knightBonus + 1 - enemy.def);
+  return addEffectivenessMark(Math.max(1, Math.ceil(base * elementEffectiveness(actor.elementKey, enemy.elementKey))), actor.elementKey, enemy.elementKey);
+}
+
+function estimateMoveDamage(actor, move, enemy) {
+  if (!move || ["heal", "guard", "kingsGuard", "timeLoop", "blinkHex"].includes(move.key)) {
+    return { damage: "-", mark: "", color: "#cfc8bd" };
+  }
+  const stat = move.style === "magic" ? actor.magic : actor.atk;
+  let base = stat + 7 + Math.floor(actor.level / 2);
+  if (move.key === "spark") base = actor.magic + 8 + actor.level;
+  if (move.key === "gust") base = actor.atk + 5;
+  if (move.key === "ironSlash") base = actor.atk * 1.75 + actor.level;
+  if (move.key === "shieldCrash") base = actor.atk + actor.def * 2 + 5;
+  if (move.key === "lionRoar") base = actor.atk + 5;
+  if (move.key === "arcBolt") base = actor.magic + 8;
+  if (move.key === "mirrorCurse") base = actor.magic * 0.8 + 4;
+  const passive = characterMovePassive(actor, move, game.lastMoveElement, game.lastActionStyle);
+  const shape = moveAimShape(move);
+  const relicMultiplier = (hasRelic("lineSigil") && ["line", "beam"].includes(shape.kind) ? 1.18 : 1)
+    * (hasRelic("burstBloom") && shape.kind === "burst" ? 1.18 : 1)
+    * (hasRelic("openingCharm") && game.turn < 18 ? 1.2 : 1)
+    * (hasRelic("thiefRibbon") && game.runStats.thefts > 0 ? 1.25 : 1);
+  const damage = Math.max(1, Math.ceil((base * relicMultiplier * (passive.multiplier || 1) * (1 + (move.powerBonus || 0))) - (move.style === "magic" ? enemy.res : enemy.def)));
+  return addEffectivenessMark(Math.max(1, Math.ceil(damage * elementEffectiveness(move.element, enemy.elementKey))), move.element, enemy.elementKey);
+}
+
+function addEffectivenessMark(damage, attackElement, defenseElement) {
+  const effectiveness = elementEffectiveness(attackElement, defenseElement);
+  return {
+    damage,
+    mark: effectiveness > 1 ? "◎" : effectiveness < 1 ? "△" : "",
+    color: effectiveness > 1 ? elementInfo(attackElement).color : effectiveness < 1 ? "#b9c0bc" : "#fff0c0",
+  };
 }
 
 function tileFromPointer(event) {
