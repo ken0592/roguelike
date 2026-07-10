@@ -1008,6 +1008,43 @@ button {
   vertical-align: middle;
 }
 
+.style-badge,
+.range-badge {
+  min-width: 30px;
+  height: 18px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid var(--style-color, rgba(255, 255, 255, 0.24));
+  background: color-mix(in srgb, var(--style-color, #8bdcf4) 18%, rgba(6, 9, 8, 0.94));
+  color: var(--style-color, #8bdcf4);
+  font-size: 0.58rem;
+  font-style: normal;
+  font-weight: 900;
+  line-height: 1;
+  vertical-align: middle;
+}
+
+.range-badge {
+  --style-color: #e7c36f;
+  min-width: 42px;
+}
+
+.move-tags {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.menu-launch-copy strong {
+  display: inline-flex;
+  justify-content: flex-end;
+  gap: 5px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
 .move-name strong .element-badge,
 .move-choice strong .element-badge,
 .ascension-choice .element-badge,
@@ -6102,7 +6139,18 @@ button {
 
 .evolution-dex-card.locked canvas,
 .enemy-dex-card.locked canvas {
-  opacity: 0.58;
+  opacity: 0.95;
+}
+
+.evolution-dex-card.locked {
+  border-color: rgba(120, 126, 122, 0.36);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 54%),
+    rgba(5, 8, 8, 0.94);
+}
+
+.evolution-dex-card.locked strong {
+  color: #b9b2a8;
 }
 
 .evolution-dex-card canvas,

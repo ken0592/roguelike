@@ -32,6 +32,7 @@ const miniCanvas = document.querySelector("#miniMap");
 const miniCtx = miniCanvas.getContext("2d");
 const townCanvas = document.querySelector("#townCanvas");
 const townCtx = townCanvas.getContext("2d");
+const USE_TOWN_BACKDROP = false;
 const townBackdrop = new Image();
 townBackdrop.src = "assets/town/foxbound-spire-hub-v1.jpg?v=pwa11";
 const spriteSheet = new Image();
@@ -217,6 +218,46 @@ function elementEffectiveness(attackKey, defenseKey) {
 function elementBadgeMarkup(key) {
   const element = elementInfo(key);
   return `<i class="element-badge" style="--element-color:${element.color}">${element.symbol}</i>`;
+}
+
+function moveStyleInfo(style) {
+  if (style === "physical") {
+    return { key: "physical", label: "物理", short: "物", color: "#ff8a68" };
+  }
+  return { key: "magic", label: "魔法", short: "魔", color: "#8bdcf4" };
+}
+
+function moveStyleBadgeMarkup(style) {
+  const info = moveStyleInfo(style);
+  return `<i class="style-badge ${info.key}" style="--style-color:${info.color}">${info.label}</i>`;
+}
+
+function moveAimShape(move) {
+  if (!move) return { kind: "melee", range: 1, label: "隣1" };
+  if (["heal", "guard", "kingsGuard", "timeLoop"].includes(move.key)) {
+    return { kind: "self", range: 0, label: "自分" };
+  }
+  if (move.key === "gust") return { kind: "burst", range: 1, label: "周囲1" };
+  if (move.key === "lionRoar" || move.key === "mirrorCurse") return { kind: "burst", range: 2, label: "周囲2" };
+  if (move.key === "shieldCrash") return { kind: "melee", range: 1, label: "正面1" };
+  if (move.key === "ironSlash") return { kind: "line", range: 2, label: "前方2" };
+  if (move.key === "spark") return { kind: "line", range: 4, label: "前方4" };
+  if (move.key === "arcBolt") return { kind: "line", range: 6, label: "直線6" };
+  if (move.key === "blinkHex") return { kind: "line", range: 4, label: "転位4" };
+  if (move.signature === "burst") return { kind: "burst", range: 2, label: "周囲2" };
+  if (move.signature === "guard") return { kind: "self", range: 0, label: "自分" };
+  if (move.signature === "beam") return { kind: "line", range: 6, label: "直線6" };
+  if (move.signature === "line") return { kind: "line", range: 4, label: "前方4" };
+  if (move.signature === "trick") return { kind: "line", range: 4, label: "前方4" };
+  return { kind: "line", range: 4, label: "前方4" };
+}
+
+function moveRangeBadgeMarkup(move) {
+  return `<i class="range-badge">${moveAimShape(move).label}</i>`;
+}
+
+function moveMetaMarkup(move) {
+  return `<span class="move-tags">${moveStyleBadgeMarkup(move.style)}${moveRangeBadgeMarkup(move)}</span>`;
 }
 
 function elementLegendMarkup() {
@@ -1728,6 +1769,7 @@ function createGame() {
     leaderTrail: [],
     nextMoveAt: 0,
     aimDirection: null,
+    aimTile: null,
     screenFlash: null,
     screenShake: null,
     guidanceActive: false,
@@ -1770,6 +1812,14 @@ function openExpeditionLoadout() {
   ui.townDialog.dataset.view = "loadout";
   renderExpeditionLoadout();
   if (!ui.townDialog.open) ui.townDialog.showModal();
+}
+
+function queueLoadoutPrompt(delay = 120) {
+  window.setTimeout(() => {
+    if (!game || game.mode !== "town") return;
+    if (ui.townDialog.open || ui.helpDialog.open || ui.saveDialog.open || ui.gameMenuDialog.open) return;
+    openExpeditionLoadout();
+  }, delay);
 }
 
 function renderExpeditionLoadout() {
@@ -3089,7 +3139,7 @@ function performAction(action) {
     addLog(`${leader.name}は様子を見た。`);
     acted = true;
   }
-  if (action.type === "basicAttack") acted = basicAttack(action.dx, action.dy);
+  if (action.type === "basicAttack") acted = basicAttack(action.dx, action.dy, action.targetX, action.targetY);
   if (action.type === "useMove") acted = useSelectedMove();
   if (action.type === "eatApple") acted = eatApple();
   if (action.type === "useItem") acted = useItem(action.kind);
@@ -3186,10 +3236,26 @@ function checkMerchantShopExit(from, to) {
   }
 }
 
-function basicAttack(dx = 0, dy = 0) {
+function basicAttack(dx = 0, dy = 0, targetX = null, targetY = null) {
   const leader = getLeader();
-  const attackDx = Math.sign(dx || leader.dx);
-  const attackDy = Math.sign(dy || leader.dy);
+  const hasTargetTile = Number.isInteger(targetX) && Number.isInteger(targetY);
+  let attackDx = Math.sign(dx || leader.dx);
+  let attackDy = Math.sign(dy || leader.dy);
+  if (hasTargetTile) {
+    const targetDistance = gridDistance(leader, { x: targetX, y: targetY });
+    attackDx = Math.sign(targetX - leader.x);
+    attackDy = Math.sign(targetY - leader.y);
+    if (targetDistance > 1) {
+      if (attackDx || attackDy) {
+        leader.dx = attackDx;
+        leader.dy = attackDy;
+        addEffect("face", leader.x, leader.y, leader.color, attackDx, attackDy);
+      }
+      showToast("通常攻撃は隣のマスだけ届く");
+      addLog("通常攻撃の届くマスではない。向きだけ合わせた。");
+      return false;
+    }
+  }
   if (!attackDx && !attackDy) return false;
   leader.dx = attackDx;
   leader.dy = attackDy;
@@ -4469,7 +4535,7 @@ function renderLevelMoveChoices() {
     button.className = `move-choice ${move.style}`;
     button.innerHTML = `
       <b style="color:${elementInfo(move.element).color}">${elementInfo(move.element).symbol}</b>
-      <span><strong>${elementBadgeMarkup(move.element)}${move.name}</strong><small>${elementInfo(move.element).name}属性　${move.hint}</small><em>PP ${move.maxPp}</em></span>
+      <span><strong>${elementBadgeMarkup(move.element)}${move.name}</strong><small>${moveMetaMarkup(move)}${elementInfo(move.element).name}属性　${move.hint}</small><em>PP ${move.maxPp}</em></span>
     `;
     button.addEventListener("click", () => learnMoveChoice(key));
     grid.appendChild(button);
@@ -5566,7 +5632,7 @@ function renderParty(rank) {
 function renderMoves() {
   const leader = getLeader();
   const selected = leader.moves[game.selectedMove];
-  ui.moveSummary.textContent = `【${elementInfo(selected.element).name}】${selected.name} ${selected.pp}/${selected.maxPp}`;
+  ui.moveSummary.innerHTML = `${elementBadgeMarkup(selected.element)}${moveStyleBadgeMarkup(selected.style)}${selected.name} ${selected.pp}/${selected.maxPp}`;
   if (ui.gameMenuDialog.open) renderGameMenu(game.menuView);
 }
 
@@ -5597,7 +5663,7 @@ function renderGameMenu(view = "moves") {
       button.type = "button";
       button.innerHTML = `
         <span class="move-key">${index + 1}</span>
-        <span class="move-name"><strong>${elementBadgeMarkup(move.element)}${move.name}</strong><span>${elementInfo(move.element).name}属性　${move.hint}</span></span>
+        <span class="move-name"><strong>${elementBadgeMarkup(move.element)}${move.name}</strong><span>${moveMetaMarkup(move)}${elementInfo(move.element).name}属性　${move.hint}</span></span>
         <span class="move-pp">${move.pp}/${move.maxPp}</span>
       `;
       button.addEventListener("click", () => {
@@ -6044,7 +6110,7 @@ function renderMoveReward() {
     button.className = `move-choice ${move.style}`;
     button.innerHTML = `
       <b style="color:${elementInfo(move.element).color}">${elementInfo(move.element).symbol}</b>
-      <span><strong>${elementBadgeMarkup(move.element)}${move.name}</strong><small>${elementInfo(move.element).name}属性　${move.hint}</small><em>PP ${move.maxPp}</em></span>
+      <span><strong>${elementBadgeMarkup(move.element)}${move.name}</strong><small>${moveMetaMarkup(move)}${elementInfo(move.element).name}属性　${move.hint}</small><em>PP ${move.maxPp}</em></span>
     `;
     button.addEventListener("click", () => learnMoveChoice(key));
     grid.appendChild(button);
@@ -6443,7 +6509,7 @@ function renderAscensionReward() {
       <span>${elementBadgeMarkup(choice.elementKey)}${elementInfo(choice.elementKey).name}属性 / ${choice.label} / 第${choice.stage}段階</span>
       <strong>${choice.name}</strong>
       <small>${choice.detail}</small>
-      ${learnedMove ? `<em>${elementBadgeMarkup(learnedMove.element)}新技 ${learnedMove.name} / ${learnedMove.hint}</em>` : ""}
+      ${learnedMove ? `<em>${elementBadgeMarkup(learnedMove.element)}${moveStyleBadgeMarkup(learnedMove.style)}新技 ${learnedMove.name} / ${moveAimShape(learnedMove).label} / ${learnedMove.hint}</em>` : ""}
       <b>${formatAscensionBonus(choice.bonus)}</b>
       ${choice.condition ? `<em>${choice.condition}</em>` : ""}
     `;
@@ -7049,7 +7115,7 @@ function renderEvolutionCodex(container) {
           <canvas width="96" height="96" aria-hidden="true"></canvas>
           <div>
             <span>${profile.name} / 第${stage}段階 / ${entry.label}</span>
-            <strong>${entry.name}</strong>
+            <strong>${isUnlocked ? entry.name : "？？？"}</strong>
             <small>${isUnlocked ? entry.detail : entry.condition}</small>
           </div>
         `;
@@ -7061,7 +7127,9 @@ function renderEvolutionCodex(container) {
           color: entry.color,
           elementKey: entry.elementKey,
         };
-        drawPortrait(card.querySelector("canvas"), preview);
+        const previewCanvas = card.querySelector("canvas");
+        drawPortrait(previewCanvas, preview);
+        if (!isUnlocked) maskCanvasAsSilhouette(previewCanvas, entry.color, "?");
         grid.appendChild(card);
       }
     }
@@ -7924,7 +7992,7 @@ function drawTown(time) {
   const height = townCanvas.height;
   townCtx.fillStyle = "#080d0d";
   townCtx.fillRect(0, 0, width, height);
-  if (townBackdrop.complete && townBackdrop.naturalWidth) {
+  if (USE_TOWN_BACKDROP && townBackdrop.complete && townBackdrop.naturalWidth) {
     const scale = Math.max(width / townBackdrop.naturalWidth, height / townBackdrop.naturalHeight);
     const sourceWidth = width / scale;
     const sourceHeight = height / scale;
@@ -9959,18 +10027,82 @@ function drawObjectivePointer(time) {
 }
 
 function drawAimIndicator() {
-  if (!game.aimDirection) return;
   const leader = getLeader();
-  const x = leader.x + game.aimDirection.x;
-  const y = leader.y + game.aimDirection.y;
-  if (!inBounds(x, y) || !inCamera(x, y)) return;
-  const { x: px, y: py } = toScreen(x, y);
-  const hasEnemy = Boolean(enemyAt(x, y));
+  const direction = game.aimDirection || { x: leader.dx, y: leader.dy };
+  if (!direction?.x && !direction?.y) return;
+  const selectedMove = leader.moves[game.selectedMove];
+  const aimTile = game.aimTile || { x: leader.x + direction.x, y: leader.y + direction.y };
+  const moveCells = aimPreviewCells(leader, selectedMove, direction);
+  const style = moveStyleInfo(selectedMove?.style);
+
   ctx.save();
-  ctx.strokeStyle = hasEnemy ? "#ff766c" : "rgba(255, 232, 175, 0.72)";
-  ctx.lineWidth = 3;
-  const edge = 10;
+  for (const cell of moveCells) {
+    if (!inCamera(cell.x, cell.y)) continue;
+    drawAimCell(cell.x, cell.y, style.color, cell.hit ? 0.24 : 0.12, cell.hit ? 3 : 2);
+  }
+
+  const attackTile = {
+    x: leader.x + direction.x,
+    y: leader.y + direction.y,
+  };
+  if (inBounds(attackTile.x, attackTile.y) && inCamera(attackTile.x, attackTile.y)) {
+    const attackEnemy = enemyAt(attackTile.x, attackTile.y);
+    drawAimCorners(attackTile.x, attackTile.y, attackEnemy ? "#ff6f62" : "#ffd982", 4);
+  }
+
+  if (inBounds(aimTile.x, aimTile.y) && inCamera(aimTile.x, aimTile.y)) {
+    const targetEnemy = enemyAt(aimTile.x, aimTile.y);
+    drawAimCorners(aimTile.x, aimTile.y, targetEnemy ? "#ff6f62" : "#f6e7b5", 2);
+    drawAimLabel(aimTile, selectedMove, targetEnemy);
+  }
+  ctx.restore();
+}
+
+function aimPreviewCells(actor, move, direction) {
+  const shape = moveAimShape(move);
+  if (shape.kind === "self") return [{ x: actor.x, y: actor.y, hit: false }];
+  if (shape.kind === "burst") {
+    const cells = [];
+    for (let y = actor.y - shape.range; y <= actor.y + shape.range; y += 1) {
+      for (let x = actor.x - shape.range; x <= actor.x + shape.range; x += 1) {
+        if (!inBounds(x, y) || gridDistance(actor, { x, y }) > shape.range) continue;
+        cells.push({ x, y, hit: Boolean(enemyAt(x, y)) });
+      }
+    }
+    return cells;
+  }
+  const cells = [];
+  const range = shape.range || 1;
+  for (let index = 1; index <= range; index += 1) {
+    const x = actor.x + direction.x * index;
+    const y = actor.y + direction.y * index;
+    if (!inBounds(x, y)) break;
+    const blocked = !isWalkable(x, y);
+    const hit = Boolean(enemyAt(x, y));
+    cells.push({ x, y, hit, blocked });
+    if (blocked || (hit && shape.kind !== "beam")) break;
+  }
+  return cells;
+}
+
+function drawAimCell(x, y, color, alpha, lineWidth) {
+  const { x: px, y: py } = toScreen(x, y);
+  ctx.fillStyle = color;
+  ctx.globalAlpha = alpha;
+  ctx.fillRect(px + 5, py + 5, TILE - 10, TILE - 10);
+  ctx.globalAlpha = 0.85;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
+  ctx.strokeRect(px + 7, py + 7, TILE - 14, TILE - 14);
+  ctx.globalAlpha = 1;
+}
+
+function drawAimCorners(x, y, color, lineWidth) {
+  const { x: px, y: py } = toScreen(x, y);
+  const edge = 11;
   const inset = 5;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = lineWidth;
   ctx.beginPath();
   ctx.moveTo(px + inset, py + inset + edge);
   ctx.lineTo(px + inset, py + inset);
@@ -9985,22 +10117,52 @@ function drawAimIndicator() {
   ctx.lineTo(px + TILE - inset, py + TILE - inset);
   ctx.lineTo(px + TILE - inset, py + TILE - inset - edge);
   ctx.stroke();
-  ctx.restore();
 }
 
-function directionFromPointer(event) {
+function drawAimLabel(tile, move, targetEnemy) {
+  const { x: px, y: py } = toScreen(tile.x, tile.y);
+  const style = moveStyleInfo(move?.style);
+  const attackText = targetEnemy ? `左: ${targetEnemy.name}` : "左: 通常";
+  const moveText = move ? `右: ${style.short}${moveAimShape(move).label}` : "";
+  const text = `${attackText}  ${moveText}`;
+  ctx.font = "900 10px sans-serif";
+  const width = Math.min(148, Math.ceil(ctx.measureText(text).width + 16));
+  const x = clamp(px + 24 - width / 2, 4, canvas.width - width - 4);
+  const y = clamp(py - 14, 6, canvas.height - 22);
+  ctx.fillStyle = "rgba(5, 9, 9, 0.92)";
+  ctx.fillRect(x, y, width, 18);
+  ctx.strokeStyle = targetEnemy ? "#ff6f62" : style.color;
+  ctx.lineWidth = 1;
+  ctx.strokeRect(x + 0.5, y + 0.5, width - 1, 17);
+  ctx.fillStyle = targetEnemy ? "#ffd1cc" : "#fff0c0";
+  ctx.textAlign = "center";
+  ctx.fillText(text, x + width / 2, y + 13);
+}
+
+function tileFromPointer(event) {
   const rect = canvas.getBoundingClientRect();
   const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
   const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
-  const leader = getLeader();
-  const leaderScreen = toScreen(leader.x, leader.y);
-  const angle = Math.atan2(y - (leaderScreen.y + TILE / 2), x - (leaderScreen.x + TILE / 2));
-  const cosine = Math.cos(angle);
-  const sine = Math.sin(angle);
   return {
-    x: Math.abs(cosine) < 0.28 ? 0 : Math.sign(cosine),
-    y: Math.abs(sine) < 0.28 ? 0 : Math.sign(sine),
+    x: clamp(Math.floor(x / TILE + renderCamera.x), 0, MAP_W - 1),
+    y: clamp(Math.floor(y / TILE + renderCamera.y), 0, MAP_H - 1),
   };
+}
+
+function aimFromPointer(event) {
+  const tile = tileFromPointer(event);
+  const leader = getLeader();
+  return {
+    x: Math.sign(tile.x - leader.x),
+    y: Math.sign(tile.y - leader.y),
+    tileX: tile.x,
+    tileY: tile.y,
+  };
+}
+
+function directionFromPointer(event) {
+  const aim = aimFromPointer(event);
+  return { x: aim.x, y: aim.y };
 }
 
 function drawMiniMap() {
@@ -10099,6 +10261,35 @@ function drawPortrait(targetCanvas, actor) {
   pctx.scale(scale, scale);
   drawActorBody(pctx, actor, 0, 0, 1, performance.now());
   pctx.restore();
+}
+
+function maskCanvasAsSilhouette(targetCanvas, glowColor = "#8eeaf1", mark = "?") {
+  const sctx = targetCanvas.getContext("2d");
+  const copy = document.createElement("canvas");
+  copy.width = targetCanvas.width;
+  copy.height = targetCanvas.height;
+  copy.getContext("2d").drawImage(targetCanvas, 0, 0);
+  sctx.clearRect(0, 0, targetCanvas.width, targetCanvas.height);
+  sctx.save();
+  sctx.shadowColor = glowColor;
+  sctx.shadowBlur = 14;
+  sctx.globalAlpha = 0.82;
+  sctx.drawImage(copy, 0, 0);
+  sctx.globalAlpha = 1;
+  sctx.globalCompositeOperation = "source-in";
+  sctx.fillStyle = "#050606";
+  sctx.fillRect(0, 0, targetCanvas.width, targetCanvas.height);
+  sctx.restore();
+  sctx.save();
+  sctx.fillStyle = "rgba(255, 240, 180, 0.92)";
+  sctx.strokeStyle = "rgba(0, 0, 0, 0.86)";
+  sctx.lineWidth = 4;
+  sctx.font = `900 ${Math.max(20, Math.floor(targetCanvas.width * 0.27))}px sans-serif`;
+  sctx.textAlign = "center";
+  sctx.textBaseline = "middle";
+  sctx.strokeText(mark, targetCanvas.width / 2, targetCanvas.height / 2 + 1);
+  sctx.fillText(mark, targetCanvas.width / 2, targetCanvas.height / 2 + 1);
+  sctx.restore();
 }
 
 function drawStatRadar(targetCanvas, actor) {
@@ -11271,6 +11462,7 @@ function bindEvents() {
   ui.endRestartButton.addEventListener("click", () => {
     ui.endOverlay.hidden = true;
     returnToTown();
+    queueLoadoutPrompt(160);
   });
   ui.helpButton.addEventListener("click", () => ui.helpDialog.showModal());
   ui.saveButton.addEventListener("click", () => saveCurrentGame(false));
@@ -11296,24 +11488,30 @@ function bindEvents() {
   ui.departButton.addEventListener("click", openExpeditionLoadout);
   canvas.addEventListener("mousemove", (event) => {
     if (game.mode !== "dungeon") return;
-    game.aimDirection = directionFromPointer(event);
+    const aim = aimFromPointer(event);
+    game.aimDirection = { x: aim.x, y: aim.y };
+    game.aimTile = { x: aim.tileX, y: aim.tileY };
   });
   canvas.addEventListener("mouseleave", () => {
     game.aimDirection = null;
+    game.aimTile = null;
   });
   canvas.addEventListener("click", (event) => {
     if (event.button !== 0 || game.mode !== "dungeon") return;
     if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open || ui.levelDialog.open) return;
-    const direction = directionFromPointer(event);
-    game.aimDirection = direction;
-    performAction({ type: "basicAttack", dx: direction.x, dy: direction.y });
+    const aim = aimFromPointer(event);
+    game.aimDirection = { x: aim.x, y: aim.y };
+    game.aimTile = { x: aim.tileX, y: aim.tileY };
+    performAction({ type: "basicAttack", dx: aim.x, dy: aim.y, targetX: aim.tileX, targetY: aim.tileY });
   });
   canvas.addEventListener("contextmenu", (event) => {
     event.preventDefault();
     if (game.mode !== "dungeon") return;
     if (ui.gameMenuDialog.open || ui.helpDialog.open || ui.townDialog.open || ui.saveDialog.open || ui.stairsDialog.open || ui.restDialog.open || ui.levelDialog.open) return;
-    const direction = directionFromPointer(event);
+    const aim = aimFromPointer(event);
+    const direction = { x: aim.x, y: aim.y };
     game.aimDirection = direction;
+    game.aimTile = { x: aim.tileX, y: aim.tileY };
     const leader = getLeader();
     leader.dx = direction.x;
     leader.dy = direction.y;
@@ -11355,6 +11553,7 @@ bindEvents();
 createGame();
 if (!loadSaveSlot(1)) saveCurrentGame(true);
 updateSoundButton();
+queueLoadoutPrompt(180);
 spriteSheet.addEventListener("load", () => {
   if (game) updateAll();
 });
