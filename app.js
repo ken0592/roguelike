@@ -10981,8 +10981,9 @@ function announceEvent(title, detail, icon = "!", tone = "good", speaker = null)
   }
   window.clearTimeout(announceEvent.timer);
   announceEvent.timer = window.setTimeout(() => {
-    ui.eventBanner.classList.add("idle");
-  }, 4200);
+    ui.eventBanner.hidden = true;
+    ui.eventBanner.classList.remove("idle", "dialogue-pop");
+  }, 3600);
 }
 
 function drawEnemyPortrait(targetCanvas, enemy) {
