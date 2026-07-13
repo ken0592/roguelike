@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa16i" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa17d" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa16i" />
+    <link rel="stylesheet" href="styles.css?v=pwa17d" />
   </head>
   <body>
     <div class="app-shell">
@@ -153,9 +153,59 @@
 
       <main id="gameLayout" class="game-layout" hidden>
         <section class="stage-panel" aria-label="ダンジョン">
-          <canvas id="gameCanvas" width="1152" height="768"></canvas>
-          <div id="relicRibbon" class="relic-ribbon" aria-label="所持星遺物"></div>
-          <div id="toast" class="toast" hidden></div>
+          <div class="stage-viewport">
+            <canvas id="gameCanvas" width="1152" height="768"></canvas>
+
+            <div class="battle-hud" aria-label="探索者の状態" aria-live="polite">
+              <div class="battle-level"><span>Lv</span><strong id="battleLevel">1</strong></div>
+              <div class="battle-vitals">
+                <div class="battle-vitals-head">
+                  <strong id="battleName">コハク</strong>
+                  <span id="battleType">光 / 星巡</span>
+                  <b>HP <em id="battleHp">34 / 34</em></b>
+                </div>
+                <div class="battle-hp-track"><i id="battleHpFill"></i></div>
+                <div class="battle-exp-track"><i id="battleExpFill"></i></div>
+              </div>
+            </div>
+
+            <div id="relicRibbon" class="relic-ribbon" aria-label="所持星遺物"></div>
+            <div id="toast" class="toast" hidden></div>
+
+            <section class="mini-map-panel" aria-label="ミニマップ">
+              <div class="mini-map-title">
+                <strong>FLOOR MAP</strong>
+                <span>訪れた場所だけ記録</span>
+              </div>
+              <canvas id="miniMap" width="220" height="148"></canvas>
+              <div class="mini-map-key" aria-hidden="true">
+                <span><i class="map-leader"></i>自分</span>
+                <span><i class="map-enemy"></i>敵</span>
+                <span><i class="map-item"></i>道具</span>
+                <span><i class="map-shop"></i>商店</span>
+                <span><i class="map-target"></i>目的</span>
+                <span><i class="map-stairs"></i>階段</span>
+              </div>
+            </section>
+
+            <div id="targetHud" class="target-hud" aria-live="polite">
+              <span id="targetHudKicker">AIM</span>
+              <strong id="targetHudTitle">カーソルで攻撃先を選択</strong>
+              <small id="targetHudDetail">左: 通常攻撃　右: 選択中の技</small>
+            </div>
+
+            <div class="attack-hint">
+              <span><b>左クリック</b>通常攻撃</span>
+              <span><b>右クリック</b>選択技</span>
+            </div>
+            <div class="terrain-legend" aria-label="地形の意味">
+              <span><i class="terrain-floor"></i>通路</span>
+              <span><i class="terrain-trap"></i>発見済み罠</span>
+              <span><i class="terrain-wall"></i>壁</span>
+              <span><i class="terrain-stairs"></i>通常階段</span>
+            </div>
+          </div>
+
           <div id="eventBanner" class="event-banner dialogue-box" hidden aria-live="assertive">
             <canvas id="eventPortrait" class="dialogue-portrait" width="64" height="64" aria-hidden="true"></canvas>
             <div class="dialogue-copy">
@@ -164,35 +214,9 @@
               <small id="eventDetail"></small>
             </div>
           </div>
-          <div class="attack-hint">
-            <span><b>左クリック</b>選択マスへ通常攻撃</span>
-            <span><b>右クリック</b>選択技の射線を発動</span>
-          </div>
-          <div class="terrain-legend" aria-label="地形の意味">
-            <span><i class="terrain-floor"></i>通路</span>
-            <span><i class="terrain-trap"></i>発見済み罠</span>
-            <span><i class="terrain-wall"></i>壁</span>
-            <span><i class="terrain-stairs"></i>通常階段</span>
-          </div>
         </section>
 
         <aside class="side-panel">
-          <section class="mini-map-panel" aria-label="ミニマップ">
-            <div class="mini-map-title">
-              <strong>FLOOR MAP</strong>
-              <span>訪れた場所だけ記録</span>
-            </div>
-            <canvas id="miniMap" width="220" height="148"></canvas>
-            <div class="mini-map-key" aria-hidden="true">
-              <span><i class="map-leader"></i>自分</span>
-              <span><i class="map-enemy"></i>敵</span>
-              <span><i class="map-item"></i>道具</span>
-              <span><i class="map-shop"></i>商店</span>
-              <span><i class="map-target"></i>目的</span>
-              <span><i class="map-stairs"></i>階段</span>
-            </div>
-          </section>
-
           <section class="party-panel" aria-label="探索者">
             <div id="partyList" class="party-list"></div>
           </section>
@@ -482,6 +506,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa16i"></script>
+    <script src="app.js?v=pwa17d"></script>
   </body>
 </html>

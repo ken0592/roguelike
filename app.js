@@ -1,4 +1,5 @@
 const TILE = 48;
+const DUNGEON_ZOOM = 1.18;
 const MAP_W = 36;
 const MAP_H = 24;
 const TARGET_FLOOR = 100;
@@ -76,6 +77,17 @@ const ui = {
   bag: document.querySelector("#bellLabel"),
   materials: document.querySelector("#materialLabel"),
   gear: document.querySelector("#gearLabel"),
+  battleHud: document.querySelector(".battle-hud"),
+  battleLevel: document.querySelector("#battleLevel"),
+  battleName: document.querySelector("#battleName"),
+  battleType: document.querySelector("#battleType"),
+  battleHp: document.querySelector("#battleHp"),
+  battleHpFill: document.querySelector("#battleHpFill"),
+  battleExpFill: document.querySelector("#battleExpFill"),
+  targetHud: document.querySelector("#targetHud"),
+  targetHudKicker: document.querySelector("#targetHudKicker"),
+  targetHudTitle: document.querySelector("#targetHudTitle"),
+  targetHudDetail: document.querySelector("#targetHudDetail"),
   goal: document.querySelector("#goalLabel"),
   rest: document.querySelector("#restLabel"),
   stairs: document.querySelector("#stairsLabel"),
@@ -1673,7 +1685,12 @@ let touchMovePointer = null;
 let touchMoveDirection = null;
 let touchMoveTimer = null;
 let touchDashHeld = false;
-let renderCamera = { x: 0, y: 0, width: canvas.width / TILE, height: canvas.height / TILE };
+let renderCamera = {
+  x: 0,
+  y: 0,
+  width: canvas.width / (TILE * DUNGEON_ZOOM),
+  height: canvas.height / (TILE * DUNGEON_ZOOM),
+};
 
 function createStarterBag() {
   return {
@@ -3328,6 +3345,7 @@ function basicAttack(dx = 0, dy = 0, targetX = null, targetY = null) {
 
   if (inBounds(tx, ty)) addEffect("slash", tx, ty, palette.brass, attackDx, attackDy);
   addLog(`${leader.name}の通常攻撃。しかし当たらなかった。`);
+  announceEvent("通常攻撃", "しかし、攻撃は空を切った", "斬", "mystic", leader);
   playSfx("miss");
   return true;
 }
@@ -4326,11 +4344,11 @@ function actorStrikeEnemy(actor, enemy, label) {
   const damage = Math.max(1, actor.atk + focusBonus + strongHit + executeBonus + knightBonus + randInt(-1, 2) - enemy.def);
   if (knightBonus && actor.id === "leader") addFloatingText(actor.x, actor.y, "王城剣", "#ffb078");
   if (strongHit) announceEvent("強撃", `${enemy.name}の急所を捉えた`, "狩", "good");
-  damageEnemy(enemy, damage, actor, label);
+  return damageEnemy(enemy, damage, actor, label);
 }
 
 function damageEnemy(enemy, amount, source, label) {
-  if (!game.enemies.includes(enemy)) return;
+  if (!game.enemies.includes(enemy)) return 0;
   const attackElement = source.id === "leader"
     ? game.currentActionElement || source.elementKey
     : source.elementKey;
@@ -4369,6 +4387,16 @@ function damageEnemy(enemy, amount, source, label) {
     addEffect("burst", enemy.x, enemy.y, elementInfo(attackElement).color);
   } else if (effectiveness < 1) {
     addFloatingText(enemy.x, enemy.y, "いまひとつ", "#b9c0bc");
+  }
+  if (source.id === "leader" && label.includes("通常攻撃")) {
+    const effectivenessText = effectiveness > 1 ? "　効果ばつぐん" : effectiveness < 1 ? "　いまひとつ" : "";
+    announceEvent(
+      "通常攻撃",
+      `${enemy.name}に ${amount}ダメージ${effectivenessText}`,
+      "斬",
+      enemy.hp <= 0 ? "good" : "mystic",
+      enemy,
+    );
   }
   playSfx("hit");
 
@@ -4425,6 +4453,7 @@ function damageEnemy(enemy, amount, source, label) {
   } else {
     addLog(`${label}。${enemy.name}に${amount}ダメージ${effectiveness > 1 ? "（効果抜群）" : effectiveness < 1 ? "（いまひとつ）" : ""}。`);
   }
+  return amount;
 }
 
 function dropRareEnemyLoot(x, y) {
@@ -5833,10 +5862,84 @@ function updateAll() {
   ui.tacticSummary.textContent = `${buildName} / 物${game.runStats.physicalUses} 魔${game.runStats.magicUses}`;
   ui.karma.textContent = buildName;
   ui.karma.style.color = buildName === "物理型" ? "#ff9274" : buildName === "魔法型" ? "#79d7f0" : "#f0cf78";
+  renderBattleHud();
   renderRelicRibbon();
   renderParty(rank);
   renderMoves();
   renderLog();
+}
+
+function renderBattleHud() {
+  const leader = getLeader();
+  if (!leader || !ui.battleHud) return;
+  const element = elementInfo(leader.elementKey);
+  const hpRatio = leader.maxHp ? clamp((leader.hp / leader.maxHp) * 100, 0, 100) : 0;
+  const expRatio = leader.nextExp ? clamp((leader.exp / leader.nextExp) * 100, 0, 100) : 0;
+  ui.battleLevel.textContent = `${leader.level}`;
+  ui.battleName.textContent = leader.evolutionName || leader.name;
+  ui.battleType.textContent = `${element.symbol} ${element.name} / ${leader.type}`;
+  ui.battleType.style.color = element.color;
+  ui.battleHp.textContent = `${leader.hp} / ${leader.maxHp}`;
+  ui.battleHpFill.style.width = `${hpRatio}%`;
+  ui.battleHpFill.style.background = hpRatio <= 25
+    ? "linear-gradient(90deg, #c53f43, #ff7468)"
+    : hpRatio <= 50
+      ? "linear-gradient(90deg, #d18a34, #f0c35a)"
+      : "linear-gradient(90deg, #3ea861, #8ed86e)";
+  ui.battleExpFill.style.width = `${expRatio}%`;
+  ui.battleHud.dataset.health = hpRatio <= 25 ? "danger" : hpRatio <= 50 ? "warning" : "safe";
+}
+
+function renderTargetHud(tile = game.aimTile) {
+  if (!ui.targetHud || game.mode !== "dungeon") return;
+  const leader = getLeader();
+  const move = leader.moves[game.selectedMove];
+  const style = moveStyleInfo(move?.style);
+  ui.targetHud.dataset.tone = "neutral";
+
+  if (!tile) {
+    const direction = game.aimDirection || { x: leader.dx, y: leader.dy };
+    const facingTile = direction?.x || direction?.y
+      ? { x: leader.x + direction.x, y: leader.y + direction.y }
+      : null;
+    if (facingTile && enemyAt(facingTile.x, facingTile.y)) tile = facingTile;
+  }
+
+  if (!tile || !inBounds(tile.x, tile.y)) {
+    ui.targetHudKicker.textContent = "SELECTED MOVE";
+    ui.targetHudTitle.textContent = move ? move.name : "技なし";
+    ui.targetHudDetail.textContent = move
+      ? `${elementInfo(move.element).name} / ${style.label} / ${moveAimShape(move).label} / PP ${move.pp}/${move.maxPp}`
+      : "カーソルで攻撃先を選択";
+    return;
+  }
+
+  const enemy = enemyAt(tile.x, tile.y);
+  if (enemy && isVisible(enemy.x, enemy.y)) {
+    const intent = enemyIntent(enemy);
+    const attackPrediction = gridDistance(leader, enemy) <= 1 ? estimateBasicAttackDamage(leader, enemy) : null;
+    const movePrediction = moveCanReachTarget(leader, move, tile) ? estimateMoveDamage(leader, move, enemy) : null;
+    ui.targetHud.dataset.tone = "danger";
+    ui.targetHudKicker.textContent = `${elementInfo(enemy.elementKey).symbol} ${intent?.label || "ENEMY"}`;
+    ui.targetHudTitle.textContent = `${enemy.name}　HP ${enemy.hp}/${enemy.maxHp}`;
+    ui.targetHudDetail.textContent = `通常 ${attackPrediction ? `${attackPrediction.damage}${attackPrediction.mark}` : "射程外"}　/　${move.name} ${movePrediction ? `${movePrediction.damage}${movePrediction.mark}` : "射程外"}`;
+    return;
+  }
+
+  const item = itemAt(tile.x, tile.y);
+  if (item && isVisible(item.x, item.y)) {
+    const catalog = itemCatalog[item.kind];
+    ui.targetHud.dataset.tone = item.shopItem ? "shop" : "item";
+    ui.targetHudKicker.textContent = item.shopItem ? `SHOP ${item.price} G` : "ITEM";
+    ui.targetHudTitle.textContent = item.gear?.name || catalog?.name || "道具";
+    ui.targetHudDetail.textContent = item.shopItem ? "商店の敷物を出る前に精算" : (catalog?.detail || catalog?.category || "足元で拾える");
+    return;
+  }
+
+  const tileType = game.map[tile.y]?.[tile.x];
+  ui.targetHudKicker.textContent = tileType === "wall" ? "BLOCKED" : "AIM";
+  ui.targetHudTitle.textContent = tileType === "wall" ? "壁に遮られている" : `${tile.x + 1}, ${tile.y + 1} のマス`;
+  ui.targetHudDetail.textContent = `${move.name}　${elementInfo(move.element).name} / ${style.label} / ${moveAimShape(move).label}`;
 }
 
 function renderParty(rank) {
@@ -5871,6 +5974,7 @@ function renderMoves() {
   const leader = getLeader();
   const selected = leader.moves[game.selectedMove];
   ui.moveSummary.innerHTML = `${elementBadgeMarkup(selected.element)}${moveStyleBadgeMarkup(selected.style)}${selected.name} ${selected.pp}/${selected.maxPp}`;
+  renderTargetHud();
   if (ui.gameMenuDialog.open) renderGameMenu(game.menuView);
 }
 
@@ -8283,6 +8387,7 @@ function draw(time = 0) {
   const shake = getScreenShakeOffset(time);
   ctx.save();
   ctx.translate(shake.x, shake.y);
+  ctx.scale(DUNGEON_ZOOM, DUNGEON_ZOOM);
   drawDungeon(time);
   ctx.restore();
   drawMiniMap();
@@ -8646,14 +8751,22 @@ function drawTownNpc(enemy, x, y, time, bubbleColor) {
 function getCamera(time) {
   const leader = getLeader();
   const visual = getActorVisualPosition(leader, time);
-  const viewW = Math.floor(canvas.width / TILE);
-  const viewH = Math.floor(canvas.height / TILE);
+  const viewW = Math.floor(dungeonViewWidth() / TILE);
+  const viewH = Math.floor(dungeonViewHeight() / TILE);
   return {
     x: clamp(visual.x - viewW / 2, 0, Math.max(0, MAP_W - viewW)),
     y: clamp(visual.y - viewH / 2, 0, Math.max(0, MAP_H - viewH)),
     width: viewW,
     height: viewH,
   };
+}
+
+function dungeonViewWidth() {
+  return canvas.width / DUNGEON_ZOOM;
+}
+
+function dungeonViewHeight() {
+  return canvas.height / DUNGEON_ZOOM;
 }
 
 function drawDungeon(time) {
@@ -8716,43 +8829,75 @@ function drawDungeon(time) {
 
 function drawUnknownTile(x, y) {
   const { x: px, y: py } = toScreen(x, y);
-  ctx.fillStyle = currentDungeonTheme().unknown;
+  const theme = currentDungeonTheme();
+  const themeKey = currentDungeonThemeKey();
+  const grain = noise(x, y, 171);
+  ctx.fillStyle = theme.unknown;
   ctx.fillRect(px, py, TILE, TILE);
-  ctx.fillStyle = "rgba(255,255,255,0.025)";
-  if ((x + y) % 2 === 0) ctx.fillRect(px + 12, py + 12, 6, 6);
+  ctx.save();
+  ctx.globalAlpha = 0.28;
+  if (themeKey === "forest") {
+    ctx.fillStyle = grain > 0.5 ? "#183420" : "#10271a";
+    for (let index = 0; index < 3; index += 1) {
+      const ox = px - 5 + noise(x + index, y, 191) * 58;
+      const oy = py - 4 + noise(x, y + index, 223) * 56;
+      const radius = 8 + noise(x + index, y - index, 257) * 10;
+      ctx.beginPath();
+      ctx.arc(ox, oy, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (grain > 0.63) {
+      ctx.strokeStyle = "#34573a";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(px - 2, py + 10 + grain * 18);
+      ctx.bezierCurveTo(px + 14, py + 2, px + 27, py + 45, px + 51, py + 31);
+      ctx.stroke();
+    }
+  } else if (themeKey === "tower") {
+    ctx.strokeStyle = "#60727d";
+    ctx.lineWidth = 1;
+    ctx.strokeRect(px + 5, py + 5, TILE - 10, TILE - 10);
+    if (grain > 0.58) {
+      ctx.beginPath();
+      ctx.moveTo(px + 7, py + 24);
+      ctx.lineTo(px + 41, py + 24);
+      ctx.moveTo(px + 24, py + 7);
+      ctx.lineTo(px + 24, py + 41);
+      ctx.stroke();
+    }
+  } else if (themeKey === "dream") {
+    ctx.fillStyle = "#624a7a";
+    ctx.beginPath();
+    ctx.arc(px + 9 + grain * 30, py + 12 + grain * 22, 2 + grain * 2, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (themeKey === "ruins") {
+    ctx.strokeStyle = "#6f5145";
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(px + 8, py + 7);
+    ctx.lineTo(px + 18, py + 19);
+    ctx.lineTo(px + 12, py + 35);
+    ctx.stroke();
+  } else {
+    ctx.fillStyle = "#70478c";
+    ctx.beginPath();
+    ctx.arc(px + 7 + grain * 34, py + 9 + grain * 29, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
 }
 
 function drawTile(x, y, type, visible) {
   const { x: px, y: py } = toScreen(x, y);
   const theme = currentDungeonTheme();
+  const themeKey = currentDungeonThemeKey();
   if (type === "wall") {
-    ctx.fillStyle = visible ? theme.wall : theme.wallDark;
-    ctx.fillRect(px, py, TILE, TILE);
-    ctx.fillStyle = visible ? theme.wallLight : theme.wall;
-    ctx.fillRect(px + 2, py + 2, TILE - 4, 9);
-    ctx.fillStyle = "rgba(5, 12, 14, 0.34)";
-    ctx.fillRect(px + 2, py + TILE - 7, TILE - 4, 5);
-    ctx.strokeStyle = visible ? "rgba(235, 239, 220, 0.22)" : "rgba(150, 160, 155, 0.12)";
-    ctx.lineWidth = 2;
-    ctx.strokeRect(px + 3, py + 3, TILE - 6, TILE - 8);
-    ctx.beginPath();
-    ctx.moveTo(px + 4, py + 25);
-    ctx.lineTo(px + TILE - 4, py + 25);
-    ctx.moveTo(px + 24, py + 4);
-    ctx.lineTo(px + 24, py + 25);
-    ctx.moveTo(px + 15, py + 25);
-    ctx.lineTo(px + 15, py + TILE - 8);
-    ctx.stroke();
+    drawDungeonWallTile(px, py, x, y, theme, themeKey, visible);
     return;
   }
 
-  const floorColors = {
-    floor: visible ? theme.floor : theme.floorDim,
-    moss: visible ? theme.moss : theme.mossDim,
-    crack: visible ? theme.crack : theme.crackDim,
-  };
-  ctx.fillStyle = floorColors[type] || floorColors.floor;
-  ctx.fillRect(px, py, TILE, TILE);
+  drawDungeonFloorTile(px, py, x, y, type, theme, themeKey, visible);
   if (isMerchantShopTile(x, y)) {
     ctx.fillStyle = game.merchant?.robbed ? "rgba(139, 47, 56, 0.5)" : "rgba(43, 139, 116, 0.48)";
     ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
@@ -8763,56 +8908,353 @@ function drawTile(x, y, type, visible) {
     ctx.fillRect(px + 8, py + 8, 6, 6);
     ctx.fillRect(px + TILE - 14, py + TILE - 14, 6, 6);
   }
-  ctx.strokeStyle = "rgba(255, 239, 200, 0.1)";
-  ctx.lineWidth = 1;
-  ctx.strokeRect(px + 2, py + 2, TILE - 4, TILE - 4);
-  ctx.fillStyle = "rgba(20, 15, 12, 0.2)";
-  ctx.fillRect(px, py + TILE - 4, TILE, 4);
 
-  if (type === "floor") {
-    const grain = noise(x, y, 93);
-    ctx.fillStyle = visible ? "rgba(255, 227, 174, 0.16)" : "rgba(255, 227, 174, 0.08)";
-    ctx.fillRect(px + 8 + grain * 18, py + 11, 3, 3);
-    ctx.fillRect(px + 30 - grain * 12, py + 32, 4, 2);
-  }
+  if (game.floorKind?.includes("rest")) drawRestTileMotif(px, py, x, y, visible);
+}
 
-  if (type === "moss") {
-    ctx.fillStyle = visible ? "#70a96a" : "#527a55";
+function currentDungeonThemeKey() {
+  if (game.floorKind?.includes("rest") && game.restTheme?.base) return game.restTheme.base;
+  if (game.floor <= 20) return "forest";
+  if (game.floor <= 40) return "tower";
+  if (game.floor <= 60) return "dream";
+  if (game.floor <= 80) return "ruins";
+  return "void";
+}
+
+function drawDungeonWallTile(px, py, x, y, theme, themeKey, visible) {
+  const openBelow = game.map[y + 1]?.[x] !== "wall";
+  const openLeft = game.map[y]?.[x - 1] !== "wall";
+  const openRight = game.map[y]?.[x + 1] !== "wall";
+  const dim = visible ? 1 : 0.56;
+  ctx.save();
+  ctx.globalAlpha = dim;
+  ctx.fillStyle = theme.wallDark;
+  ctx.fillRect(px, py, TILE, TILE);
+
+  const rockLayout = [
+    [-5, -4, 29, 27],
+    [20, -6, 34, 28],
+    [1, 19, 31, 34],
+    [27, 18, 27, 33],
+    [14, 10, 27, 28],
+  ];
+  for (let index = 0; index < rockLayout.length; index += 1) {
+    const seed = noise(x * 7 + index, y * 11 - index, 311 + index * 47);
+    const [baseLeft, baseTop, baseWidth, baseHeight] = rockLayout[index];
+    const left = px + baseLeft + Math.floor((seed - 0.5) * 5);
+    const top = py + baseTop + Math.floor((noise(x, y, 401 + index) - 0.5) * 5);
+    const width = baseWidth + Math.floor(seed * 4);
+    const height = baseHeight + Math.floor(noise(x - index, y + index, 457) * 4);
+    const lightRock = index === 0 || (index === 4 && seed > 0.48);
+    ctx.fillStyle = lightRock ? theme.wallLight : theme.wall;
     ctx.beginPath();
-    ctx.arc(px + 13, py + 14, 5, 0, Math.PI * 2);
-    ctx.arc(px + 33, py + 31, 7, 0, Math.PI * 2);
-    ctx.arc(px + 12, py + 36, 4, 0, Math.PI * 2);
+    ctx.moveTo(left + width * 0.18, top);
+    ctx.lineTo(left + width * 0.72, top + 1);
+    ctx.lineTo(left + width, top + height * 0.28);
+    ctx.lineTo(left + width * 0.88, top + height * 0.82);
+    ctx.lineTo(left + width * 0.58, top + height);
+    ctx.lineTo(left + width * 0.12, top + height * 0.87);
+    ctx.lineTo(left, top + height * 0.34);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = visible ? "#c9ef91" : "#86a873";
-    ctx.lineWidth = 3;
+    ctx.strokeStyle = "rgba(5, 10, 8, 0.28)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(255, 255, 226, 0.11)";
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(px + 24, py + 17);
-    ctx.lineTo(px + 24, py + 31);
-    ctx.moveTo(px + 17, py + 24);
-    ctx.lineTo(px + 31, py + 24);
+    ctx.moveTo(left + width * 0.2, top + height * 0.16);
+    ctx.quadraticCurveTo(left + width * 0.48, top + height * 0.04, left + width * 0.72, top + height * 0.18);
     ctx.stroke();
   }
 
-  if (type === "crack") {
-    ctx.strokeStyle = visible ? "#ffc45a" : "#a86d4e";
-    ctx.lineWidth = 3;
-    ctx.shadowColor = visible ? "#ff7b48" : "transparent";
-    ctx.shadowBlur = visible ? 7 : 0;
+  if (themeKey === "forest") {
+    ctx.fillStyle = visible ? "#3f6f3f" : "#2b4a34";
+    for (let index = 0; index < 9; index += 1) {
+      const ox = px - 2 + noise(x + index * 2, y, 509) * 52;
+      const oy = py - 3 + noise(x, y + index * 2, 541) * 25;
+      const radius = 3 + noise(x + index, y - index, 577) * 4;
+      ctx.beginPath();
+      ctx.arc(ox, oy, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.fillStyle = visible ? "rgba(166, 202, 108, 0.34)" : "rgba(94, 126, 79, 0.22)";
     ctx.beginPath();
-    ctx.moveTo(px + 7, py + 12);
-    ctx.lineTo(px + 20, py + 20);
+    ctx.arc(px + 9 + noise(x, y, 611) * 31, py + 5 + noise(x, y, 617) * 12, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  if (openBelow) {
+    const cliff = ctx.createLinearGradient(0, py + 32, 0, py + TILE);
+    cliff.addColorStop(0, "rgba(4, 8, 6, 0.12)");
+    cliff.addColorStop(1, "rgba(2, 5, 4, 0.72)");
+    ctx.fillStyle = cliff;
+    ctx.fillRect(px, py + 31, TILE, 17);
+    ctx.strokeStyle = themeKey === "forest" ? "#78955a" : theme.wallLight;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(px, py + 34 + noise(x, y, 643) * 2);
+    ctx.lineTo(px + 12, py + 32);
+    ctx.lineTo(px + 25, py + 35);
+    ctx.lineTo(px + 37, py + 32);
+    ctx.lineTo(px + TILE, py + 34);
+    ctx.stroke();
+    if (themeKey === "forest") {
+      ctx.strokeStyle = visible ? "#a2bd72" : "#657a54";
+      ctx.lineWidth = 1.3;
+      for (let index = 0; index < 6; index += 1) {
+        const gx = px + 4 + index * 8 + noise(x + index, y, 661) * 3;
+        const gy = py + 34;
+        ctx.beginPath();
+        ctx.moveTo(gx, gy + 2);
+        ctx.lineTo(gx - 2, gy - 5 - (index % 3));
+        ctx.moveTo(gx, gy + 2);
+        ctx.lineTo(gx + 3, gy - 3 - (index % 2));
+        ctx.stroke();
+      }
+    }
+  }
+  ctx.globalAlpha = dim;
+  if (openLeft) {
+    ctx.strokeStyle = "rgba(232, 240, 216, 0.13)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px + 1, py + 5);
+    ctx.lineTo(px + 2, py + 39);
+    ctx.stroke();
+  }
+  if (openRight) {
+    ctx.fillStyle = "rgba(0, 0, 0, 0.26)";
+    ctx.fillRect(px + TILE - 3, py + 5, 3, 38);
+  }
+
+  drawDungeonWallMotif(px, py, x, y, theme, themeKey, visible);
+  ctx.restore();
+}
+
+function drawDungeonWallMotif(px, py, x, y, theme, themeKey, visible) {
+  const detail = noise(x, y, 733);
+  if (themeKey === "forest") {
+    ctx.fillStyle = visible ? "#4f7c4b" : "#34543a";
+    for (let index = 0; index < 4; index += 1) {
+      const ox = px + 5 + Math.floor(noise(x + index, y, 801) * 38);
+      const oy = py + 3 + Math.floor(noise(x, y + index, 823) * 10);
+      ctx.beginPath();
+      ctx.arc(ox, oy, 4 + (index % 2), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (detail > 0.48) {
+      ctx.strokeStyle = visible ? "#84aa62" : "#57724c";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(px + 9 + detail * 18, py + 4);
+      ctx.bezierCurveTo(px + 6, py + 16, px + 30, py + 23, px + 20, py + 39);
+      ctx.stroke();
+    }
+  } else if (themeKey === "tower") {
+    ctx.strokeStyle = visible ? "rgba(166, 211, 219, 0.38)" : "rgba(105, 137, 145, 0.24)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(px + 8, py + 8, 32, 32);
+    ctx.beginPath();
+    ctx.moveTo(px + 24, py + 8);
+    ctx.lineTo(px + 24, py + 40);
+    ctx.moveTo(px + 8, py + 24);
+    ctx.lineTo(px + 40, py + 24);
+    ctx.stroke();
+  } else if (themeKey === "dream") {
+    ctx.fillStyle = visible ? "rgba(187, 148, 232, 0.45)" : "rgba(109, 84, 139, 0.3)";
+    ctx.beginPath();
+    ctx.moveTo(px + 24, py + 5);
+    ctx.lineTo(px + 31, py + 20);
+    ctx.lineTo(px + 24, py + 29);
+    ctx.lineTo(px + 18, py + 20);
+    ctx.closePath();
+    ctx.fill();
+  } else if (themeKey === "ruins") {
+    ctx.strokeStyle = visible ? "rgba(255, 184, 125, 0.28)" : "rgba(133, 87, 70, 0.24)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(px + 11, py + 7);
+    ctx.lineTo(px + 19, py + 17);
     ctx.lineTo(px + 15, py + 29);
-    ctx.lineTo(px + 29, py + 34);
-    ctx.lineTo(px + 39, py + 42);
-    ctx.moveTo(px + 20, py + 20);
-    ctx.lineTo(px + 33, py + 13);
-    ctx.moveTo(px + 15, py + 29);
-    ctx.lineTo(px + 7, py + 38);
+    ctx.lineTo(px + 28, py + 39);
+    ctx.stroke();
+  } else {
+    ctx.strokeStyle = visible ? "rgba(195, 111, 239, 0.5)" : "rgba(106, 65, 136, 0.28)";
+    ctx.lineWidth = 2;
+    ctx.shadowColor = visible ? "#bc67ea" : "transparent";
+    ctx.shadowBlur = visible ? 4 : 0;
+    ctx.beginPath();
+    ctx.moveTo(px + 6, py + 34);
+    ctx.lineTo(px + 17, py + 24);
+    ctx.lineTo(px + 23, py + 29);
+    ctx.lineTo(px + 39, py + 13);
     ctx.stroke();
     ctx.shadowBlur = 0;
   }
+}
 
-  if (game.floorKind?.includes("rest")) drawRestTileMotif(px, py, x, y, visible);
+function drawDungeonFloorTile(px, py, x, y, type, theme, themeKey, visible) {
+  const floorColors = {
+    floor: visible ? theme.floor : theme.floorDim,
+    moss: visible ? theme.moss : theme.mossDim,
+    crack: visible ? theme.crack : theme.crackDim,
+  };
+  const grain = noise(x, y, 93);
+  ctx.fillStyle = floorColors[type] || floorColors.floor;
+  ctx.fillRect(px, py, TILE, TILE);
+  ctx.fillStyle = grain > 0.52 ? "rgba(255, 235, 191, 0.065)" : "rgba(20, 12, 7, 0.055)";
+  ctx.beginPath();
+  ctx.ellipse(
+    px + 9 + noise(x, y, 907) * 32,
+    py + 8 + noise(x, y, 911) * 31,
+    13 + grain * 12,
+    8 + noise(x, y, 919) * 10,
+    grain * 2,
+    0,
+    Math.PI * 2,
+  );
+  ctx.fill();
+
+  if (game.map[y - 1]?.[x] === "wall") {
+    ctx.fillStyle = "rgba(2, 7, 5, 0.22)";
+    ctx.fillRect(px, py, TILE, 8);
+  }
+  if (game.map[y]?.[x - 1] === "wall") {
+    ctx.fillStyle = "rgba(2, 7, 5, 0.1)";
+    ctx.fillRect(px, py, 5, TILE);
+  }
+
+  if (type === "moss") {
+    ctx.fillStyle = visible ? "rgba(132, 184, 91, 0.38)" : "rgba(71, 111, 68, 0.3)";
+    for (let index = 0; index < 5; index += 1) {
+      const ox = px + 5 + Math.floor(noise(x + index, y, 947) * 38);
+      const oy = py + 7 + Math.floor(noise(x, y + index, 971) * 34);
+      ctx.beginPath();
+      ctx.arc(ox, oy, 3 + (index % 3), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    ctx.strokeStyle = visible ? "rgba(205, 235, 130, 0.64)" : "rgba(128, 157, 96, 0.38)";
+    ctx.lineWidth = 1.5;
+    for (let index = 0; index < 3; index += 1) {
+      const ox = px + 10 + Math.floor(noise(x + index, y, 997) * 28);
+      const oy = py + 16 + index * 8;
+      ctx.beginPath();
+      ctx.moveTo(ox, oy + 5);
+      ctx.lineTo(ox - 3, oy);
+      ctx.moveTo(ox, oy + 5);
+      ctx.lineTo(ox + 3, oy - 2);
+      ctx.stroke();
+    }
+  } else if (type === "crack") {
+    ctx.strokeStyle = visible ? "#ffc45a" : "#a86d4e";
+    ctx.lineWidth = 2.5;
+    ctx.shadowColor = visible ? "#ff7048" : "transparent";
+    ctx.shadowBlur = visible ? 6 : 0;
+    ctx.beginPath();
+    ctx.moveTo(px + 6, py + 10);
+    ctx.lineTo(px + 19, py + 19);
+    ctx.lineTo(px + 14, py + 29);
+    ctx.lineTo(px + 29, py + 35);
+    ctx.lineTo(px + 42, py + 43);
+    ctx.moveTo(px + 19, py + 19);
+    ctx.lineTo(px + 34, py + 12);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+  } else {
+    drawDungeonFloorDetails(px, py, x, y, themeKey, visible, grain);
+  }
+  drawDungeonFloorEdges(px, py, x, y, themeKey, visible);
+}
+
+function drawDungeonFloorDetails(px, py, x, y, themeKey, visible, grain) {
+  const alpha = visible ? 1 : 0.5;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  if (themeKey === "forest") {
+    ctx.fillStyle = "rgba(255, 226, 164, 0.22)";
+    for (let index = 0; index < 3; index += 1) {
+      const ox = px + 5 + noise(x + index, y, 1031) * 38;
+      const oy = py + 7 + noise(x, y + index, 1049) * 34;
+      ctx.beginPath();
+      ctx.ellipse(ox, oy, 2.5 + (index % 2), 1.4, grain + index, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    if (noise(x, y, 1061) > 0.58) drawGrassTuft(px + 6 + grain * 30, py + 43, visible);
+    if (noise(x, y, 1067) > 0.82) {
+      ctx.fillStyle = visible ? "#d67c72" : "#7c5e56";
+      ctx.beginPath();
+      ctx.arc(px + 12 + grain * 24, py + 16 + grain * 16, 2.2, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  } else if (themeKey === "tower") {
+    ctx.strokeStyle = "rgba(211, 226, 226, 0.12)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(px + 3, py + 24);
+    ctx.lineTo(px + 45, py + 24);
+    ctx.moveTo(px + 24, py + 3);
+    ctx.lineTo(px + 24, py + 45);
+    ctx.stroke();
+  } else if (themeKey === "dream") {
+    ctx.fillStyle = "rgba(232, 195, 255, 0.18)";
+    drawPixelStar(ctx, px + 13 + grain * 20, py + 17 + grain * 13, 4, ctx.fillStyle);
+  } else if (themeKey === "ruins") {
+    ctx.fillStyle = "rgba(245, 205, 157, 0.15)";
+    ctx.fillRect(px + 7 + grain * 14, py + 10, 6, 3);
+    ctx.fillRect(px + 29 - grain * 8, py + 35, 8, 3);
+  } else {
+    ctx.fillStyle = "rgba(195, 123, 242, 0.2)";
+    ctx.beginPath();
+    ctx.arc(px + 12 + grain * 25, py + 12 + grain * 19, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawDungeonFloorEdges(px, py, x, y, themeKey, visible) {
+  if (themeKey !== "forest") return;
+  const wallAbove = game.map[y - 1]?.[x] === "wall";
+  const wallBelow = game.map[y + 1]?.[x] === "wall";
+  const wallLeft = game.map[y]?.[x - 1] === "wall";
+  const wallRight = game.map[y]?.[x + 1] === "wall";
+  ctx.save();
+  ctx.globalAlpha = visible ? 0.86 : 0.44;
+  ctx.fillStyle = visible ? "#547a43" : "#40583b";
+  if (wallAbove || wallBelow) {
+    const edgeY = wallAbove ? py + 2 : py + TILE - 3;
+    for (let index = 0; index < 6; index += 1) {
+      const radius = 2.5 + noise(x + index, y, 1129) * 2.5;
+      ctx.beginPath();
+      ctx.arc(px + 3 + index * 8 + noise(x, y + index, 1151) * 3, edgeY, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  if (wallLeft || wallRight) {
+    const edgeX = wallLeft ? px + 2 : px + TILE - 3;
+    for (let index = 0; index < 5; index += 1) {
+      const radius = 2 + noise(x, y + index, 1171) * 2.5;
+      ctx.beginPath();
+      ctx.arc(edgeX, py + 4 + index * 10 + noise(x + index, y, 1193) * 3, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+function drawGrassTuft(x, y, visible) {
+  ctx.save();
+  ctx.strokeStyle = visible ? "#83a85f" : "#566f4c";
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x - 4, y - 8);
+  ctx.moveTo(x, y);
+  ctx.lineTo(x, y - 10);
+  ctx.moveTo(x, y);
+  ctx.lineTo(x + 5, y - 7);
+  ctx.stroke();
+  ctx.restore();
 }
 
 function currentDungeonTheme() {
@@ -9935,8 +10377,9 @@ function drawMapTokenCell(targetCtx, cell) {
 function drawBossHud() {
   const boss = game.enemies.find((enemy) => enemy.boss);
   if (!boss) return;
-  const width = Math.min(430, canvas.width - 240);
-  const x = (canvas.width - width) / 2;
+  const viewWidth = dungeonViewWidth();
+  const width = Math.min(430, viewWidth - 240);
+  const x = (viewWidth - width) / 2;
   const y = 18;
   ctx.save();
   ctx.fillStyle = "rgba(8, 10, 9, 0.88)";
@@ -10318,8 +10761,10 @@ function drawObjectivePointer(time) {
   const dx = target.x - leader.x;
   const dy = target.y - leader.y;
   const angle = Math.atan2(dy, dx);
-  const x = canvas.width / 2 + Math.cos(angle) * (canvas.width / 2 - 42);
-  const y = canvas.height / 2 + Math.sin(angle) * (canvas.height / 2 - 42);
+  const viewWidth = dungeonViewWidth();
+  const viewHeight = dungeonViewHeight();
+  const x = viewWidth / 2 + Math.cos(angle) * (viewWidth / 2 - 42);
+  const y = viewHeight / 2 + Math.sin(angle) * (viewHeight / 2 - 42);
   ctx.save();
   ctx.translate(x, y);
   ctx.rotate(angle);
@@ -10355,14 +10800,33 @@ function drawAimIndicator() {
   };
   if (inBounds(attackTile.x, attackTile.y) && inCamera(attackTile.x, attackTile.y)) {
     const attackEnemy = enemyAt(attackTile.x, attackTile.y);
+    drawAimCell(attackTile.x, attackTile.y, attackEnemy ? "#ff6f62" : "#ffd982", attackEnemy ? 0.28 : 0.14, 2);
     drawAimCorners(attackTile.x, attackTile.y, attackEnemy ? "#ff6f62" : "#ffd982", 4);
+    drawBasicAttackGlyph(attackTile.x, attackTile.y, attackEnemy ? "#ff6f62" : "#ffd982");
   }
 
   if (inBounds(aimTile.x, aimTile.y) && inCamera(aimTile.x, aimTile.y)) {
     const targetEnemy = enemyAt(aimTile.x, aimTile.y);
     drawAimCorners(aimTile.x, aimTile.y, targetEnemy ? "#ff6f62" : "#f6e7b5", 2);
-    drawAimLabel(aimTile, selectedMove, targetEnemy);
+    if (targetEnemy) drawAimLabel(aimTile, selectedMove, targetEnemy);
   }
+  ctx.restore();
+}
+
+function drawBasicAttackGlyph(x, y, color) {
+  const { x: px, y: py } = toScreen(x, y);
+  ctx.save();
+  ctx.translate(px + TILE - 11, py + 11);
+  ctx.rotate(-Math.PI / 4);
+  ctx.fillStyle = "rgba(5, 9, 8, 0.9)";
+  ctx.fillRect(-7, -7, 14, 14);
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(-7, -7, 14, 14);
+  ctx.fillStyle = color;
+  ctx.fillRect(-1.5, -5, 3, 8);
+  ctx.fillRect(-4, 2, 8, 2);
+  ctx.fillRect(-1, 4, 2, 4);
   ctx.restore();
 }
 
@@ -10452,8 +10916,8 @@ function drawAimLabel(tile, move, targetEnemy) {
     : "カーソル方向へ攻撃";
   ctx.font = "900 10px sans-serif";
   const width = Math.min(184, Math.ceil(Math.max(ctx.measureText(text).width, ctx.measureText(second).width) + 16));
-  const x = clamp(px + 24 - width / 2, 4, canvas.width - width - 4);
-  const y = clamp(py - 28, 6, canvas.height - 36);
+  const x = clamp(px + 24 - width / 2, 4, dungeonViewWidth() - width - 4);
+  const y = clamp(py - 28, 6, dungeonViewHeight() - 36);
   ctx.fillStyle = "rgba(5, 9, 9, 0.92)";
   ctx.fillRect(x, y, width, 32);
   ctx.strokeStyle = targetEnemy ? "#ff6f62" : style.color;
@@ -10514,8 +10978,8 @@ function addEffectivenessMark(damage, attackElement, defenseElement) {
 
 function tileFromPointer(event) {
   const rect = canvas.getBoundingClientRect();
-  const x = ((event.clientX - rect.left) / rect.width) * canvas.width;
-  const y = ((event.clientY - rect.top) / rect.height) * canvas.height;
+  const x = (((event.clientX - rect.left) / rect.width) * canvas.width) / DUNGEON_ZOOM;
+  const y = (((event.clientY - rect.top) / rect.height) * canvas.height) / DUNGEON_ZOOM;
   return {
     x: clamp(Math.floor(x / TILE + renderCamera.x), 0, MAP_W - 1),
     y: clamp(Math.floor(y / TILE + renderCamera.y), 0, MAP_H - 1),
@@ -10536,6 +11000,11 @@ function aimFromPointer(event) {
 function directionFromPointer(event) {
   const aim = aimFromPointer(event);
   return { x: aim.x, y: aim.y };
+}
+
+function clearPointerAim() {
+  game.aimDirection = null;
+  game.aimTile = null;
 }
 
 function drawMiniMap() {
@@ -10981,8 +11450,8 @@ function announceEvent(title, detail, icon = "!", tone = "good", speaker = null)
   }
   window.clearTimeout(announceEvent.timer);
   announceEvent.timer = window.setTimeout(() => {
-    ui.eventBanner.hidden = true;
-    ui.eventBanner.classList.remove("idle", "dialogue-pop");
+    ui.eventBanner.classList.remove("dialogue-pop");
+    ui.eventBanner.classList.add("idle");
   }, 3600);
 }
 
@@ -11038,7 +11507,7 @@ function drawScreenFlash(time) {
   ctx.globalAlpha = alpha;
   ctx.strokeStyle = game.screenFlash.color;
   ctx.lineWidth = 18;
-  ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+  ctx.strokeRect(4, 4, dungeonViewWidth() - 8, dungeonViewHeight() - 8);
   ctx.restore();
 }
 
@@ -11740,7 +12209,9 @@ function handleKey(event) {
   if (event.repeat && action.type !== "move") return;
   event.preventDefault();
   if (action.type === "move" && event.shiftKey) {
+    clearPointerAim();
     performAction({ ...action, type: "face" });
+    renderTargetHud(null);
     return;
   }
   if (action.type === "move") {
@@ -11748,7 +12219,9 @@ function handleKey(event) {
     if (now < game.nextMoveAt) return;
     game.nextMoveAt = now + 125;
   }
+  clearPointerAim();
   performAction(action);
+  renderTargetHud(null);
 }
 
 function getTouchDpadDirection(event, pad) {
@@ -11865,10 +12338,12 @@ function bindEvents() {
     const aim = aimFromPointer(event);
     game.aimDirection = { x: aim.x, y: aim.y };
     game.aimTile = { x: aim.tileX, y: aim.tileY };
+    renderTargetHud(game.aimTile);
   });
   canvas.addEventListener("mouseleave", () => {
     game.aimDirection = null;
     game.aimTile = null;
+    renderTargetHud(null);
   });
   canvas.addEventListener("click", (event) => {
     if (event.button !== 0 || game.mode !== "dungeon") return;
