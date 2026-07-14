@@ -11010,85 +11010,193 @@ function clearPointerAim() {
 function drawMiniMap() {
   const sx = miniCanvas.width / MAP_W;
   const sy = miniCanvas.height / MAP_H;
-  miniCtx.fillStyle = "#030708";
+  const markerRadius = Math.max(2.8, Math.min(4.1, Math.min(sx, sy) * 0.56));
+  const mappedFloorAt = (x, y) => (
+    x >= 0
+    && y >= 0
+    && x < MAP_W
+    && y < MAP_H
+    && game.mapped[y]?.[x]
+    && game.map[y]?.[x] !== "wall"
+  );
+  const markerCenter = (x, y) => ({
+    x: (x + 0.5) * sx,
+    y: (y + 0.5) * sy,
+  });
+  const drawDot = (x, y, fill, radius = markerRadius, stroke = "#07100d", lineWidth = 1.5) => {
+    const center = markerCenter(x, y);
+    miniCtx.save();
+    miniCtx.beginPath();
+    miniCtx.arc(center.x, center.y, radius, 0, Math.PI * 2);
+    miniCtx.fillStyle = fill;
+    miniCtx.shadowColor = fill;
+    miniCtx.shadowBlur = 4;
+    miniCtx.fill();
+    miniCtx.shadowBlur = 0;
+    miniCtx.strokeStyle = stroke;
+    miniCtx.lineWidth = lineWidth;
+    miniCtx.stroke();
+    miniCtx.restore();
+  };
+  const drawDiamond = (x, y, fill, radius = markerRadius, stroke = "#07100d", lineWidth = 1.5) => {
+    const center = markerCenter(x, y);
+    miniCtx.save();
+    miniCtx.beginPath();
+    miniCtx.moveTo(center.x, center.y - radius);
+    miniCtx.lineTo(center.x + radius, center.y);
+    miniCtx.lineTo(center.x, center.y + radius);
+    miniCtx.lineTo(center.x - radius, center.y);
+    miniCtx.closePath();
+    miniCtx.fillStyle = fill;
+    miniCtx.shadowColor = fill;
+    miniCtx.shadowBlur = 4;
+    miniCtx.fill();
+    miniCtx.shadowBlur = 0;
+    miniCtx.strokeStyle = stroke;
+    miniCtx.lineWidth = lineWidth;
+    miniCtx.stroke();
+    miniCtx.restore();
+  };
+
+  miniCtx.fillStyle = "#020706";
   miniCtx.fillRect(0, 0, miniCanvas.width, miniCanvas.height);
   for (let y = 0; y < MAP_H; y += 1) {
     for (let x = 0; x < MAP_W; x += 1) {
-      if (!game.mapped[y][x] || game.map[y][x] === "wall") continue;
+      if (!mappedFloorAt(x, y)) continue;
+      const left = Math.floor(x * sx);
+      const top = Math.floor(y * sy);
+      const width = Math.ceil((x + 1) * sx) - left;
+      const height = Math.ceil((y + 1) * sy) - top;
       miniCtx.fillStyle = isMerchantShopTile(x, y)
-        ? (game.merchant?.robbed ? "#b34850" : "#43b995")
-        : game.visible[y][x] ? "#69cbd0" : "#346f76";
-      miniCtx.fillRect(Math.floor(x * sx), Math.floor(y * sy), Math.ceil(sx), Math.ceil(sy));
+        ? (game.merchant?.robbed ? "#b9545b" : "#54c9a4")
+        : game.visible[y][x] ? "#acd9bd" : "#477763";
+      miniCtx.fillRect(left, top, width, height);
     }
   }
 
-  for (const item of game.items) {
-    const mappedItem = game.mapped[item.y]?.[item.x];
-    if (!mappedItem) continue;
-    if (!isVisible(item.x, item.y) && !hasSkill("scout")) continue;
-    miniCtx.fillStyle = "#ffd45f";
-    miniCtx.fillRect(item.x * sx + 1, item.y * sy + 1, Math.max(3, sx - 2), Math.max(3, sy - 2));
-  }
-  if (game.merchant && game.mapped[game.merchant.y]?.[game.merchant.x]) {
-    miniCtx.fillStyle = "#61e1bd";
-    miniCtx.fillRect(
-      game.merchant.x * sx,
-      game.merchant.y * sy,
-      Math.max(4, sx + 1),
-      Math.max(4, sy + 1),
-    );
-  }
-  for (const node of game.restNodes || []) {
-    if (!game.mapped[node.y]?.[node.x]) continue;
-    miniCtx.fillStyle = node.action === "milestone" && game.restChoiceTaken ? "#827a72" : node.color;
-    miniCtx.fillRect(node.x * sx, node.y * sy, Math.max(4, sx + 1), Math.max(4, sy + 1));
-  }
-  if (game.casino && game.mapped[game.casino.y]?.[game.casino.x]) {
-    miniCtx.fillStyle = "#f1b94d";
-    miniCtx.fillRect(game.casino.x * sx, game.casino.y * sy, Math.max(4, sx + 1), Math.max(4, sy + 1));
-  }
-  if (game.secretStairs?.revealed && game.mapped[game.secretStairs.y]?.[game.secretStairs.x]) {
-    miniCtx.fillStyle = game.secretStairs.used ? "#73627f" : "#d99bff";
-    miniCtx.fillRect(game.secretStairs.x * sx, game.secretStairs.y * sy, sx + 1, sy + 1);
-  }
-
-  if (game.stairsRevealed && (game.mapped[game.stairs.y][game.stairs.x] || game.guidanceActive || hasRelic("starCompass"))) {
-    miniCtx.fillStyle = game.mission.complete ? "#fff8de" : "#8a8e8d";
-    miniCtx.fillRect(game.stairs.x * sx, game.stairs.y * sy, sx + 1, sy + 1);
-  }
-  for (const trap of game.traps) {
-    if (!trap.revealed || !game.mapped[trap.y]?.[trap.x]) continue;
-    miniCtx.fillStyle = "#ff786c";
-    miniCtx.fillRect(trap.x * sx + 1, trap.y * sy + 1, Math.max(3, sx - 2), Math.max(3, sy - 2));
-  }
-  if (
-    game.mission &&
-    !game.mission.complete &&
-    (game.mapped[game.mission.y][game.mission.x] || game.guidanceActive)
-  ) {
-    miniCtx.fillStyle = "#df78ff";
-    miniCtx.fillRect(game.mission.x * sx, game.mission.y * sy, sx + 1, sy + 1);
-  }
-  for (const enemy of game.enemies) {
-    if (!isVisible(enemy.x, enemy.y) || !game.mapped[enemy.y]?.[enemy.x]) continue;
-    miniCtx.fillStyle = enemy.rare ? "#ffe45f" : elementInfo(enemy.elementKey).color;
-    miniCtx.fillRect(enemy.x * sx, enemy.y * sy, sx + 1, sy + 1);
-  }
-  for (let index = game.team.length - 1; index >= 0; index -= 1) {
-    const actor = game.team[index];
-    if (actor.down) continue;
-    miniCtx.fillStyle = actor.id === "leader" ? "#62efff" : "#8ed96c";
-    miniCtx.fillRect(actor.x * sx, actor.y * sy, sx + 1, sy + 1);
+  // Trace only the outside of explored floor so rooms and corridors read as shapes.
+  for (let y = 0; y < MAP_H; y += 1) {
+    for (let x = 0; x < MAP_W; x += 1) {
+      if (!mappedFloorAt(x, y)) continue;
+      const left = x * sx;
+      const top = y * sy;
+      const right = (x + 1) * sx;
+      const bottom = (y + 1) * sy;
+      miniCtx.beginPath();
+      if (!mappedFloorAt(x, y - 1)) {
+        miniCtx.moveTo(left, top);
+        miniCtx.lineTo(right, top);
+      }
+      if (!mappedFloorAt(x + 1, y)) {
+        miniCtx.moveTo(right, top);
+        miniCtx.lineTo(right, bottom);
+      }
+      if (!mappedFloorAt(x, y + 1)) {
+        miniCtx.moveTo(right, bottom);
+        miniCtx.lineTo(left, bottom);
+      }
+      if (!mappedFloorAt(x - 1, y)) {
+        miniCtx.moveTo(left, bottom);
+        miniCtx.lineTo(left, top);
+      }
+      miniCtx.strokeStyle = game.visible[y]?.[x]
+        ? "rgba(230, 255, 237, 0.96)"
+        : "rgba(126, 184, 158, 0.84)";
+      miniCtx.lineWidth = 1.25;
+      miniCtx.stroke();
+    }
   }
 
-  miniCtx.strokeStyle = "rgba(255,255,255,0.42)";
-  miniCtx.lineWidth = 1;
+  miniCtx.save();
+  miniCtx.strokeStyle = "rgba(255, 250, 222, 0.72)";
+  miniCtx.lineWidth = 1.5;
+  miniCtx.setLineDash([4, 2]);
   miniCtx.strokeRect(
     renderCamera.x * sx,
     renderCamera.y * sy,
     renderCamera.width * sx,
     renderCamera.height * sy,
   );
+  miniCtx.restore();
+
+  for (const item of game.items) {
+    const mappedItem = game.mapped[item.y]?.[item.x];
+    if (!mappedItem) continue;
+    if (!isVisible(item.x, item.y) && !hasSkill("scout")) continue;
+    drawDiamond(item.x, item.y, "#ffd45f", markerRadius - 0.2, "#3a2200", 1.4);
+  }
+  if (game.merchant && game.mapped[game.merchant.y]?.[game.merchant.x]) {
+    drawDiamond(game.merchant.x, game.merchant.y, "#61e1bd", markerRadius + 0.8, "#e8fff5", 1.5);
+  }
+  for (const node of game.restNodes || []) {
+    if (!game.mapped[node.y]?.[node.x]) continue;
+    drawDot(
+      node.x,
+      node.y,
+      node.action === "milestone" && game.restChoiceTaken ? "#827a72" : node.color,
+      markerRadius + 0.35,
+      "#f4eddd",
+      1.25,
+    );
+  }
+  if (game.casino && game.mapped[game.casino.y]?.[game.casino.x]) {
+    drawDot(game.casino.x, game.casino.y, "#f1b94d", markerRadius + 0.35, "#fff2c3", 1.25);
+  }
+  if (game.secretStairs?.revealed && game.mapped[game.secretStairs.y]?.[game.secretStairs.x]) {
+    drawDiamond(
+      game.secretStairs.x,
+      game.secretStairs.y,
+      game.secretStairs.used ? "#73627f" : "#d99bff",
+      markerRadius + 0.8,
+      "#f9e9ff",
+      1.5,
+    );
+  }
+
+  if (game.stairsRevealed && (game.mapped[game.stairs.y][game.stairs.x] || game.guidanceActive || hasRelic("starCompass"))) {
+    drawDiamond(
+      game.stairs.x,
+      game.stairs.y,
+      game.mission.complete ? "#fff8de" : "#9ea8a4",
+      markerRadius + 0.8,
+      "#163039",
+      1.7,
+    );
+  }
+  for (const trap of game.traps) {
+    if (!trap.revealed || !game.mapped[trap.y]?.[trap.x]) continue;
+    drawDiamond(trap.x, trap.y, "#ff786c", markerRadius - 0.25, "#4c0d0b", 1.3);
+  }
+  if (
+    game.mission &&
+    !game.mission.complete &&
+    (game.mapped[game.mission.y][game.mission.x] || game.guidanceActive)
+  ) {
+    drawDot(game.mission.x, game.mission.y, "#df78ff", markerRadius + 0.65, "#fff0ff", 1.5);
+  }
+  for (const enemy of game.enemies) {
+    if (!isVisible(enemy.x, enemy.y) || !game.mapped[enemy.y]?.[enemy.x]) continue;
+    drawDot(
+      enemy.x,
+      enemy.y,
+      enemy.rare ? "#ffe45f" : elementInfo(enemy.elementKey).color,
+      markerRadius + 0.35,
+      enemy.rare ? "#fff7ca" : "#ff625e",
+      2,
+    );
+  }
+  for (let index = game.team.length - 1; index >= 0; index -= 1) {
+    const actor = game.team[index];
+    if (actor.down) continue;
+    drawDiamond(
+      actor.x,
+      actor.y,
+      actor.id === "leader" ? "#62efff" : "#8ed96c",
+      actor.id === "leader" ? markerRadius + 1.25 : markerRadius + 0.6,
+      actor.id === "leader" ? "#ffffff" : "#efffe8",
+      actor.id === "leader" ? 2 : 1.4,
+    );
+  }
 }
 
 function drawPortrait(targetCanvas, actor) {
