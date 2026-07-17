@@ -1,0 +1,5531 @@
+{
+  "version": 1,
+  "source": "FOXBOUND_技290案.xlsx",
+  "total": 290,
+  "moves": [
+    {
+      "id": "F001",
+      "name": "火のこぶし",
+      "element": "火",
+      "category": "物理",
+      "power": 45,
+      "accuracy": 95,
+      "pp": 20,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "20%で火傷。",
+      "constraint": "なし",
+      "tags": [
+        "近接",
+        "火傷"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F002",
+      "name": "火花とばし",
+      "element": "火",
+      "category": "特殊",
+      "power": 35,
+      "accuracy": 100,
+      "pp": 22,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "遠距離の小火球。",
+      "constraint": "威力は低い",
+      "tags": [
+        "直線",
+        "火傷"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F003",
+      "name": "焦熱の尾",
+      "element": "火",
+      "category": "物理",
+      "power": 55,
+      "accuracy": 95,
+      "pp": 16,
+      "range": "正面＋左右斜め",
+      "target": "敵最大3体",
+      "effect": "15%で火傷。",
+      "constraint": "使用後に防御-1段階",
+      "tags": [
+        "扇形",
+        "火傷"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F004",
+      "name": "炭火まき",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "周囲1マス",
+      "target": "床",
+      "effect": "3ターン残る火床を最大3マス生成。",
+      "constraint": "自分も火床の影響を受ける",
+      "tags": [
+        "設置",
+        "火床"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F005",
+      "name": "燃えるかけ声",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "自分中心・部屋",
+      "target": "味方全員",
+      "effect": "攻撃+1段階、火傷耐性上昇。",
+      "constraint": "防御-1段階",
+      "tags": [
+        "強化",
+        "部屋"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F006",
+      "name": "爆ぜ石",
+      "element": "火",
+      "category": "特殊",
+      "power": 50,
+      "accuracy": 90,
+      "pp": 15,
+      "range": "投擲・直線4マス",
+      "target": "敵1体＋周囲1マス",
+      "effect": "着弾点で小爆発。",
+      "constraint": "隣接する味方にも小ダメージ",
+      "tags": [
+        "爆発",
+        "投擲"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F007",
+      "name": "煙幕",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 95,
+      "pp": 16,
+      "range": "自分中心・周囲2マス",
+      "target": "敵全体",
+      "effect": "命中-1段階、視界を1マスにする。",
+      "constraint": "自分の視界も短くなる",
+      "tags": [
+        "煙",
+        "命中低下"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F008",
+      "name": "火走り",
+      "element": "火",
+      "category": "物理",
+      "power": 50,
+      "accuracy": 95,
+      "pp": 15,
+      "range": "直線2マス突進",
+      "target": "最初の敵",
+      "effect": "2マス進み攻撃。火床上なら威力1.5倍。",
+      "constraint": "壁に当たると自傷",
+      "tags": [
+        "突進",
+        "火床"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F009",
+      "name": "灰かぶり",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 20,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次に受ける水技を半減し、攻撃+1。",
+      "constraint": "発動まで移動不可",
+      "tags": [
+        "防御",
+        "カウンター"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F010",
+      "name": "火種うつし",
+      "element": "火",
+      "category": "特殊",
+      "power": 30,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "火傷中の敵に当てると周囲へ火傷を拡散。",
+      "constraint": "未火傷相手には低威力",
+      "tags": [
+        "火傷",
+        "拡散"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "F011",
+      "name": "焼き払い",
+      "element": "火",
+      "category": "特殊",
+      "power": 65,
+      "accuracy": 90,
+      "pp": 13,
+      "range": "正面3×2マス",
+      "target": "敵全体",
+      "effect": "草・蔦・毒床を消して追加ダメージ。",
+      "constraint": "水床では威力半減",
+      "tags": [
+        "範囲",
+        "地形破壊"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F012",
+      "name": "炎輪",
+      "element": "火",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 100,
+      "pp": 14,
+      "range": "自分中心・周囲1マス",
+      "target": "敵全体",
+      "effect": "隣接敵を1マス吹き飛ばす。",
+      "constraint": "PP消費が重い",
+      "tags": [
+        "周囲",
+        "吹き飛ばし"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F013",
+      "name": "炉心の構え",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "自分",
+      "target": "自分",
+      "effect": "技を使うたび熱量+1。熱量ごとに火威力+10%。",
+      "constraint": "熱量5で毎ターン自傷",
+      "tags": [
+        "熱量",
+        "ピーキー"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F014",
+      "name": "追い火",
+      "element": "火",
+      "category": "特殊",
+      "power": 45,
+      "accuracy": 100,
+      "pp": 16,
+      "range": "視界内",
+      "target": "火傷中の敵1体",
+      "effect": "火傷中の敵へ必中。",
+      "constraint": "対象が火傷でないと失敗",
+      "tags": [
+        "火傷",
+        "必中"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F015",
+      "name": "炎の鎖",
+      "element": "火",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 90,
+      "pp": 12,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "命中後、自分の前へ引き寄せる。",
+      "constraint": "大型敵には無効",
+      "tags": [
+        "引き寄せ",
+        "直線"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F016",
+      "name": "赤熱連打",
+      "element": "火",
+      "category": "物理",
+      "power": 28,
+      "accuracy": 90,
+      "pp": 12,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "2～4回攻撃。",
+      "constraint": "外すと残りの連撃も終了",
+      "tags": [
+        "多段",
+        "近接"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F017",
+      "name": "火柱",
+      "element": "火",
+      "category": "特殊",
+      "power": 75,
+      "accuracy": 85,
+      "pp": 10,
+      "range": "指定3マス以内",
+      "target": "1マス＋周囲",
+      "effect": "1ターン予告後に爆発。",
+      "constraint": "予告中に対象が移動可能",
+      "tags": [
+        "予告",
+        "爆発"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F018",
+      "name": "灼熱の壁",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "正面横3マス",
+      "target": "床",
+      "effect": "4ターンの炎壁。通過者にダメージ。",
+      "constraint": "自分も通過不可",
+      "tags": [
+        "壁",
+        "設置"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F019",
+      "name": "火喰い",
+      "element": "火",
+      "category": "物理",
+      "power": 60,
+      "accuracy": 95,
+      "pp": 14,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "敵が火傷なら火傷を解除しHP回復。",
+      "constraint": "火傷を消費する",
+      "tags": [
+        "火傷消費",
+        "吸収"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F020",
+      "name": "燃焼反転",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "受けた火傷ダメージを次の攻撃力へ蓄積。",
+      "constraint": "水技を受けると蓄積消失",
+      "tags": [
+        "蓄積",
+        "ピーキー"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F021",
+      "name": "蒸気爆発",
+      "element": "火",
+      "category": "特殊",
+      "power": 85,
+      "accuracy": 85,
+      "pp": 8,
+      "range": "周囲2マス",
+      "target": "敵全体",
+      "effect": "水床・濡れ状態の敵へ威力2倍。",
+      "constraint": "条件外では命中70",
+      "tags": [
+        "水連携",
+        "爆発"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F022",
+      "name": "業火の槍",
+      "element": "火",
+      "category": "特殊",
+      "power": 95,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "直線6マス・貫通",
+      "target": "敵全体",
+      "effect": "貫通する直線攻撃。",
+      "constraint": "使用後PPを追加で1消費",
+      "tags": [
+        "貫通",
+        "直線"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F023",
+      "name": "灰燼転生",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "戦闘不能時にHP25%で復活。",
+      "constraint": "復活後、全PP半減",
+      "tags": [
+        "復活",
+        "代償"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F024",
+      "name": "爆炎跳び",
+      "element": "火",
+      "category": "物理",
+      "power": 80,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "指定2マス以内",
+      "target": "着地点周囲1マス",
+      "effect": "跳んで着地爆発。",
+      "constraint": "着地点が塞がれていると失敗",
+      "tags": [
+        "移動",
+        "爆発"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F025",
+      "name": "火葬の印",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "印を付与。3ターン以内に倒すと周囲大爆発。",
+      "constraint": "倒せないと自分が火傷",
+      "tags": [
+        "時限",
+        "爆発"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F026",
+      "name": "煉獄車",
+      "element": "火",
+      "category": "物理",
+      "power": 100,
+      "accuracy": 80,
+      "pp": 7,
+      "range": "直線5マス突進",
+      "target": "通過した敵全体",
+      "effect": "通過攻撃し壁まで進む。",
+      "constraint": "停止時に最大HP10%自傷",
+      "tags": [
+        "突進",
+        "多体",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F027",
+      "name": "紅蓮の間",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "部屋全体",
+      "target": "全員",
+      "effect": "5ターン、部屋全体を火床扱いにする。",
+      "constraint": "自分も毎ターン小ダメージ",
+      "tags": [
+        "部屋",
+        "火床"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F028",
+      "name": "灼命交換",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "自分と敵の現在HP割合を平均化。",
+      "constraint": "ボスには効果半減",
+      "tags": [
+        "HP操作",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F029",
+      "name": "星火乱舞",
+      "element": "火",
+      "category": "特殊",
+      "power": 32,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "部屋内ランダム",
+      "target": "敵ランダム4～7回",
+      "effect": "部屋内の敵へランダム連撃。",
+      "constraint": "同じ敵に偏る",
+      "tags": [
+        "多段",
+        "部屋"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F030",
+      "name": "熾天一閃",
+      "element": "火",
+      "category": "物理",
+      "power": 120,
+      "accuracy": 75,
+      "pp": 5,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "急所率が非常に高い。",
+      "constraint": "外すと自分が1ターン行動不能",
+      "tags": [
+        "単発",
+        "急所",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F031",
+      "name": "火傷払い",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 14,
+      "range": "味方1体",
+      "target": "味方",
+      "effect": "味方の火傷を解除し、次の火技威力+50%。",
+      "constraint": "火傷していないと失敗",
+      "tags": [
+        "支援",
+        "火傷消費"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F032",
+      "name": "油濡れ弾",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 95,
+      "pp": 14,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "油濡れを付与。次の火技が爆発する。",
+      "constraint": "水技で解除",
+      "tags": [
+        "油濡れ",
+        "コンボ起点"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F033",
+      "name": "焼土の祈り",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "部屋",
+      "target": "床",
+      "effect": "木属性の床効果を消し、消した数だけ特攻上昇。",
+      "constraint": "木床がないと効果なし",
+      "tags": [
+        "地形変換",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F034",
+      "name": "余熱回収",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "自分",
+      "target": "自分",
+      "effect": "火傷敵を倒すとPP1回復する状態になる。",
+      "constraint": "通常攻撃の威力-20%",
+      "tags": [
+        "PP回復",
+        "火傷"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F035",
+      "name": "燃える盾",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "3ターン、接触攻撃者を火傷にする。",
+      "constraint": "水ダメージ+30%",
+      "tags": [
+        "反撃",
+        "火傷"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F036",
+      "name": "火口封じ",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "熱量を0にし、熱量×HP5%回復。",
+      "constraint": "次の2ターン火技使用不可",
+      "tags": [
+        "熱量消費",
+        "回復"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F037",
+      "name": "爆薬連結",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "部屋",
+      "target": "設置物",
+      "effect": "部屋内の爆弾・火柱を鎖爆発させる。",
+      "constraint": "設置物がないと失敗",
+      "tags": [
+        "設置",
+        "連鎖"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F038",
+      "name": "紅蓮の契約",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "最大HP20%減、火技威力+45%。",
+      "constraint": "解除不可",
+      "tags": [
+        "常時",
+        "代償"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F039",
+      "name": "焦土の歩み",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "5ターン、移動したマスを火床にする。",
+      "constraint": "移動するたびHP3%消費",
+      "tags": [
+        "移動",
+        "設置",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F040",
+      "name": "最後の火花",
+      "element": "火",
+      "category": "特殊",
+      "power": 150,
+      "accuracy": 100,
+      "pp": 1,
+      "range": "部屋全体",
+      "target": "敵全体",
+      "effect": "残りPPが全技0の時のみ使用可。",
+      "constraint": "使用後HP1になる",
+      "tags": [
+        "切り札",
+        "ピーキー"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "F041",
+      "name": "火鼠の抜け道",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "自分",
+      "target": "自分",
+      "effect": "炎壁と火床を無視して移動。",
+      "constraint": "水床で移動不可",
+      "tags": [
+        "移動",
+        "地形"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F042",
+      "name": "熔断",
+      "element": "火",
+      "category": "物理",
+      "power": 70,
+      "accuracy": 90,
+      "pp": 10,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "防御上昇を全解除して追加ダメージ。",
+      "constraint": "強化がない敵には威力50",
+      "tags": [
+        "強化解除",
+        "近接"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F043",
+      "name": "炭化刻印",
+      "element": "火",
+      "category": "特殊",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "同じ敵へ当てるたび威力+20、最大+80。",
+      "constraint": "別の敵を攻撃するとリセット",
+      "tags": [
+        "蓄積",
+        "単体"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F044",
+      "name": "炎上連鎖",
+      "element": "火",
+      "category": "特殊",
+      "power": 45,
+      "accuracy": 90,
+      "pp": 10,
+      "range": "部屋",
+      "target": "火傷中の敵全体",
+      "effect": "火傷中の全敵へ同時攻撃。",
+      "constraint": "対象数×PP追加消費",
+      "tags": [
+        "火傷",
+        "部屋",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F045",
+      "name": "焼き印カウンター",
+      "element": "火",
+      "category": "物理",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次に近接攻撃した敵へ威力90で反撃。",
+      "constraint": "遠距離攻撃には無効",
+      "tags": [
+        "カウンター",
+        "近接"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F046",
+      "name": "火精召喚",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "隣接空きマス",
+      "target": "召喚物",
+      "effect": "3ターン火精を召喚。火傷敵を優先攻撃。",
+      "constraint": "召喚中、自分のPP回復不可",
+      "tags": [
+        "召喚",
+        "火傷"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F047",
+      "name": "緋色の分岐",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "自分",
+      "target": "自分",
+      "effect": "攻撃型か速度型のどちらかを選択して5ターン強化。",
+      "constraint": "選ばなかった能力が低下",
+      "tags": [
+        "選択",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F048",
+      "name": "熱風逆流",
+      "element": "火",
+      "category": "特殊",
+      "power": 60,
+      "accuracy": 90,
+      "pp": 10,
+      "range": "扇形3マス",
+      "target": "敵全体",
+      "effect": "敵を自分から遠ざける。火傷なら2マス。",
+      "constraint": "壁衝突ダメージは自分にも半分",
+      "tags": [
+        "吹き飛ばし",
+        "壁衝突"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "F049",
+      "name": "灼星の雨",
+      "element": "火",
+      "category": "特殊",
+      "power": 90,
+      "accuracy": 80,
+      "pp": 6,
+      "range": "部屋ランダム5マス",
+      "target": "敵・床",
+      "effect": "複数地点へ火柱を落とす。",
+      "constraint": "味方のいるマスも選ばれる",
+      "tags": [
+        "部屋",
+        "ランダム",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "F050",
+      "name": "不滅炉",
+      "element": "火",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 3,
+      "range": "自分",
+      "target": "自分",
+      "effect": "10ターン火技無消費。",
+      "constraint": "終了時、全火技PPが0になる",
+      "tags": [
+        "PP",
+        "切り札",
+        "ピーキー"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "W001",
+      "name": "水弾",
+      "element": "水",
+      "category": "特殊",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 22,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "20%で濡れ。",
+      "constraint": "なし",
+      "tags": [
+        "直線",
+        "濡れ"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W002",
+      "name": "波打ち",
+      "element": "水",
+      "category": "特殊",
+      "power": 45,
+      "accuracy": 95,
+      "pp": 20,
+      "range": "扇形2マス",
+      "target": "敵全体",
+      "effect": "1マス押し流す。",
+      "constraint": "壁際では威力低下",
+      "tags": [
+        "扇形",
+        "押し流し"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W003",
+      "name": "水切り",
+      "element": "水",
+      "category": "物理",
+      "power": 50,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "急所率が少し高い。",
+      "constraint": "なし",
+      "tags": [
+        "近接",
+        "急所"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W004",
+      "name": "冷気の粒",
+      "element": "水",
+      "category": "特殊",
+      "power": 35,
+      "accuracy": 100,
+      "pp": 20,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "10%で凍結。",
+      "constraint": "火床上では威力半減",
+      "tags": [
+        "凍結",
+        "直線"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W005",
+      "name": "水の輪",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "味方1体",
+      "target": "味方",
+      "effect": "3ターン被ダメージを10%軽減。",
+      "constraint": "重ね掛け不可",
+      "tags": [
+        "防御",
+        "支援"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W006",
+      "name": "濡らし霧",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 95,
+      "pp": 16,
+      "range": "周囲2マス",
+      "target": "敵全体",
+      "effect": "濡れを付与し火傷を解除。",
+      "constraint": "自分も濡れる",
+      "tags": [
+        "濡れ",
+        "範囲"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W007",
+      "name": "押し潮",
+      "element": "水",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 90,
+      "pp": 15,
+      "range": "直線5マス",
+      "target": "最初の敵",
+      "effect": "2マス押し流す。",
+      "constraint": "大型敵には1マス",
+      "tags": [
+        "押し流し",
+        "直線"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W008",
+      "name": "水鏡",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 15,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次の直線技を1回だけ無効化。",
+      "constraint": "近接には無効",
+      "tags": [
+        "防御",
+        "直線対策"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W009",
+      "name": "雫連射",
+      "element": "水",
+      "category": "特殊",
+      "power": 22,
+      "accuracy": 95,
+      "pp": 18,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "2～3回攻撃。",
+      "constraint": "1発ごとに命中判定",
+      "tags": [
+        "多段",
+        "直線"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W010",
+      "name": "水たまり",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 20,
+      "range": "指定3マス以内",
+      "target": "床1マス",
+      "effect": "水床を5ターン生成。",
+      "constraint": "同時設置は3枚まで",
+      "tags": [
+        "設置",
+        "水床"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "W011",
+      "name": "氷柱",
+      "element": "水",
+      "category": "特殊",
+      "power": 65,
+      "accuracy": 90,
+      "pp": 14,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "20%で凍結。",
+      "constraint": "濡れ相手以外には命中80",
+      "tags": [
+        "凍結",
+        "濡れ"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W012",
+      "name": "引き潮",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 14,
+      "range": "直線5マス",
+      "target": "敵1体",
+      "effect": "敵を自分の前まで引き寄せる。",
+      "constraint": "間に障害物があると失敗",
+      "tags": [
+        "引き寄せ",
+        "直線"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W013",
+      "name": "渦潮",
+      "element": "水",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 90,
+      "pp": 12,
+      "range": "指定3マス・周囲1",
+      "target": "敵全体",
+      "effect": "中心へ1マス引き寄せる。",
+      "constraint": "味方も巻き込む",
+      "tags": [
+        "範囲",
+        "引き寄せ"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W014",
+      "name": "氷床",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 14,
+      "range": "直線4マス",
+      "target": "床",
+      "effect": "踏むと進行方向へ滑る床を作る。",
+      "constraint": "自分も滑る",
+      "tags": [
+        "設置",
+        "滑走"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W015",
+      "name": "泡牢",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 12,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "2ターン移動不可。攻撃すると解除。",
+      "constraint": "大型敵は1ターン",
+      "tags": [
+        "拘束",
+        "状態異常"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W016",
+      "name": "波乗り突進",
+      "element": "水",
+      "category": "物理",
+      "power": 70,
+      "accuracy": 90,
+      "pp": 11,
+      "range": "直線4マス",
+      "target": "通過敵全体",
+      "effect": "水床上のみ使用可。",
+      "constraint": "水床がないと失敗",
+      "tags": [
+        "突進",
+        "水床"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W017",
+      "name": "霜の刃",
+      "element": "水",
+      "category": "物理",
+      "power": 60,
+      "accuracy": 95,
+      "pp": 13,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "凍結中なら威力2倍、凍結解除。",
+      "constraint": "凍結を消費",
+      "tags": [
+        "砕氷",
+        "近接"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W018",
+      "name": "清流",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "直線4マス",
+      "target": "味方全体",
+      "effect": "通過した味方の状態異常を1つ解除。",
+      "constraint": "敵の弱体も解除する",
+      "tags": [
+        "浄化",
+        "直線"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W019",
+      "name": "満ち潮の構え",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "自分",
+      "target": "自分",
+      "effect": "移動せずにいるほど水技+15%、最大+60%。",
+      "constraint": "移動するとリセット",
+      "tags": [
+        "蓄積",
+        "固定砲台"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W020",
+      "name": "水圧破砕",
+      "element": "水",
+      "category": "特殊",
+      "power": 75,
+      "accuracy": 85,
+      "pp": 10,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "壁際の敵へ威力1.7倍。",
+      "constraint": "中央では命中75",
+      "tags": [
+        "壁衝突",
+        "直線"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W021",
+      "name": "氷河線",
+      "element": "水",
+      "category": "特殊",
+      "power": 85,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "直線6マス・貫通",
+      "target": "敵全体",
+      "effect": "命中した床を氷床にする。",
+      "constraint": "使用後移動-1ターン",
+      "tags": [
+        "貫通",
+        "氷床"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W022",
+      "name": "深海圧",
+      "element": "水",
+      "category": "特殊",
+      "power": 100,
+      "accuracy": 85,
+      "pp": 8,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "相手の残りHPが多いほど強い。",
+      "constraint": "瀕死敵には威力40",
+      "tags": [
+        "高HP特攻",
+        "近接"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W023",
+      "name": "逆流転移",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "直線5マス",
+      "target": "敵1体",
+      "effect": "敵と位置を入れ替え、双方を濡れにする。",
+      "constraint": "ボスには位置交換無効",
+      "tags": [
+        "位置交換",
+        "濡れ"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W024",
+      "name": "凍海の間",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "部屋全体",
+      "target": "床",
+      "effect": "4ターン、部屋の床を氷床化。",
+      "constraint": "自分も滑る",
+      "tags": [
+        "部屋",
+        "氷床"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W025",
+      "name": "津波",
+      "element": "水",
+      "category": "特殊",
+      "power": 105,
+      "accuracy": 80,
+      "pp": 6,
+      "range": "部屋の一方向全域",
+      "target": "敵全体",
+      "effect": "壁まで押し流す。",
+      "constraint": "味方も押し流す",
+      "tags": [
+        "部屋",
+        "押し流し"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W026",
+      "name": "水刃乱舞",
+      "element": "水",
+      "category": "物理",
+      "power": 30,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "周囲1マス",
+      "target": "敵ランダム3～6回",
+      "effect": "周囲へ多段攻撃。",
+      "constraint": "同じ敵に偏る",
+      "tags": [
+        "多段",
+        "周囲"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W027",
+      "name": "氷棺",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 80,
+      "pp": 6,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "3ターン凍結、被ダメージ半減。",
+      "constraint": "解除時に敵のHP10%回復",
+      "tags": [
+        "凍結",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W028",
+      "name": "海鳴り",
+      "element": "水",
+      "category": "特殊",
+      "power": 70,
+      "accuracy": 95,
+      "pp": 8,
+      "range": "部屋全体",
+      "target": "敵全体",
+      "effect": "敵の移動方向を1ターン反転。",
+      "constraint": "通路では使用不可",
+      "tags": [
+        "部屋",
+        "混乱"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W029",
+      "name": "水月反射",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 7,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次に受ける特殊技を使用者へコピー。",
+      "constraint": "物理技には無効",
+      "tags": [
+        "コピー",
+        "カウンター"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W030",
+      "name": "絶対零度線",
+      "element": "水",
+      "category": "特殊",
+      "power": 130,
+      "accuracy": 70,
+      "pp": 4,
+      "range": "直線5マス",
+      "target": "敵1体",
+      "effect": "命中時50%で凍結。",
+      "constraint": "外すと自分が凍結",
+      "tags": [
+        "単発",
+        "凍結",
+        "ピーキー"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "W031",
+      "name": "雨乞い",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "5ターン、水技+25%、火技-25%。",
+      "constraint": "木技の回復量も増える",
+      "tags": [
+        "部屋",
+        "天候"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W032",
+      "name": "泡の道",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "直線4マス",
+      "target": "床",
+      "effect": "味方が通るとPP1回復する泡床。",
+      "constraint": "各マス1回で消滅",
+      "tags": [
+        "設置",
+        "PP回復"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W033",
+      "name": "水精召喚",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "隣接空きマス",
+      "target": "召喚物",
+      "effect": "4ターン水精を召喚し敵を押す。",
+      "constraint": "召喚中、自分の防御-20%",
+      "tags": [
+        "召喚",
+        "押し流し"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W034",
+      "name": "潮目読み",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次の3ターン、敵の移動先が見える。",
+      "constraint": "攻撃すると解除",
+      "tags": [
+        "予測",
+        "支援"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W035",
+      "name": "砕波カウンター",
+      "element": "水",
+      "category": "物理",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次の近接攻撃者を2マス吹き飛ばす。",
+      "constraint": "遠距離には無効",
+      "tags": [
+        "カウンター",
+        "吹き飛ばし"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W036",
+      "name": "露払い",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "周囲1マス",
+      "target": "味方全体",
+      "effect": "火傷・毒を解除し小回復。",
+      "constraint": "凍結中には使用不可",
+      "tags": [
+        "回復",
+        "浄化"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W037",
+      "name": "凍結蓄圧",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "凍結させるたび次の水技+25%、最大+100%。",
+      "constraint": "火技を使うと消失",
+      "tags": [
+        "蓄積",
+        "凍結"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W038",
+      "name": "深淵潜航",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "自分",
+      "target": "自分",
+      "effect": "2ターン床下へ潜り無敵、3ターン目に浮上。",
+      "constraint": "浮上地点を選べない",
+      "tags": [
+        "無敵",
+        "ランダム"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W039",
+      "name": "渦の契約",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "最大PP25%減、水技範囲+1。",
+      "constraint": "解除不可",
+      "tags": [
+        "常時",
+        "代償"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W040",
+      "name": "大海の一滴",
+      "element": "水",
+      "category": "特殊",
+      "power": 180,
+      "accuracy": 100,
+      "pp": 1,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "残りHPとPPが満タン時のみ使用可。",
+      "constraint": "使用後HP・PPが半分",
+      "tags": [
+        "切り札",
+        "ピーキー"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "W041",
+      "name": "霧隠れ",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "自分中心・周囲2",
+      "target": "全員",
+      "effect": "3ターン命中率低下、遠距離技無効。",
+      "constraint": "自分の遠距離技も無効",
+      "tags": [
+        "霧",
+        "封印"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W042",
+      "name": "雪崩呼び",
+      "element": "水",
+      "category": "特殊",
+      "power": 80,
+      "accuracy": 85,
+      "pp": 8,
+      "range": "前方扇形3マス",
+      "target": "敵全体",
+      "effect": "凍結中の敵を吹き飛ばし壁衝突追加。",
+      "constraint": "凍結敵がいないと威力45",
+      "tags": [
+        "凍結",
+        "壁衝突"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W043",
+      "name": "潮鎖",
+      "element": "水",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 95,
+      "pp": 10,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "3ターン、自分から離れる移動を禁止。",
+      "constraint": "大型敵には無効",
+      "tags": [
+        "拘束",
+        "位置"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W044",
+      "name": "水泡分身",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "隣接空きマス",
+      "target": "分身",
+      "effect": "1回だけ攻撃を受ける分身を2体生成。",
+      "constraint": "分身がある間、攻撃-20%",
+      "tags": [
+        "分身",
+        "防御"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W045",
+      "name": "満潮爆発",
+      "element": "水",
+      "category": "特殊",
+      "power": 95,
+      "accuracy": 90,
+      "pp": 7,
+      "range": "部屋",
+      "target": "水床全体",
+      "effect": "全水床を消費し、その上の敵へ攻撃。",
+      "constraint": "水床がないと失敗",
+      "tags": [
+        "設置消費",
+        "部屋"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W046",
+      "name": "氷針の檻",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "指定3マス・周囲1",
+      "target": "床",
+      "effect": "通過するとダメージ＋移動停止する氷針を配置。",
+      "constraint": "味方にも作用",
+      "tags": [
+        "罠",
+        "設置"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W047",
+      "name": "流れの分岐",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "自分",
+      "target": "自分",
+      "effect": "押し流し型か凍結型を5ターン強化。",
+      "constraint": "選ばない系統は弱体",
+      "tags": [
+        "選択",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W048",
+      "name": "海蝕",
+      "element": "水",
+      "category": "特殊",
+      "power": 70,
+      "accuracy": 90,
+      "pp": 10,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "敵の防御を1段階ずつ削る。",
+      "constraint": "同じ敵以外へ使うと蓄積リセット",
+      "tags": [
+        "防御低下",
+        "蓄積"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "W049",
+      "name": "月潮の雨",
+      "element": "水",
+      "category": "特殊",
+      "power": 75,
+      "accuracy": 85,
+      "pp": 6,
+      "range": "部屋ランダム6マス",
+      "target": "敵・床",
+      "effect": "氷柱か水床をランダム生成。",
+      "constraint": "自分のマスも選ばれる",
+      "tags": [
+        "部屋",
+        "ランダム"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "W050",
+      "name": "無限潮",
+      "element": "水",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 3,
+      "range": "自分",
+      "target": "自分",
+      "effect": "10ターン水技の射程+2、PP消費なし。",
+      "constraint": "終了後全水技PP0",
+      "tags": [
+        "PP",
+        "切り札"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "N001",
+      "name": "つる打ち",
+      "element": "木",
+      "category": "物理",
+      "power": 45,
+      "accuracy": 100,
+      "pp": 22,
+      "range": "直線2マス",
+      "target": "敵1体",
+      "effect": "10%で拘束。",
+      "constraint": "なし",
+      "tags": [
+        "近接",
+        "拘束"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N002",
+      "name": "葉刃",
+      "element": "木",
+      "category": "物理",
+      "power": 50,
+      "accuracy": 95,
+      "pp": 20,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "急所率が少し高い。",
+      "constraint": "なし",
+      "tags": [
+        "直線",
+        "急所"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N003",
+      "name": "毒胞子",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 18,
+      "range": "周囲2マス",
+      "target": "敵全体",
+      "effect": "毒を付与。",
+      "constraint": "味方にも低確率で付与",
+      "tags": [
+        "毒",
+        "範囲"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N004",
+      "name": "芽吹き",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "自分",
+      "target": "自分",
+      "effect": "3ターン毎ターンHP5%回復。",
+      "constraint": "火傷中は無効",
+      "tags": [
+        "回復",
+        "持続"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N005",
+      "name": "木の盾",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 16,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次の物理ダメージを半減。",
+      "constraint": "火技は半減できない",
+      "tags": [
+        "防御",
+        "物理"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N006",
+      "name": "種飛ばし",
+      "element": "木",
+      "category": "物理",
+      "power": 38,
+      "accuracy": 100,
+      "pp": 22,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "低確率で毒。",
+      "constraint": "威力は低い",
+      "tags": [
+        "直線",
+        "毒"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N007",
+      "name": "根止め",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 95,
+      "pp": 16,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "2ターン移動不可。",
+      "constraint": "攻撃は可能",
+      "tags": [
+        "拘束",
+        "近接"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N008",
+      "name": "花粉幕",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 16,
+      "range": "扇形2マス",
+      "target": "敵全体",
+      "effect": "命中低下または眠気。",
+      "constraint": "効果はランダム",
+      "tags": [
+        "状態異常",
+        "扇形"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N009",
+      "name": "樹液ぬり",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "味方1体",
+      "target": "味方",
+      "effect": "3ターン接触攻撃者を減速。",
+      "constraint": "火傷すると解除",
+      "tags": [
+        "反撃",
+        "減速"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N010",
+      "name": "落葉踏み",
+      "element": "木",
+      "category": "物理",
+      "power": 55,
+      "accuracy": 95,
+      "pp": 16,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "毒床・草床上で威力1.5倍。",
+      "constraint": "通常床では威力45",
+      "tags": [
+        "地形",
+        "近接"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "N011",
+      "name": "茨の輪",
+      "element": "木",
+      "category": "物理",
+      "power": 60,
+      "accuracy": 90,
+      "pp": 14,
+      "range": "周囲1マス",
+      "target": "敵全体",
+      "effect": "接触した敵を1ターン拘束。",
+      "constraint": "自分も移動不可1ターン",
+      "tags": [
+        "周囲",
+        "拘束"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N012",
+      "name": "毒蔦",
+      "element": "木",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 95,
+      "pp": 14,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "毒＋引き寄せ。",
+      "constraint": "大型敵には引き寄せ無効",
+      "tags": [
+        "毒",
+        "引き寄せ"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N013",
+      "name": "寄生種",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 12,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "4ターンHPを吸収。",
+      "constraint": "敵が離れすぎると解除",
+      "tags": [
+        "吸収",
+        "持続"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N014",
+      "name": "癒しの花",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "指定3マス",
+      "target": "床1マス",
+      "effect": "3回踏まれるまで味方を回復。",
+      "constraint": "敵も回復する",
+      "tags": [
+        "設置",
+        "回復"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N015",
+      "name": "毒床",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 14,
+      "range": "指定3マス",
+      "target": "床1マス",
+      "effect": "5ターン毒床を生成。",
+      "constraint": "味方にも有効",
+      "tags": [
+        "設置",
+        "毒床"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N016",
+      "name": "樹皮硬化",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "自分",
+      "target": "自分",
+      "effect": "防御+2、移動するたび効果低下。",
+      "constraint": "速度低下",
+      "tags": [
+        "防御",
+        "固定砲台"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N017",
+      "name": "森の呼び声",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "部屋",
+      "target": "召喚物",
+      "effect": "小型植物を2体召喚。",
+      "constraint": "部屋外では1体",
+      "tags": [
+        "召喚",
+        "部屋"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N018",
+      "name": "花爆弾",
+      "element": "木",
+      "category": "特殊",
+      "power": 65,
+      "accuracy": 90,
+      "pp": 12,
+      "range": "投擲4マス",
+      "target": "着弾周囲1マス",
+      "effect": "毒か眠気をランダム付与。",
+      "constraint": "効果を選べない",
+      "tags": [
+        "爆発",
+        "状態異常"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N019",
+      "name": "養分吸収",
+      "element": "木",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "毒中の敵からHP・PPを吸収。",
+      "constraint": "毒を解除する",
+      "tags": [
+        "毒消費",
+        "吸収"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N020",
+      "name": "根の道",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "直線4マス",
+      "target": "床",
+      "effect": "味方の移動コストを0にする根道。",
+      "constraint": "火床で即消滅",
+      "tags": [
+        "設置",
+        "移動"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N021",
+      "name": "大樹槍",
+      "element": "木",
+      "category": "物理",
+      "power": 85,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "直線5マス・貫通",
+      "target": "敵全体",
+      "effect": "防御を1段階下げる。",
+      "constraint": "火属性敵には威力低下",
+      "tags": [
+        "貫通",
+        "防御低下"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N022",
+      "name": "毒花園",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 7,
+      "range": "部屋",
+      "target": "床",
+      "effect": "部屋に毒床と花をランダム生成。",
+      "constraint": "味方も影響",
+      "tags": [
+        "部屋",
+        "設置"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N023",
+      "name": "世界樹の雫",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "部屋",
+      "target": "味方全員",
+      "effect": "HP30%回復＋状態異常解除。",
+      "constraint": "使用者の最大HP10%減",
+      "tags": [
+        "全体回復",
+        "代償"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N024",
+      "name": "捕食蔦",
+      "element": "木",
+      "category": "物理",
+      "power": 80,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "引き寄せ後、毒なら追加攻撃。",
+      "constraint": "大型敵には追加のみ",
+      "tags": [
+        "引き寄せ",
+        "毒"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N025",
+      "name": "腐食雨",
+      "element": "木",
+      "category": "特殊",
+      "power": 75,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "部屋全体",
+      "target": "敵全体",
+      "effect": "3ターン防御が毎ターン低下。",
+      "constraint": "味方の装備耐久も減る",
+      "tags": [
+        "部屋",
+        "防御低下"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N026",
+      "name": "花葬",
+      "element": "木",
+      "category": "特殊",
+      "power": 95,
+      "accuracy": 85,
+      "pp": 7,
+      "range": "指定3マス・周囲1",
+      "target": "敵全体",
+      "effect": "状態異常の敵へ威力2倍。",
+      "constraint": "状態異常を全解除",
+      "tags": [
+        "状態異常消費",
+        "爆発"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N027",
+      "name": "森羅結界",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "自分中心・周囲2",
+      "target": "味方全体",
+      "effect": "3ターン外からの攻撃を半減。",
+      "constraint": "結界内から外への攻撃も半減",
+      "tags": [
+        "結界",
+        "防御"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N028",
+      "name": "樹海迷彩",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 7,
+      "range": "自分",
+      "target": "自分",
+      "effect": "草床・毒床上で透明化。",
+      "constraint": "床を離れると解除",
+      "tags": [
+        "透明",
+        "地形"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N029",
+      "name": "千葉乱舞",
+      "element": "木",
+      "category": "物理",
+      "power": 28,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "部屋内ランダム",
+      "target": "敵ランダム5～8回",
+      "effect": "毒相手を優先する多段。",
+      "constraint": "対象を選べない",
+      "tags": [
+        "多段",
+        "毒"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N030",
+      "name": "終樹の杭",
+      "element": "木",
+      "category": "物理",
+      "power": 130,
+      "accuracy": 75,
+      "pp": 4,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "敵を壁まで押し込み、壁で大ダメージ。",
+      "constraint": "壁がないと威力50",
+      "tags": [
+        "壁衝突",
+        "ピーキー"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "N031",
+      "name": "胞子交換",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "周囲2マス",
+      "target": "全員",
+      "effect": "自分の状態異常を敵1体へ移す。",
+      "constraint": "対象はランダム",
+      "tags": [
+        "状態移送",
+        "ピーキー"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N032",
+      "name": "毒樹の実",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "HP20%回復し毒になる。",
+      "constraint": "毒耐性を無視",
+      "tags": [
+        "回復",
+        "代償"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N033",
+      "name": "根精召喚",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "隣接空きマス",
+      "target": "召喚物",
+      "effect": "5ターン根精を召喚し敵を拘束。",
+      "constraint": "召喚中、自分の移動不可",
+      "tags": [
+        "召喚",
+        "拘束"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N034",
+      "name": "毒連鎖",
+      "element": "木",
+      "category": "特殊",
+      "power": 45,
+      "accuracy": 95,
+      "pp": 10,
+      "range": "部屋",
+      "target": "毒中の敵全体",
+      "effect": "毒中の全敵へ攻撃し毒ターン+1。",
+      "constraint": "対象数×PP追加消費",
+      "tags": [
+        "毒",
+        "部屋",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N035",
+      "name": "枯死の契約",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "回復を受けられなくなる代わり木技+55%。",
+      "constraint": "解除不可",
+      "tags": [
+        "常時",
+        "代償"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N036",
+      "name": "再生爆発",
+      "element": "木",
+      "category": "特殊",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分中心・周囲1",
+      "target": "敵全体",
+      "effect": "自分の回復量累積を消費して攻撃。",
+      "constraint": "累積0では失敗",
+      "tags": [
+        "回復蓄積",
+        "爆発"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N037",
+      "name": "花冠の選択",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "自分",
+      "target": "自分",
+      "effect": "毒型・回復型・召喚型から1つを強化。",
+      "constraint": "他2系統が弱体",
+      "tags": [
+        "選択",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N038",
+      "name": "茨返し",
+      "element": "木",
+      "category": "物理",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次に受ける近接ダメージを同量返す。",
+      "constraint": "自分も通常通り受ける",
+      "tags": [
+        "反撃",
+        "ピーキー"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N039",
+      "name": "森食み",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "周囲1マス",
+      "target": "床",
+      "effect": "草・毒・根床を消費しHPとPP回復。",
+      "constraint": "床がないと失敗",
+      "tags": [
+        "地形消費",
+        "回復"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N040",
+      "name": "生命の前借り",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 3,
+      "range": "自分",
+      "target": "自分",
+      "effect": "10ターン毎ターンHP10%回復。",
+      "constraint": "終了時最大HP50%を失う",
+      "tags": [
+        "切り札",
+        "代償"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "N041",
+      "name": "木漏れ日",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "部屋",
+      "target": "味方全員",
+      "effect": "光属性の味方も小回復。",
+      "constraint": "闇属性の味方は回復半減",
+      "tags": [
+        "回復",
+        "光連携"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N042",
+      "name": "腐葉土",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "指定3マス・周囲1",
+      "target": "床",
+      "effect": "毒床上の召喚物を強化する床。",
+      "constraint": "敵召喚物も強化",
+      "tags": [
+        "召喚",
+        "毒床"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N043",
+      "name": "種子砲",
+      "element": "木",
+      "category": "物理",
+      "power": 70,
+      "accuracy": 90,
+      "pp": 10,
+      "range": "直線5マス",
+      "target": "敵1体",
+      "effect": "外れた場合、着弾床に攻撃植物を設置。",
+      "constraint": "命中すると設置なし",
+      "tags": [
+        "直線",
+        "設置"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N044",
+      "name": "森の税",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "部屋",
+      "target": "敵全体",
+      "effect": "敵が移動するたびHP3%吸収。",
+      "constraint": "自分が移動すると解除",
+      "tags": [
+        "固定砲台",
+        "吸収"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N045",
+      "name": "木霊返し",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次に受けた変化技を使用者へ返す。",
+      "constraint": "攻撃技には無効",
+      "tags": [
+        "反射",
+        "変化技"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N046",
+      "name": "眠り森",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 80,
+      "pp": 7,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "2ターン後、部屋内全員を眠らせる。",
+      "constraint": "自分も眠る",
+      "tags": [
+        "部屋",
+        "睡眠",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N047",
+      "name": "蔦渡り",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "直線3マス",
+      "target": "自分",
+      "effect": "壁や穴を越えて移動。",
+      "constraint": "着地点に敵がいると失敗",
+      "tags": [
+        "移動",
+        "地形"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "N048",
+      "name": "毒脈破裂",
+      "element": "木",
+      "category": "特殊",
+      "power": 85,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "敵1体",
+      "target": "敵1体＋周囲1",
+      "effect": "毒ターン数を消費し範囲攻撃。",
+      "constraint": "毒を解除",
+      "tags": [
+        "毒消費",
+        "爆発"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N049",
+      "name": "星樹の種",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "床1マス",
+      "target": "設置物",
+      "effect": "5ターン後に強力な回復樹へ成長。",
+      "constraint": "壊されると敵を回復",
+      "tags": [
+        "時限",
+        "設置"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "N050",
+      "name": "不死森",
+      "element": "木",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 3,
+      "range": "部屋",
+      "target": "味方全員",
+      "effect": "10ターン戦闘不能にならずHP1で耐える。",
+      "constraint": "終了時、生存者のHP1",
+      "tags": [
+        "切り札",
+        "部屋"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "L001",
+      "name": "光弾",
+      "element": "光",
+      "category": "特殊",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 22,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "命中率が高い。",
+      "constraint": "なし",
+      "tags": [
+        "直線",
+        "命中"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L002",
+      "name": "星打ち",
+      "element": "光",
+      "category": "物理",
+      "power": 50,
+      "accuracy": 100,
+      "pp": 20,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "闇属性へ威力1.2倍。",
+      "constraint": "なし",
+      "tags": [
+        "近接",
+        "対闇"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L003",
+      "name": "小さな守護",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "味方1体",
+      "target": "味方",
+      "effect": "次のダメージを20軽減。",
+      "constraint": "重ね掛け不可",
+      "tags": [
+        "防御",
+        "支援"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L004",
+      "name": "浄めの風",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "周囲1マス",
+      "target": "味方全体",
+      "effect": "状態異常を1つ解除。",
+      "constraint": "HPは回復しない",
+      "tags": [
+        "浄化",
+        "周囲"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L005",
+      "name": "光線",
+      "element": "光",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 95,
+      "pp": 18,
+      "range": "直線5マス",
+      "target": "敵1体",
+      "effect": "壁まで届く。",
+      "constraint": "曲がり角では使いにくい",
+      "tags": [
+        "直線",
+        "長射程"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L006",
+      "name": "照明",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 20,
+      "range": "部屋",
+      "target": "床",
+      "effect": "部屋全体を明るくし罠を可視化。",
+      "constraint": "敵にも自分の位置が見える",
+      "tags": [
+        "探索",
+        "部屋"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L007",
+      "name": "光輪投げ",
+      "element": "光",
+      "category": "物理",
+      "power": 45,
+      "accuracy": 95,
+      "pp": 18,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "命中後に戻り、低確率で再命中。",
+      "constraint": "狭い通路では戻らない",
+      "tags": [
+        "往復",
+        "直線"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L008",
+      "name": "白壁",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 16,
+      "range": "正面横3マス",
+      "target": "床",
+      "effect": "2ターン通過不能の光壁。",
+      "constraint": "自分も通れない",
+      "tags": [
+        "壁",
+        "設置"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L009",
+      "name": "祈り",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 16,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次の回復量+50%。",
+      "constraint": "攻撃すると解除",
+      "tags": [
+        "回復強化",
+        "準備"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L010",
+      "name": "閃光",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 16,
+      "range": "周囲2マス",
+      "target": "敵全体",
+      "effect": "1ターン目つぶし。",
+      "constraint": "闇属性には命中70",
+      "tags": [
+        "目つぶし",
+        "範囲"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "L011",
+      "name": "貫光",
+      "element": "光",
+      "category": "特殊",
+      "power": 65,
+      "accuracy": 95,
+      "pp": 14,
+      "range": "直線5マス・貫通",
+      "target": "敵全体",
+      "effect": "敵を1体貫通する。",
+      "constraint": "貫通後威力30%低下",
+      "tags": [
+        "貫通",
+        "直線"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L012",
+      "name": "守護輪",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 14,
+      "range": "自分中心・周囲1",
+      "target": "味方全体",
+      "effect": "3ターン被ダメージ-15%。",
+      "constraint": "範囲外へ出ると解除",
+      "tags": [
+        "結界",
+        "防御"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L013",
+      "name": "聖なる標的",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "直線5マス",
+      "target": "敵1体",
+      "effect": "3ターン、その敵への技が必中。",
+      "constraint": "他の敵への命中-15%",
+      "tags": [
+        "必中",
+        "単体"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L014",
+      "name": "照準星",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "自分",
+      "target": "自分",
+      "effect": "直線技の射程+2、威力-10%。",
+      "constraint": "3ターン限定",
+      "tags": [
+        "直線",
+        "射程"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L015",
+      "name": "光返し",
+      "element": "光",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "壁に当たると1回だけ反射する。",
+      "constraint": "反射先は選べない",
+      "tags": [
+        "反射",
+        "直線"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L016",
+      "name": "星鎖",
+      "element": "光",
+      "category": "特殊",
+      "power": 60,
+      "accuracy": 90,
+      "pp": 12,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "命中した敵と自分を光の線で結ぶ。",
+      "constraint": "離れすぎると自分もダメージ",
+      "tags": [
+        "拘束",
+        "位置"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L017",
+      "name": "浄化光",
+      "element": "光",
+      "category": "特殊",
+      "power": 60,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "敵の強化を1つ解除して追加ダメージ。",
+      "constraint": "強化なしでは威力45",
+      "tags": [
+        "強化解除",
+        "直線"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L018",
+      "name": "星灯り",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 14,
+      "range": "指定3マス",
+      "target": "床1マス",
+      "effect": "踏む味方の命中と回避を1段階上昇。",
+      "constraint": "敵も利用可能",
+      "tags": [
+        "設置",
+        "強化"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L019",
+      "name": "裁きの線",
+      "element": "光",
+      "category": "特殊",
+      "power": 75,
+      "accuracy": 90,
+      "pp": 10,
+      "range": "直線6マス",
+      "target": "敵1体",
+      "effect": "同一直線上に敵が1体だけなら威力1.5倍。",
+      "constraint": "複数いると威力50",
+      "tags": [
+        "孤立",
+        "直線"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L020",
+      "name": "逆光",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "自分",
+      "target": "自分",
+      "effect": "背後から受ける攻撃を半減。",
+      "constraint": "正面からの被ダメ+15%",
+      "tags": [
+        "方向",
+        "ピーキー"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L021",
+      "name": "星雨",
+      "element": "光",
+      "category": "特殊",
+      "power": 80,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "部屋内ランダム4マス",
+      "target": "敵・床",
+      "effect": "光柱を4本落とす。",
+      "constraint": "味方のマスも選ばれる",
+      "tags": [
+        "部屋",
+        "ランダム"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L022",
+      "name": "太陽槍",
+      "element": "光",
+      "category": "特殊",
+      "power": 100,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "直線8マス・貫通",
+      "target": "敵全体",
+      "effect": "長射程貫通。",
+      "constraint": "使用後2ターン回避低下",
+      "tags": [
+        "貫通",
+        "長射程"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L023",
+      "name": "完全浄化",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "部屋",
+      "target": "味方全員",
+      "effect": "全状態異常と弱体を解除。",
+      "constraint": "味方の強化も全解除",
+      "tags": [
+        "浄化",
+        "部屋",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L024",
+      "name": "天蓋",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "部屋",
+      "target": "味方全員",
+      "effect": "3ターン遠距離攻撃を無効化。",
+      "constraint": "味方も遠距離攻撃不可",
+      "tags": [
+        "封印",
+        "部屋"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L025",
+      "name": "光速一歩",
+      "element": "光",
+      "category": "物理",
+      "power": 80,
+      "accuracy": 95,
+      "pp": 8,
+      "range": "視界内直線",
+      "target": "最初の敵",
+      "effect": "敵の前まで移動して攻撃。",
+      "constraint": "途中に罠があると発動",
+      "tags": [
+        "移動",
+        "直線"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L026",
+      "name": "審判",
+      "element": "光",
+      "category": "特殊",
+      "power": 110,
+      "accuracy": 80,
+      "pp": 6,
+      "range": "部屋",
+      "target": "敵1体",
+      "effect": "カルマが高いほど威力上昇。",
+      "constraint": "低カルマでは威力40",
+      "tags": [
+        "カルマ",
+        "単体"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L027",
+      "name": "聖域",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "指定3マス・周囲1",
+      "target": "床",
+      "effect": "範囲内の味方は状態異常無効。",
+      "constraint": "敵も回復効果を得る",
+      "tags": [
+        "設置",
+        "浄化"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L028",
+      "name": "分光",
+      "element": "光",
+      "category": "特殊",
+      "power": 65,
+      "accuracy": 95,
+      "pp": 8,
+      "range": "直線4マス",
+      "target": "敵1体＋左右",
+      "effect": "命中地点から左右へ分裂光。",
+      "constraint": "主対象への威力低下",
+      "tags": [
+        "分裂",
+        "範囲"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L029",
+      "name": "白星連打",
+      "element": "光",
+      "category": "特殊",
+      "power": 25,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "直線5マス",
+      "target": "敵1体",
+      "effect": "3～5回攻撃。全弾命中時、強化解除。",
+      "constraint": "1発でも外すと解除なし",
+      "tags": [
+        "多段",
+        "強化解除"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L030",
+      "name": "天罰線",
+      "element": "光",
+      "category": "特殊",
+      "power": 150,
+      "accuracy": 70,
+      "pp": 4,
+      "range": "部屋内一直線",
+      "target": "敵全体",
+      "effect": "指定した一列を焼き払う。",
+      "constraint": "予告1ターン、味方も対象",
+      "tags": [
+        "予告",
+        "部屋",
+        "ピーキー"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "L031",
+      "name": "星の道標",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "部屋",
+      "target": "床",
+      "effect": "階段方向を示す光線を生成。",
+      "constraint": "敵にも階段位置が見える",
+      "tags": [
+        "探索",
+        "部屋"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L032",
+      "name": "照応",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "味方1体",
+      "target": "味方",
+      "effect": "対象と命中率・回避率を共有。",
+      "constraint": "低い方に揃う場合もある",
+      "tags": [
+        "共有",
+        "ピーキー"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L033",
+      "name": "光精召喚",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "隣接空きマス",
+      "target": "召喚物",
+      "effect": "3ターン光精を召喚し浄化支援。",
+      "constraint": "召喚中、自分の攻撃-20%",
+      "tags": [
+        "召喚",
+        "浄化"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L034",
+      "name": "直線支配",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "5ターン直線技威力+40%。",
+      "constraint": "周囲技と近接技-30%",
+      "tags": [
+        "直線",
+        "代償"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L035",
+      "name": "救済の代価",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "味方1体",
+      "target": "味方",
+      "effect": "対象を全回復。",
+      "constraint": "自分のHPが1になる",
+      "tags": [
+        "回復",
+        "代償"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L036",
+      "name": "反照の盾",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次の特殊技を半減し同威力で反射。",
+      "constraint": "物理被ダメ+25%",
+      "tags": [
+        "反射",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L037",
+      "name": "夜明けの選択",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "自分",
+      "target": "自分",
+      "effect": "守護型・直線型・浄化型から1つ強化。",
+      "constraint": "他2系統弱体",
+      "tags": [
+        "選択",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L038",
+      "name": "星標爆破",
+      "element": "光",
+      "category": "特殊",
+      "power": 90,
+      "accuracy": 90,
+      "pp": 7,
+      "range": "印付きの敵",
+      "target": "敵1体＋周囲1",
+      "effect": "聖なる標的を消費して爆発。",
+      "constraint": "印を消費",
+      "tags": [
+        "印消費",
+        "爆発"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L039",
+      "name": "光輪循環",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "浄化するたびPP1回復。",
+      "constraint": "状態異常付与率半減",
+      "tags": [
+        "PP回復",
+        "浄化"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L040",
+      "name": "奇跡",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 1,
+      "range": "部屋",
+      "target": "味方全員",
+      "effect": "戦闘不能者をHP50%で復活。",
+      "constraint": "使用者は進化段階1つ分の能力低下",
+      "tags": [
+        "切り札",
+        "復活"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "L041",
+      "name": "白夜",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "5ターン闇技を封じ、命中+20%。",
+      "constraint": "光技PP消費2倍",
+      "tags": [
+        "部屋",
+        "封印"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L042",
+      "name": "光圧",
+      "element": "光",
+      "category": "特殊",
+      "power": 70,
+      "accuracy": 95,
+      "pp": 10,
+      "range": "扇形3マス",
+      "target": "敵全体",
+      "effect": "敵を1マス吹き飛ばす。",
+      "constraint": "壁衝突ダメージなし",
+      "tags": [
+        "吹き飛ばし",
+        "扇形"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L043",
+      "name": "星座接続",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "味方2体",
+      "target": "味方",
+      "effect": "2体が同じ敵を攻撃すると追撃。",
+      "constraint": "どちらかが離れると解除",
+      "tags": [
+        "連携",
+        "単体集中"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L044",
+      "name": "光膜分身",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "隣接空きマス",
+      "target": "分身",
+      "effect": "攻撃を1回無効にする分身を生成。",
+      "constraint": "分身破壊時、自分が目つぶし",
+      "tags": [
+        "分身",
+        "防御"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L045",
+      "name": "聖線封鎖",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "直線5マス",
+      "target": "床",
+      "effect": "光線を横切った敵を1ターン停止。",
+      "constraint": "1体通ると消滅",
+      "tags": [
+        "罠",
+        "直線"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L046",
+      "name": "暁の鐘",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "3ターン後、全員の状態を初期化。",
+      "constraint": "敵も全回復",
+      "tags": [
+        "時限",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L047",
+      "name": "星見",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次の3ターン、罠・透明敵・隠し扉を可視化。",
+      "constraint": "攻撃不能",
+      "tags": [
+        "探索",
+        "代償"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "L048",
+      "name": "浄罪",
+      "element": "光",
+      "category": "特殊",
+      "power": 80,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "敵1体",
+      "target": "敵1体",
+      "effect": "敵の状態異常数×25追加ダメージ、全解除。",
+      "constraint": "状態異常を消費",
+      "tags": [
+        "状態異常消費",
+        "単体"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L049",
+      "name": "天球崩し",
+      "element": "光",
+      "category": "特殊",
+      "power": 95,
+      "accuracy": 85,
+      "pp": 6,
+      "range": "部屋内全直線",
+      "target": "敵全体",
+      "effect": "同じ縦横列にいる敵へ攻撃。",
+      "constraint": "斜め位置には当たらない",
+      "tags": [
+        "部屋",
+        "直線"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "L050",
+      "name": "永昼",
+      "element": "光",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 3,
+      "range": "部屋",
+      "target": "味方全員",
+      "effect": "10ターン全技必中。",
+      "constraint": "終了後全員の命中-2段階",
+      "tags": [
+        "切り札",
+        "部屋"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "D001",
+      "name": "影弾",
+      "element": "闇",
+      "category": "特殊",
+      "power": 40,
+      "accuracy": 100,
+      "pp": 22,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "10%で呪い。",
+      "constraint": "なし",
+      "tags": [
+        "直線",
+        "呪い"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D002",
+      "name": "闇爪",
+      "element": "闇",
+      "category": "物理",
+      "power": 50,
+      "accuracy": 95,
+      "pp": 20,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "背後からなら威力1.4倍。",
+      "constraint": "なし",
+      "tags": [
+        "背後",
+        "近接"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D003",
+      "name": "呪い札",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 18,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "3ターン与ダメージ-20%。",
+      "constraint": "ボスには半減",
+      "tags": [
+        "呪い",
+        "弱体"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D004",
+      "name": "影潜り",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 16,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次の1ターン敵をすり抜けて移動。",
+      "constraint": "攻撃すると解除",
+      "tags": [
+        "移動",
+        "すり抜け"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D005",
+      "name": "PP吸い",
+      "element": "闇",
+      "category": "特殊",
+      "power": 30,
+      "accuracy": 95,
+      "pp": 18,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "敵のランダム技PPを1吸収。",
+      "constraint": "PP0の敵には無効",
+      "tags": [
+        "PP妨害",
+        "吸収"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D006",
+      "name": "暗幕",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 95,
+      "pp": 16,
+      "range": "周囲2マス",
+      "target": "敵全体",
+      "effect": "視界を1マスにする。",
+      "constraint": "自分の視界も短くなる",
+      "tags": [
+        "視界",
+        "範囲"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D007",
+      "name": "影縫い",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 16,
+      "range": "直線3マス",
+      "target": "敵1体",
+      "effect": "2ターン移動不可。",
+      "constraint": "光床上では失敗",
+      "tags": [
+        "拘束",
+        "直線"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D008",
+      "name": "吸血牙",
+      "element": "闇",
+      "category": "物理",
+      "power": 45,
+      "accuracy": 95,
+      "pp": 18,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "与ダメージの30%回復。",
+      "constraint": "光属性には回復半減",
+      "tags": [
+        "吸収",
+        "近接"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D009",
+      "name": "転位",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 18,
+      "range": "指定2マス",
+      "target": "自分",
+      "effect": "指定マスへ転移。",
+      "constraint": "罠の有無は確認できない",
+      "tags": [
+        "転移",
+        "移動"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D010",
+      "name": "不吉な鐘",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 16,
+      "range": "部屋",
+      "target": "敵全体",
+      "effect": "敵のいずれかの技PP-1。",
+      "constraint": "どの技か選べない",
+      "tags": [
+        "PP妨害",
+        "部屋"
+      ],
+      "stage": "序盤",
+      "notes": ""
+    },
+    {
+      "id": "D011",
+      "name": "黒鎖",
+      "element": "闇",
+      "category": "特殊",
+      "power": 55,
+      "accuracy": 90,
+      "pp": 14,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "敵を引き寄せ、呪いを付与。",
+      "constraint": "大型敵には引き寄せ無効",
+      "tags": [
+        "引き寄せ",
+        "呪い"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D012",
+      "name": "影交換",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 14,
+      "range": "視界内",
+      "target": "敵1体",
+      "effect": "敵と位置交換。",
+      "constraint": "ボスには無効",
+      "tags": [
+        "位置交換",
+        "転移"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D013",
+      "name": "虚弱の印",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 95,
+      "pp": 12,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "回復量-50%、防御-1段階。",
+      "constraint": "3ターン",
+      "tags": [
+        "弱体",
+        "回復妨害"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D014",
+      "name": "夢喰い",
+      "element": "闇",
+      "category": "特殊",
+      "power": 75,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "直線3マス",
+      "target": "眠り中の敵1体",
+      "effect": "威力高＋HP回復。",
+      "constraint": "眠っていないと失敗",
+      "tags": [
+        "睡眠",
+        "吸収"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D015",
+      "name": "影刃投げ",
+      "element": "闇",
+      "category": "物理",
+      "power": 60,
+      "accuracy": 95,
+      "pp": 14,
+      "range": "直線5マス",
+      "target": "敵1体",
+      "effect": "背後から当てるとPP1回復。",
+      "constraint": "正面では追加なし",
+      "tags": [
+        "背後",
+        "直線"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D016",
+      "name": "黒霧",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "3ターン強化効果を無効化。",
+      "constraint": "味方の強化も無効",
+      "tags": [
+        "部屋",
+        "強化封印"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D017",
+      "name": "呪詛連打",
+      "element": "闇",
+      "category": "特殊",
+      "power": 24,
+      "accuracy": 90,
+      "pp": 12,
+      "range": "直線4マス",
+      "target": "敵1体",
+      "effect": "2～4回攻撃、命中ごと呪い率上昇。",
+      "constraint": "外すと残り終了",
+      "tags": [
+        "多段",
+        "呪い"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D018",
+      "name": "影の囮",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "足元",
+      "target": "分身",
+      "effect": "2ターン囮を残して1マス後退。",
+      "constraint": "後退できないと失敗",
+      "tags": [
+        "囮",
+        "移動"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D019",
+      "name": "生命租借",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "HP20%消費しPPを5回復。",
+      "constraint": "HP20%以下では使用不可",
+      "tags": [
+        "PP回復",
+        "代償"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D020",
+      "name": "呪い返し",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次に受ける状態異常を使用者へ返す。",
+      "constraint": "攻撃ダメージは受ける",
+      "tags": [
+        "反射",
+        "状態異常"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D021",
+      "name": "奈落線",
+      "element": "闇",
+      "category": "特殊",
+      "power": 85,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "直線6マス・貫通",
+      "target": "敵全体",
+      "effect": "命中者のPPを1減らす。",
+      "constraint": "自分のPPも追加1消費",
+      "tags": [
+        "貫通",
+        "PP妨害"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D022",
+      "name": "影裂き",
+      "element": "闇",
+      "category": "物理",
+      "power": 90,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "敵の背後へ転移",
+      "target": "敵1体",
+      "effect": "転移して攻撃。",
+      "constraint": "背後マスが空いていないと失敗",
+      "tags": [
+        "転移",
+        "背後"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D023",
+      "name": "呪界",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "5ターン回復効果をダメージへ反転。",
+      "constraint": "自分も対象",
+      "tags": [
+        "部屋",
+        "回復反転"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D024",
+      "name": "魂喰らい",
+      "element": "闇",
+      "category": "特殊",
+      "power": 70,
+      "accuracy": 95,
+      "pp": 8,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "倒すと最大HP+3。",
+      "constraint": "倒せないと最大HP-3",
+      "tags": [
+        "撃破条件",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D025",
+      "name": "黒穴",
+      "element": "闇",
+      "category": "特殊",
+      "power": 75,
+      "accuracy": 85,
+      "pp": 7,
+      "range": "指定4マス・周囲2",
+      "target": "敵全体",
+      "effect": "中心へ引き寄せて攻撃。",
+      "constraint": "味方も引き寄せる",
+      "tags": [
+        "範囲",
+        "引き寄せ"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D026",
+      "name": "PP封印",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 85,
+      "pp": 6,
+      "range": "敵1体",
+      "target": "敵1体",
+      "effect": "最もPPが多い技を3ターン封じる。",
+      "constraint": "通常攻撃は封じられない",
+      "tags": [
+        "PP妨害",
+        "封印"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D027",
+      "name": "月蝕",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "光技を闇技扱いに反転。",
+      "constraint": "闇技の命中-10%",
+      "tags": [
+        "属性反転",
+        "部屋"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D028",
+      "name": "影の軍勢",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "周囲空きマス",
+      "target": "召喚物",
+      "effect": "自分のHP10%ずつ消費して影を最大3体召喚。",
+      "constraint": "影1体ごと最大HP10%減",
+      "tags": [
+        "召喚",
+        "代償"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D029",
+      "name": "呪殺刻印",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 6,
+      "range": "敵1体",
+      "target": "敵1体",
+      "effect": "5ターン後、残HP20%以下なら戦闘不能。",
+      "constraint": "条件未達なら自分が大ダメージ",
+      "tags": [
+        "時限",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D030",
+      "name": "無明一閃",
+      "element": "闇",
+      "category": "物理",
+      "power": 140,
+      "accuracy": 70,
+      "pp": 4,
+      "range": "視界外の敵1体",
+      "target": "敵1体",
+      "effect": "視界外なら必中・急所。",
+      "constraint": "視界内では使用不可",
+      "tags": [
+        "視界外",
+        "切り札"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "D031",
+      "name": "影渡り",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 12,
+      "range": "影床・敵の背後",
+      "target": "自分",
+      "effect": "影から影へ最大5マス転移。",
+      "constraint": "光床では使用不可",
+      "tags": [
+        "転移",
+        "地形"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D032",
+      "name": "呪い吸収",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "部屋",
+      "target": "敵全体",
+      "effect": "敵の呪いを消費し、1つごとHP5%回復。",
+      "constraint": "呪いを全解除",
+      "tags": [
+        "呪い消費",
+        "回復"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D033",
+      "name": "闇精召喚",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "隣接空きマス",
+      "target": "召喚物",
+      "effect": "4ターン闇精を召喚しPP妨害。",
+      "constraint": "召喚中、自分の最大PP-20%",
+      "tags": [
+        "召喚",
+        "PP妨害"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D034",
+      "name": "裏切りの印",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "敵1体",
+      "target": "敵1体",
+      "effect": "次の攻撃を最も近い仲間へ向けさせる。",
+      "constraint": "単独敵には無効",
+      "tags": [
+        "混乱",
+        "敵利用"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D035",
+      "name": "奈落の契約",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "回復量-50%、闇技+50%。",
+      "constraint": "解除不可",
+      "tags": [
+        "常時",
+        "代償"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D036",
+      "name": "影蓄積",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "転移するたび次の攻撃+20%、最大+100%。",
+      "constraint": "被弾で消失",
+      "tags": [
+        "蓄積",
+        "転移"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D037",
+      "name": "宵闇の選択",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "自分",
+      "target": "自分",
+      "effect": "呪い型・転移型・吸収型から1つ強化。",
+      "constraint": "他2系統弱体",
+      "tags": [
+        "選択",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D038",
+      "name": "死角カウンター",
+      "element": "闇",
+      "category": "物理",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "背後から攻撃された時、その背後へ転移し反撃。",
+      "constraint": "正面攻撃には無効",
+      "tags": [
+        "カウンター",
+        "転移"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D039",
+      "name": "空虚回収",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "周囲2マス",
+      "target": "床",
+      "effect": "消えた設置物1つごとPP1回復。",
+      "constraint": "設置物をすべて消す",
+      "tags": [
+        "設置消費",
+        "PP回復"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D040",
+      "name": "魂の前借り",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 3,
+      "range": "自分",
+      "target": "自分",
+      "effect": "10ターン技PP無限。",
+      "constraint": "終了時HP1、全PP0",
+      "tags": [
+        "切り札",
+        "代償"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "D041",
+      "name": "夜帳",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "5ターン視界1マス、背後攻撃+50%。",
+      "constraint": "味方も視界低下",
+      "tags": [
+        "部屋",
+        "背後"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D042",
+      "name": "黒雨",
+      "element": "闇",
+      "category": "特殊",
+      "power": 70,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "部屋ランダム5マス",
+      "target": "敵・床",
+      "effect": "呪い床か影床を生成。",
+      "constraint": "自分のマスも選ばれる",
+      "tags": [
+        "部屋",
+        "ランダム"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D043",
+      "name": "影鎖爆破",
+      "element": "闇",
+      "category": "特殊",
+      "power": 85,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "拘束中の敵",
+      "target": "敵1体＋周囲1",
+      "effect": "拘束を解除し爆発。",
+      "constraint": "拘束を消費",
+      "tags": [
+        "拘束消費",
+        "爆発"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D044",
+      "name": "虚無の鏡",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次に受ける技を無効化するが、その技を永久に使用不可にする。",
+      "constraint": "フロア中継続",
+      "tags": [
+        "封印",
+        "防御",
+        "ピーキー"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D045",
+      "name": "悪夢の扉",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 7,
+      "range": "指定3マス",
+      "target": "床",
+      "effect": "踏んだ敵を部屋の別地点へ転移し眠気付与。",
+      "constraint": "味方にも作用",
+      "tags": [
+        "罠",
+        "転移"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D046",
+      "name": "黒星崩壊",
+      "element": "闇",
+      "category": "特殊",
+      "power": 100,
+      "accuracy": 80,
+      "pp": 6,
+      "range": "部屋",
+      "target": "呪い中の敵全体",
+      "effect": "呪い中の敵へ大ダメージ。",
+      "constraint": "使用者の全強化を解除",
+      "tags": [
+        "呪い",
+        "部屋"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D047",
+      "name": "影縫い歩法",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 10,
+      "range": "自分",
+      "target": "自分",
+      "effect": "3ターン、移動後に元のマスへ影罠を残す。",
+      "constraint": "移動するたびHP3%消費",
+      "tags": [
+        "移動",
+        "罠"
+      ],
+      "stage": "中盤",
+      "notes": ""
+    },
+    {
+      "id": "D048",
+      "name": "吸命反転",
+      "element": "闇",
+      "category": "特殊",
+      "power": 75,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "敵1体",
+      "target": "敵1体",
+      "effect": "敵の回復量累積をダメージへ変換。",
+      "constraint": "累積がないと威力40",
+      "tags": [
+        "回復反転",
+        "単体"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D049",
+      "name": "深淵の宴",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "倒れた敵1体ごと味方闇技+10%。",
+      "constraint": "敵が復活すると強化消失",
+      "tags": [
+        "撃破蓄積",
+        "部屋"
+      ],
+      "stage": "終盤",
+      "notes": ""
+    },
+    {
+      "id": "D050",
+      "name": "永夜",
+      "element": "闇",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 3,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "10ターン敵の技PP消費2倍。",
+      "constraint": "味方もPP消費2倍",
+      "tags": [
+        "切り札",
+        "部屋"
+      ],
+      "stage": "最終盤",
+      "notes": ""
+    },
+    {
+      "id": "H001",
+      "name": "神護",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "3ターン全属性ダメージ20%軽減。",
+      "constraint": "攻撃すると残り1ターン",
+      "tags": [
+        "防御",
+        "特殊属性"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H002",
+      "name": "白金光線",
+      "element": "聖神",
+      "category": "特殊",
+      "power": 85,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "直線6マス・貫通",
+      "target": "敵全体",
+      "effect": "強化を1つ解除。",
+      "constraint": "PP消費が重い",
+      "tags": [
+        "直線",
+        "浄化"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H003",
+      "name": "神域",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "指定3マス・周囲1",
+      "target": "床",
+      "effect": "範囲内の味方は状態異常無効。",
+      "constraint": "敵も与ダメージ-10%",
+      "tags": [
+        "設置",
+        "防御"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H004",
+      "name": "聖輪斬",
+      "element": "聖神",
+      "category": "物理",
+      "power": 90,
+      "accuracy": 95,
+      "pp": 8,
+      "range": "周囲1マス",
+      "target": "敵全体",
+      "effect": "邪悪属性へ威力1.5倍。",
+      "constraint": "なし",
+      "tags": [
+        "周囲",
+        "対邪悪"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H005",
+      "name": "天秤の祈り",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "味方と敵の強化段階を0へ戻す。",
+      "constraint": "自分の強化も消える",
+      "tags": [
+        "初期化",
+        "部屋"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H006",
+      "name": "神罰の星",
+      "element": "聖神",
+      "category": "特殊",
+      "power": 110,
+      "accuracy": 85,
+      "pp": 6,
+      "range": "指定5マス",
+      "target": "敵1体＋周囲1",
+      "effect": "カルマが高いほど威力増加。",
+      "constraint": "低カルマでは反動",
+      "tags": [
+        "カルマ",
+        "爆発"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H007",
+      "name": "守護転送",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 7,
+      "range": "味方1体",
+      "target": "味方",
+      "effect": "対象が受ける次の攻撃を自分が肩代わりし半減。",
+      "constraint": "自分の回避0",
+      "tags": [
+        "肩代わり",
+        "防御"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H008",
+      "name": "聖火再生",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "味方1体",
+      "target": "味方",
+      "effect": "HP50%で復活し聖神を3ターン付与。",
+      "constraint": "使用者の最大HP20%減",
+      "tags": [
+        "復活",
+        "代償"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H009",
+      "name": "光輪砲",
+      "element": "聖神",
+      "category": "特殊",
+      "power": 70,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "直線8マス",
+      "target": "敵1体",
+      "effect": "光輪の数×20追加ダメージ。",
+      "constraint": "使用後光輪を全消費",
+      "tags": [
+        "蓄積消費",
+        "直線"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H010",
+      "name": "四方封印",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "自分中心・十字3マス",
+      "target": "敵全体",
+      "effect": "十字線上の敵を2ターン移動不可。",
+      "constraint": "斜め敵には無効",
+      "tags": [
+        "十字",
+        "拘束"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H011",
+      "name": "神威反射",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "次の攻撃を無効化して同属性で反射。",
+      "constraint": "反射後PP0",
+      "tags": [
+        "反射",
+        "ピーキー"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H012",
+      "name": "浄罪輪廻",
+      "element": "聖神",
+      "category": "特殊",
+      "power": 95,
+      "accuracy": 90,
+      "pp": 6,
+      "range": "部屋",
+      "target": "状態異常中の敵全体",
+      "effect": "状態異常を消して大ダメージ。",
+      "constraint": "味方の状態異常も消える",
+      "tags": [
+        "状態異常消費",
+        "部屋"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H013",
+      "name": "天門",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "指定5マス",
+      "target": "床",
+      "effect": "味方だけ通れる転移門を2つ設置。",
+      "constraint": "3ターンで消滅",
+      "tags": [
+        "転移",
+        "設置"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H014",
+      "name": "聖神降臨",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 3,
+      "range": "自分",
+      "target": "自分",
+      "effect": "5ターン全能力+2、被ダメ20%軽減。",
+      "constraint": "終了時HP1",
+      "tags": [
+        "切り札",
+        "代償"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H015",
+      "name": "白金の雨",
+      "element": "聖神",
+      "category": "特殊",
+      "power": 80,
+      "accuracy": 95,
+      "pp": 6,
+      "range": "部屋全体",
+      "target": "敵全体",
+      "effect": "敵の呪い・邪悪効果を解除して追加ダメージ。",
+      "constraint": "通常敵には威力60",
+      "tags": [
+        "部屋",
+        "対邪悪"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H016",
+      "name": "左右対称陣",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 6,
+      "range": "部屋",
+      "target": "床",
+      "effect": "自分と対称位置の味方へ同じ強化を複製。",
+      "constraint": "対称位置が壁なら失敗",
+      "tags": [
+        "位置",
+        "複製"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H017",
+      "name": "無傷の誓い",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "被弾するまで技威力+60%。",
+      "constraint": "被弾後フロア中技威力-20%",
+      "tags": [
+        "ノーダメ",
+        "ピーキー"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H018",
+      "name": "神性収束",
+      "element": "聖神",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "全強化を消費し、次の技に1つ×25%加算。",
+      "constraint": "強化を全消費",
+      "tags": [
+        "強化消費",
+        "単発"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H019",
+      "name": "創世線",
+      "element": "聖神",
+      "category": "特殊",
+      "power": 140,
+      "accuracy": 80,
+      "pp": 3,
+      "range": "部屋の指定一列",
+      "target": "敵全体",
+      "effect": "攻撃後、その列を聖域化。",
+      "constraint": "味方もダメージ",
+      "tags": [
+        "部屋",
+        "直線",
+        "切り札"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "H020",
+      "name": "神域崩壊",
+      "element": "聖神",
+      "category": "特殊",
+      "power": 180,
+      "accuracy": 100,
+      "pp": 1,
+      "range": "部屋全体",
+      "target": "敵全体",
+      "effect": "設置中の聖域・光輪を全消費して攻撃。",
+      "constraint": "設置がないと失敗",
+      "tags": [
+        "設置消費",
+        "切り札"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E001",
+      "name": "邪力",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 8,
+      "range": "自分",
+      "target": "自分",
+      "effect": "3ターン与ダメージ+20%。",
+      "constraint": "被ダメージ+20%",
+      "tags": [
+        "火力",
+        "特殊属性"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E002",
+      "name": "黒赤裂爪",
+      "element": "邪悪",
+      "category": "物理",
+      "power": 95,
+      "accuracy": 90,
+      "pp": 8,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "防御を無視30%。",
+      "constraint": "自分も最大HP5%ダメージ",
+      "tags": [
+        "近接",
+        "自傷"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E003",
+      "name": "侵食",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 90,
+      "pp": 7,
+      "range": "敵1体",
+      "target": "敵1体",
+      "effect": "3ターン毎ターン最大HP減少。",
+      "constraint": "倒せないと自分も同量減少",
+      "tags": [
+        "持続",
+        "ピーキー"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E004",
+      "name": "割れ輪爆破",
+      "element": "邪悪",
+      "category": "特殊",
+      "power": 100,
+      "accuracy": 85,
+      "pp": 6,
+      "range": "周囲2マス",
+      "target": "敵全体",
+      "effect": "自分の強化1つを消費して威力上昇。",
+      "constraint": "強化なしでは威力60",
+      "tags": [
+        "強化消費",
+        "爆発"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E005",
+      "name": "悪意転送",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 7,
+      "range": "味方1体",
+      "target": "味方",
+      "effect": "自分の状態異常を対象へ移し攻撃+2。",
+      "constraint": "味方にも使用可能",
+      "tags": [
+        "状態移送",
+        "ピーキー"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E006",
+      "name": "血契",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "最大HP30%減、全技威力+35%。",
+      "constraint": "解除不可",
+      "tags": [
+        "常時",
+        "代償"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E007",
+      "name": "邪眼",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 85,
+      "pp": 6,
+      "range": "視界内",
+      "target": "敵1体",
+      "effect": "敵を恐怖状態にし自分から逃走させる。",
+      "constraint": "ボスには命中50",
+      "tags": [
+        "恐怖",
+        "位置"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E008",
+      "name": "貪食",
+      "element": "邪悪",
+      "category": "物理",
+      "power": 80,
+      "accuracy": 95,
+      "pp": 7,
+      "range": "正面1マス",
+      "target": "敵1体",
+      "effect": "倒すとHP・PP回復。",
+      "constraint": "倒せないとPP全消費",
+      "tags": [
+        "撃破条件",
+        "ピーキー"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E009",
+      "name": "破滅線",
+      "element": "邪悪",
+      "category": "特殊",
+      "power": 120,
+      "accuracy": 80,
+      "pp": 5,
+      "range": "直線6マス・貫通",
+      "target": "敵全体",
+      "effect": "命中した敵と自分に呪い。",
+      "constraint": "自分の呪いは解除不可3ターン",
+      "tags": [
+        "貫通",
+        "自傷"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E010",
+      "name": "悪夢領域",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "5ターン状態異常ダメージ2倍。",
+      "constraint": "味方も対象",
+      "tags": [
+        "部屋",
+        "状態異常"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E011",
+      "name": "魂売り",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 4,
+      "range": "自分",
+      "target": "自分",
+      "effect": "ランダム技1つをフロア中失い、残る技PP全回復。",
+      "constraint": "失う技を選べない",
+      "tags": [
+        "PP回復",
+        "代償"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E012",
+      "name": "歪角突進",
+      "element": "邪悪",
+      "category": "物理",
+      "power": 115,
+      "accuracy": 80,
+      "pp": 5,
+      "range": "直線5マス突進",
+      "target": "通過敵全体",
+      "effect": "壁まで突進し敵を吹き飛ばす。",
+      "constraint": "壁衝突で自分も大ダメージ",
+      "tags": [
+        "突進",
+        "壁衝突"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E013",
+      "name": "侵食分身",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "周囲空きマス",
+      "target": "分身",
+      "effect": "HP15%ずつ消費して分身を最大3体生成。",
+      "constraint": "分身死亡時追加自傷",
+      "tags": [
+        "分身",
+        "代償"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E014",
+      "name": "邪悪降臨",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 3,
+      "range": "自分",
+      "target": "自分",
+      "effect": "5ターン与ダメージ+80%。",
+      "constraint": "毎ターンHP15%消費",
+      "tags": [
+        "切り札",
+        "自傷"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E015",
+      "name": "黒赤の雨",
+      "element": "邪悪",
+      "category": "特殊",
+      "power": 90,
+      "accuracy": 85,
+      "pp": 6,
+      "range": "部屋ランダム7マス",
+      "target": "敵・床",
+      "effect": "侵食床か爆発をランダム生成。",
+      "constraint": "自分のマスも選ばれる",
+      "tags": [
+        "部屋",
+        "ランダム"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E016",
+      "name": "歪曲陣",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "部屋",
+      "target": "全員",
+      "effect": "敵味方の位置をランダムに入れ替える。",
+      "constraint": "階段上にも移動する",
+      "tags": [
+        "位置交換",
+        "ランダム"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E017",
+      "name": "無慈悲の誓い",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "回復しない限り撃破ごと与ダメ+10%、最大+100%。",
+      "constraint": "回復すると全消失し混乱",
+      "tags": [
+        "撃破蓄積",
+        "ピーキー"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E018",
+      "name": "悪性収束",
+      "element": "邪悪",
+      "category": "変化",
+      "power": 0,
+      "accuracy": 100,
+      "pp": 5,
+      "range": "自分",
+      "target": "自分",
+      "effect": "全弱体を消費し、次の技に1つ×35%加算。",
+      "constraint": "弱体を全消費",
+      "tags": [
+        "弱体消費",
+        "単発"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E019",
+      "name": "終末線",
+      "element": "邪悪",
+      "category": "特殊",
+      "power": 150,
+      "accuracy": 75,
+      "pp": 3,
+      "range": "部屋の指定一列",
+      "target": "全員",
+      "effect": "敵味方を区別せず攻撃し床を消滅。",
+      "constraint": "穴が残る",
+      "tags": [
+        "部屋",
+        "地形破壊",
+        "切り札"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    },
+    {
+      "id": "E020",
+      "name": "星喰い",
+      "element": "邪悪",
+      "category": "特殊",
+      "power": 220,
+      "accuracy": 100,
+      "pp": 1,
+      "range": "敵1体",
+      "target": "敵1体",
+      "effect": "対象の強化・PP・状態をすべて吸収して攻撃。",
+      "constraint": "使用後自分の全技PP0・HP1",
+      "tags": [
+        "吸収",
+        "切り札"
+      ],
+      "stage": "特殊進化",
+      "notes": ""
+    }
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "id": "snake_priest",
+  "display_name": "蛇神官",
+  "category": "enemies",
+  "rows": 4,
+  "cols": 5,
+  "frame_canvas": {
+    "width": 136,
+    "height": 88
+  },
+  "n_frames": 16,
+  "frame_files": [
+    {
+      "row": 1,
+      "col": 5,
+      "file": "frames/r01_c05.png"
+    },
+    {
+      "row": 2,
+      "col": 1,
+      "file": "frames/r02_c01.png"
+    },
+    {
+      "row": 2,
+      "col": 2,
+      "file": "frames/r02_c02.png"
+    },
+    {
+      "row": 2,
+      "col": 3,
+      "file": "frames/r02_c03.png"
+    },
+    {
+      "row": 2,
+      "col": 4,
+      "file": "frames/r02_c04.png"
+    },
+    {
+      "row": 2,
+      "col": 5,
+      "file": "frames/r02_c05.png"
+    },
+    {
+      "row": 3,
+      "col": 1,
+      "file": "frames/r03_c01.png"
+    },
+    {
+      "row": 3,
+      "col": 2,
+      "file": "frames/r03_c02.png"
+    },
+    {
+      "row": 3,
+      "col": 3,
+      "file": "frames/r03_c03.png"
+    },
+    {
+      "row": 3,
+      "col": 4,
+      "file": "frames/r03_c04.png"
+    },
+    {
+      "row": 3,
+      "col": 5,
+      "file": "frames/r03_c05.png"
+    },
+    {
+      "row": 4,
+      "col": 1,
+      "file": "frames/r04_c01.png"
+    },
+    {
+      "row": 4,
+      "col": 2,
+      "file": "frames/r04_c02.png"
+    },
+    {
+      "row": 4,
+      "col": 3,
+      "file": "frames/r04_c03.png"
+    },
+    {
+      "row": 4,
+      "col": 4,
+      "file": "frames/r04_c04.png"
+    },
+    {
+      "row": 4,
+      "col": 5,
+      "file": "frames/r04_c05.png"
+    }
+  ],
+  "notes": "Rows and columns follow the original sheet layout in reading order. Use generic row/column semantics unless you relabel after review."
+}

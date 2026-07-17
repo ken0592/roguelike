@@ -1,10 +1,10 @@
-const CACHE_NAME = "foxbound-v17e";
+const CACHE_NAME = "foxbound-v18a";
 const APP_SHELL = [
   "./",
   "./index.html",
-  "./styles.css?v=pwa17e",
-  "./app.js?v=pwa17e",
-  "./manifest.webmanifest?v=pwa17e",
+  "./styles.css?v=pwa18a",
+  "./app.js?v=pwa18a",
+  "./manifest.webmanifest?v=pwa18a",
   "./assets/pwa/icon-180.png",
   "./assets/pwa/icon-192.png",
   "./assets/pwa/icon-512.png",
@@ -18,6 +18,17 @@ const APP_SHELL = [
   "./assets/tokens/foxbound-enemies-4-v1.png?v=pwa11",
   "./assets/town/foxbound-spire-hub-v1.jpg?v=pwa11",
   "./assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png",
+  "./assets/foxbound-codex-v1/runtime-manifest.json?v=pwa18a",
+  "./assets/foxbound-codex-v1/assets/heroes/kohaku/spritesheet.png?v=pwa18a",
+  "./assets/foxbound-codex-v1/assets/heroes/regulus/spritesheet.png?v=pwa18a",
+  "./assets/foxbound-codex-v1/assets/heroes/mira/spritesheet.png?v=pwa18a",
+  "./assets/relics/foxbound-relic-icons-v1/relic-icons-common-v1.png?v=pwa18a",
+  "./assets/relics/foxbound-relic-icons-v1/relic-icons-uncommon-v1.png?v=pwa18a",
+  "./assets/relics/foxbound-relic-icons-v1/relic-icons-rare-v1.png?v=pwa18a",
+  "./assets/relics/foxbound-relic-icons-v1/relic-icons-star-v1.png?v=pwa18a",
+  "./assets/relics/foxbound-relic-icons-v1/relic-icons-boss-v1.png?v=pwa18a",
+  "./assets/data/foxbound-relic-designs-v1.json",
+  "./assets/data/foxbound-move-designs-v1.json",
 ];
 
 self.addEventListener("install", (event) => {

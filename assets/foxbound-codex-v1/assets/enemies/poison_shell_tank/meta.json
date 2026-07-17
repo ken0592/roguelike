@@ -1,0 +1,110 @@
+{
+  "id": "poison_shell_tank",
+  "display_name": "毒殻戦車",
+  "category": "enemies",
+  "rows": 4,
+  "cols": 5,
+  "frame_canvas": {
+    "width": 128,
+    "height": 80
+  },
+  "n_frames": 19,
+  "frame_files": [
+    {
+      "row": 1,
+      "col": 1,
+      "file": "frames/r01_c01.png"
+    },
+    {
+      "row": 1,
+      "col": 2,
+      "file": "frames/r01_c02.png"
+    },
+    {
+      "row": 1,
+      "col": 3,
+      "file": "frames/r01_c03.png"
+    },
+    {
+      "row": 1,
+      "col": 4,
+      "file": "frames/r01_c04.png"
+    },
+    {
+      "row": 1,
+      "col": 5,
+      "file": "frames/r01_c05.png"
+    },
+    {
+      "row": 2,
+      "col": 1,
+      "file": "frames/r02_c01.png"
+    },
+    {
+      "row": 2,
+      "col": 2,
+      "file": "frames/r02_c02.png"
+    },
+    {
+      "row": 2,
+      "col": 3,
+      "file": "frames/r02_c03.png"
+    },
+    {
+      "row": 2,
+      "col": 4,
+      "file": "frames/r02_c04.png"
+    },
+    {
+      "row": 2,
+      "col": 5,
+      "file": "frames/r02_c05.png"
+    },
+    {
+      "row": 3,
+      "col": 1,
+      "file": "frames/r03_c01.png"
+    },
+    {
+      "row": 3,
+      "col": 2,
+      "file": "frames/r03_c02.png"
+    },
+    {
+      "row": 3,
+      "col": 3,
+      "file": "frames/r03_c03.png"
+    },
+    {
+      "row": 3,
+      "col": 4,
+      "file": "frames/r03_c04.png"
+    },
+    {
+      "row": 3,
+      "col": 5,
+      "file": "frames/r03_c05.png"
+    },
+    {
+      "row": 4,
+      "col": 1,
+      "file": "frames/r04_c01.png"
+    },
+    {
+      "row": 4,
+      "col": 2,
+      "file": "frames/r04_c02.png"
+    },
+    {
+      "row": 4,
+      "col": 3,
+      "file": "frames/r04_c03.png"
+    },
+    {
+      "row": 4,
+      "col": 4,
+      "file": "frames/r04_c04.png"
+    }
+  ],
+  "notes": "Rows and columns follow the original sheet layout in reading order. Use generic row/column semantics unless you relabel after review."
+}

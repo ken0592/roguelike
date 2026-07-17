@@ -1,0 +1,55 @@
+{
+  "id": "lux_nox",
+  "display_name": "双面司祭ルクス＝ノクス",
+  "category": "bosses",
+  "rows": 4,
+  "cols": 6,
+  "frame_canvas": {
+    "width": 168,
+    "height": 328
+  },
+  "n_frames": 8,
+  "frame_files": [
+    {
+      "row": 1,
+      "col": 4,
+      "file": "frames/r01_c04.png"
+    },
+    {
+      "row": 1,
+      "col": 6,
+      "file": "frames/r01_c06.png"
+    },
+    {
+      "row": 2,
+      "col": 2,
+      "file": "frames/r02_c02.png"
+    },
+    {
+      "row": 2,
+      "col": 3,
+      "file": "frames/r02_c03.png"
+    },
+    {
+      "row": 2,
+      "col": 5,
+      "file": "frames/r02_c05.png"
+    },
+    {
+      "row": 2,
+      "col": 6,
+      "file": "frames/r02_c06.png"
+    },
+    {
+      "row": 3,
+      "col": 4,
+      "file": "frames/r03_c04.png"
+    },
+    {
+      "row": 4,
+      "col": 6,
+      "file": "frames/r04_c06.png"
+    }
+  ],
+  "notes": "Rows and columns follow the original sheet layout in reading order. Use generic row/column semantics unless you relabel after review."
+}

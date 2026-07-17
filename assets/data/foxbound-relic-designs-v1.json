@@ -1,0 +1,2551 @@
+{
+  "version": 1,
+  "source": "FOXBOUND_レリック155案.xlsx",
+  "total": 155,
+  "relics": [
+    {
+      "id": "C001",
+      "name": "赤熱の小石",
+      "rarity": "コモン",
+      "kind": "属性強化",
+      "effect": "火属性技の威力+8%。",
+      "condition": "なし",
+      "tags": [
+        "火",
+        "火傷"
+      ],
+      "synergy": "火属性技",
+      "motif": "火色の小さな結晶片",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C002",
+      "name": "潮騒の貝片",
+      "rarity": "コモン",
+      "kind": "属性強化",
+      "effect": "水属性技の威力+8%。",
+      "condition": "なし",
+      "tags": [
+        "水",
+        "濡れ"
+      ],
+      "synergy": "水属性技",
+      "motif": "水色の小さな結晶片",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C003",
+      "name": "若葉の護り木",
+      "rarity": "コモン",
+      "kind": "属性強化",
+      "effect": "木属性技の威力+8%。",
+      "condition": "なし",
+      "tags": [
+        "木",
+        "毒"
+      ],
+      "synergy": "木属性技",
+      "motif": "木色の小さな結晶片",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C004",
+      "name": "白星の欠片",
+      "rarity": "コモン",
+      "kind": "属性強化",
+      "effect": "光属性技の威力+8%。",
+      "condition": "なし",
+      "tags": [
+        "光",
+        "直線"
+      ],
+      "synergy": "光属性技",
+      "motif": "光色の小さな結晶片",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C005",
+      "name": "黒月の破片",
+      "rarity": "コモン",
+      "kind": "属性強化",
+      "effect": "闇属性技の威力+8%。",
+      "condition": "なし",
+      "tags": [
+        "闇",
+        "呪い"
+      ],
+      "synergy": "闇属性技",
+      "motif": "闇色の小さな結晶片",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C006",
+      "name": "火紋の指輪",
+      "rarity": "コモン",
+      "kind": "属性補助",
+      "effect": "火属性の状態異常・追加効果の発生率+5%。",
+      "condition": "直接ダメージは増えない",
+      "tags": [
+        "火",
+        "火傷"
+      ],
+      "synergy": "火状態異常",
+      "motif": "火紋章入りの簡素な指輪",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C007",
+      "name": "水紋の指輪",
+      "rarity": "コモン",
+      "kind": "属性補助",
+      "effect": "水属性の状態異常・追加効果の発生率+5%。",
+      "condition": "直接ダメージは増えない",
+      "tags": [
+        "水",
+        "濡れ"
+      ],
+      "synergy": "水状態異常",
+      "motif": "水紋章入りの簡素な指輪",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C008",
+      "name": "木紋の指輪",
+      "rarity": "コモン",
+      "kind": "属性補助",
+      "effect": "木属性の状態異常・追加効果の発生率+5%。",
+      "condition": "直接ダメージは増えない",
+      "tags": [
+        "木",
+        "毒"
+      ],
+      "synergy": "木状態異常",
+      "motif": "木紋章入りの簡素な指輪",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C009",
+      "name": "光紋の指輪",
+      "rarity": "コモン",
+      "kind": "属性補助",
+      "effect": "光属性の状態異常・追加効果の発生率+5%。",
+      "condition": "直接ダメージは増えない",
+      "tags": [
+        "光",
+        "直線"
+      ],
+      "synergy": "光状態異常",
+      "motif": "光紋章入りの簡素な指輪",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C010",
+      "name": "闇紋の指輪",
+      "rarity": "コモン",
+      "kind": "属性補助",
+      "effect": "闇属性の状態異常・追加効果の発生率+5%。",
+      "condition": "直接ダメージは増えない",
+      "tags": [
+        "闇",
+        "呪い"
+      ],
+      "synergy": "闇状態異常",
+      "motif": "闇紋章入りの簡素な指輪",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C011",
+      "name": "火避けの布",
+      "rarity": "コモン",
+      "kind": "属性耐性",
+      "effect": "火属性から受けるダメージ-8%。",
+      "condition": "他属性には効果なし",
+      "tags": [
+        "火",
+        "耐性"
+      ],
+      "synergy": "火ボス対策",
+      "motif": "火色の小さな布切れ",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C012",
+      "name": "水避けの布",
+      "rarity": "コモン",
+      "kind": "属性耐性",
+      "effect": "水属性から受けるダメージ-8%。",
+      "condition": "他属性には効果なし",
+      "tags": [
+        "水",
+        "耐性"
+      ],
+      "synergy": "水ボス対策",
+      "motif": "水色の小さな布切れ",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C013",
+      "name": "木避けの布",
+      "rarity": "コモン",
+      "kind": "属性耐性",
+      "effect": "木属性から受けるダメージ-8%。",
+      "condition": "他属性には効果なし",
+      "tags": [
+        "木",
+        "耐性"
+      ],
+      "synergy": "木ボス対策",
+      "motif": "木色の小さな布切れ",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C014",
+      "name": "光避けの布",
+      "rarity": "コモン",
+      "kind": "属性耐性",
+      "effect": "光属性から受けるダメージ-8%。",
+      "condition": "他属性には効果なし",
+      "tags": [
+        "光",
+        "耐性"
+      ],
+      "synergy": "光ボス対策",
+      "motif": "光色の小さな布切れ",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C015",
+      "name": "闇避けの布",
+      "rarity": "コモン",
+      "kind": "属性耐性",
+      "effect": "闇属性から受けるダメージ-8%。",
+      "condition": "他属性には効果なし",
+      "tags": [
+        "闇",
+        "耐性"
+      ],
+      "synergy": "闇ボス対策",
+      "motif": "闇色の小さな布切れ",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C016",
+      "name": "力持ちの帯",
+      "rarity": "コモン",
+      "kind": "通常攻撃",
+      "effect": "通常攻撃の威力+12%。",
+      "condition": "技威力-3%",
+      "tags": [
+        "通常攻撃"
+      ],
+      "synergy": "無技の首輪 / 重ね牙",
+      "motif": "擦れた革帯",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C017",
+      "name": "節約の栓",
+      "rarity": "コモン",
+      "kind": "PP",
+      "effect": "技使用時10%でPPを消費しない。",
+      "condition": "発動は各技ごと",
+      "tags": [
+        "PP",
+        "節約"
+      ],
+      "synergy": "破戒の宝珠",
+      "motif": "小さなコルク栓",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C018",
+      "name": "見通し眼鏡",
+      "rarity": "コモン",
+      "kind": "探索",
+      "effect": "通路内の視界が1マス伸びる。",
+      "condition": "部屋では効果なし",
+      "tags": [
+        "通路",
+        "視界"
+      ],
+      "synergy": "通路王の冠 / 直線技",
+      "motif": "片レンズの眼鏡",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C019",
+      "name": "拾い手袋",
+      "rarity": "コモン",
+      "kind": "探索",
+      "effect": "足元のアイテムを拾ってもターンを消費しない。",
+      "condition": "持ち物満杯では無効",
+      "tags": [
+        "探索",
+        "アイテム"
+      ],
+      "synergy": "盗賊の小袋",
+      "motif": "指先のない革手袋",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C020",
+      "name": "軽い靴底",
+      "rarity": "コモン",
+      "kind": "移動",
+      "effect": "罠を踏んだ直後の次ターン、移動で罠を再発動しない。",
+      "condition": "同じ罠のみ",
+      "tags": [
+        "罠",
+        "移動"
+      ],
+      "synergy": "慎重の手袋",
+      "motif": "薄い靴底",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C021",
+      "name": "火傷の針",
+      "rarity": "コモン",
+      "kind": "状態異常",
+      "effect": "火傷中の敵への通常攻撃+10%。",
+      "condition": "技には乗らない",
+      "tags": [
+        "火傷",
+        "通常攻撃"
+      ],
+      "synergy": "油染みの布 / 延焼のランタン",
+      "motif": "煤けた縫い針",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C022",
+      "name": "薄氷の爪",
+      "rarity": "コモン",
+      "kind": "状態異常",
+      "effect": "凍結中の敵への物理技+12%。",
+      "condition": "攻撃後、凍結ターン-1",
+      "tags": [
+        "凍結",
+        "物理"
+      ],
+      "synergy": "砕氷の槌印",
+      "motif": "半透明の小爪",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C023",
+      "name": "毒見の匙",
+      "rarity": "コモン",
+      "kind": "状態異常",
+      "effect": "毒状態の敵から受けるダメージ-10%。",
+      "condition": "未毒の敵には無効",
+      "tags": [
+        "毒",
+        "防御"
+      ],
+      "synergy": "胞子袋 / 腐葉の冠",
+      "motif": "緑青のついた匙",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C024",
+      "name": "星の照準針",
+      "rarity": "コモン",
+      "kind": "命中",
+      "effect": "直線技の命中+8%。",
+      "condition": "周囲技には無効",
+      "tags": [
+        "光",
+        "直線",
+        "命中"
+      ],
+      "synergy": "貫光のレンズ",
+      "motif": "星形の照準針",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C025",
+      "name": "影踏み紐",
+      "rarity": "コモン",
+      "kind": "転移",
+      "effect": "転移後1ターン、回避+10%。",
+      "condition": "攻撃すると即終了",
+      "tags": [
+        "闇",
+        "転移"
+      ],
+      "synergy": "置き去りの影",
+      "motif": "黒い足首紐",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C026",
+      "name": "壁打ちの小杭",
+      "rarity": "コモン",
+      "kind": "位置",
+      "effect": "敵が壁に衝突した時、固定5ダメージ追加。",
+      "condition": "ボスは半減",
+      "tags": [
+        "吹き飛ばし",
+        "壁衝突"
+      ],
+      "synergy": "雪崩の鈴 / 押し潮",
+      "motif": "短い鉄杭",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C027",
+      "name": "通路の小旗",
+      "rarity": "コモン",
+      "kind": "地形",
+      "effect": "通路内で防御+8%。",
+      "condition": "部屋内では無効",
+      "tags": [
+        "通路",
+        "防御"
+      ],
+      "synergy": "通路王の冠",
+      "motif": "細長い布旗",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C028",
+      "name": "広間の鈴",
+      "rarity": "コモン",
+      "kind": "地形",
+      "effect": "部屋内で周囲技の威力+8%。",
+      "condition": "通路内では無効",
+      "tags": [
+        "部屋",
+        "範囲"
+      ],
+      "synergy": "広間の旗",
+      "motif": "丸い銀鈴",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C029",
+      "name": "背当て板",
+      "rarity": "コモン",
+      "kind": "位置",
+      "effect": "背後が壁なら被ダメージ-10%。",
+      "condition": "背後が空いていると無効",
+      "tags": [
+        "壁際",
+        "防御"
+      ],
+      "synergy": "背水の盾",
+      "motif": "小さな木板",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C030",
+      "name": "孤独の木札",
+      "rarity": "コモン",
+      "kind": "条件強化",
+      "effect": "同じ部屋の敵が1体だけなら与ダメージ+8%。",
+      "condition": "敵2体以上では無効",
+      "tags": [
+        "孤立",
+        "単体"
+      ],
+      "synergy": "孤狼の鈴",
+      "motif": "一本線の木札",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C031",
+      "name": "残心の糸",
+      "rarity": "コモン",
+      "kind": "連続攻撃",
+      "effect": "同じ敵へ連続で攻撃すると2回目以降+4%、最大+12%。",
+      "condition": "別の敵を攻撃するとリセット",
+      "tags": [
+        "蓄積",
+        "単体"
+      ],
+      "synergy": "重ね牙",
+      "motif": "赤い結び糸",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C032",
+      "name": "帰還の羽根",
+      "rarity": "コモン",
+      "kind": "移動",
+      "effect": "吹き飛ばされた時、30%で1マス手前に留まる。",
+      "condition": "引き寄せには無効",
+      "tags": [
+        "吹き飛ばし",
+        "防御"
+      ],
+      "synergy": "壁打ち対策",
+      "motif": "曲がった羽根",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C033",
+      "name": "小さな薬包",
+      "rarity": "コモン",
+      "kind": "回復",
+      "effect": "回復アイテムの回復量+10%。",
+      "condition": "技による回復には無効",
+      "tags": [
+        "アイテム",
+        "回復"
+      ],
+      "synergy": "湧泉の杯",
+      "motif": "紙包みの薬",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C034",
+      "name": "空瓶の栓",
+      "rarity": "コモン",
+      "kind": "消耗品",
+      "effect": "投げたアイテムが外れた時、20%で壊れず床に残る。",
+      "condition": "命中時には無効",
+      "tags": [
+        "投擲",
+        "アイテム"
+      ],
+      "synergy": "投擲ビルド",
+      "motif": "青い瓶栓",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C035",
+      "name": "眠り鼠の尾",
+      "rarity": "コモン",
+      "kind": "状態耐性",
+      "effect": "睡眠ターン-1。",
+      "condition": "最低1ターンは眠る",
+      "tags": [
+        "睡眠",
+        "耐性"
+      ],
+      "synergy": "眠り森対策",
+      "motif": "丸まった鼠尾",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C036",
+      "name": "火打ちの石板",
+      "rarity": "コモン",
+      "kind": "床",
+      "effect": "火床の持続+1ターン。",
+      "condition": "敵の火床も延長",
+      "tags": [
+        "火床",
+        "設置"
+      ],
+      "synergy": "炭火まき / 延焼",
+      "motif": "焦げた石板",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C037",
+      "name": "水泡のしずく",
+      "rarity": "コモン",
+      "kind": "床",
+      "effect": "水床・氷床の持続+1ターン。",
+      "condition": "敵の床も延長",
+      "tags": [
+        "水床",
+        "氷床"
+      ],
+      "synergy": "泡の道 / 氷河線",
+      "motif": "透明な雫石",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C038",
+      "name": "腐葉の小瓶",
+      "rarity": "コモン",
+      "kind": "床",
+      "effect": "毒床の持続+1ターン。",
+      "condition": "味方にも作用",
+      "tags": [
+        "毒床",
+        "設置"
+      ],
+      "synergy": "腐葉土 / 毒花園",
+      "motif": "黒緑の小瓶",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C039",
+      "name": "白線の定規",
+      "rarity": "コモン",
+      "kind": "射程",
+      "effect": "通路内の直線技威力+10%。",
+      "condition": "部屋内では-5%",
+      "tags": [
+        "通路",
+        "直線",
+        "ピーキー"
+      ],
+      "synergy": "星の照準器",
+      "motif": "白金の短い定規",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C040",
+      "name": "黒幕の糸",
+      "rarity": "コモン",
+      "kind": "背後",
+      "effect": "背後攻撃時、呪い付与率+10%。",
+      "condition": "正面攻撃には無効",
+      "tags": [
+        "背後",
+        "呪い"
+      ],
+      "synergy": "影踏みの靴",
+      "motif": "黒紫の糸束",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C041",
+      "name": "小さな骨笛",
+      "rarity": "コモン",
+      "kind": "召喚",
+      "effect": "召喚物の持続+1ターン。",
+      "condition": "召喚物の最大HP-5%",
+      "tags": [
+        "召喚",
+        "持続"
+      ],
+      "synergy": "森の呼び声 / 闇精召喚",
+      "motif": "骨製の短い笛",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C042",
+      "name": "罠師のチョーク",
+      "rarity": "コモン",
+      "kind": "罠",
+      "effect": "自分が設置した罠を踏んでも発動しない。",
+      "condition": "敵の罠には無効",
+      "tags": [
+        "罠",
+        "設置"
+      ],
+      "synergy": "氷針の檻 / 悪夢の扉",
+      "motif": "白いチョーク片",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C043",
+      "name": "割れた盾鋲",
+      "rarity": "コモン",
+      "kind": "ガード",
+      "effect": "防御行動中の被ダメージ-8%。",
+      "condition": "攻撃中は無効",
+      "tags": [
+        "防御",
+        "ガード"
+      ],
+      "synergy": "守りの頁",
+      "motif": "欠けた盾の鋲",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C044",
+      "name": "連撃の拍子木",
+      "rarity": "コモン",
+      "kind": "多段",
+      "effect": "多段技の最終段だけ威力+15%。",
+      "condition": "途中で外すと発動しない",
+      "tags": [
+        "多段",
+        "連撃"
+      ],
+      "synergy": "赤熱連打 / 雫連射",
+      "motif": "二本の小拍子木",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C045",
+      "name": "止血の布片",
+      "rarity": "コモン",
+      "kind": "低HP",
+      "effect": "HP25%以下で回復アイテムの効果+20%。",
+      "condition": "HP25%超では無効",
+      "tags": [
+        "低HP",
+        "回復"
+      ],
+      "synergy": "血染めの爪",
+      "motif": "赤黒い布片",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C046",
+      "name": "空腹避けの種殻",
+      "rarity": "コモン",
+      "kind": "満腹度",
+      "effect": "空腹ダメージ-1。",
+      "condition": "食料回復量-10%",
+      "tags": [
+        "空腹",
+        "ピーキー"
+      ],
+      "synergy": "空腹の王冠",
+      "motif": "乾いた種殻",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C047",
+      "name": "一歩の石",
+      "rarity": "コモン",
+      "kind": "移動",
+      "effect": "5ターン移動しなかった後の最初の移動はターンを消費しない。",
+      "condition": "連続発動不可",
+      "tags": [
+        "固定砲台",
+        "移動"
+      ],
+      "synergy": "満ち潮の構え",
+      "motif": "平たい踏み石",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C048",
+      "name": "帰路の糸巻き",
+      "rarity": "コモン",
+      "kind": "探索",
+      "effect": "階段を見つけた後、階段方向が常に表示される。",
+      "condition": "隠し階段には無効",
+      "tags": [
+        "探索",
+        "階段"
+      ],
+      "synergy": "北天の鍵",
+      "motif": "青い糸巻き",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C049",
+      "name": "拾い食いの匙",
+      "rarity": "コモン",
+      "kind": "食料",
+      "effect": "床に落ちた食料を食べた時、満腹度+10追加。",
+      "condition": "持ち物から食べると無効",
+      "tags": [
+        "食料",
+        "探索"
+      ],
+      "synergy": "空腹ビルド",
+      "motif": "曲がった木匙",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "C050",
+      "name": "迷いの硬貨",
+      "rarity": "コモン",
+      "kind": "ランダム",
+      "effect": "フロア開始時、攻撃・防御・命中のどれか+1段階。",
+      "condition": "別の1能力が-1段階",
+      "tags": [
+        "ランダム",
+        "ピーキー"
+      ],
+      "synergy": "変転のコイン",
+      "motif": "表裏の異なる古銭",
+      "availability": "B1F以降",
+      "notes": ""
+    },
+    {
+      "id": "U001",
+      "name": "火の宝珠",
+      "rarity": "アンコモン",
+      "kind": "属性強化",
+      "effect": "火属性技の威力+15%、PP消費+1。",
+      "condition": "PP1の技には追加消費なし",
+      "tags": [
+        "火",
+        "火傷",
+        "ピーキー"
+      ],
+      "synergy": "火属性技 / 節約の栓",
+      "motif": "火色の装飾宝珠",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U002",
+      "name": "水の宝珠",
+      "rarity": "アンコモン",
+      "kind": "属性強化",
+      "effect": "水属性技の威力+15%、PP消費+1。",
+      "condition": "PP1の技には追加消費なし",
+      "tags": [
+        "水",
+        "濡れ",
+        "ピーキー"
+      ],
+      "synergy": "水属性技 / 節約の栓",
+      "motif": "水色の装飾宝珠",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U003",
+      "name": "木の宝珠",
+      "rarity": "アンコモン",
+      "kind": "属性強化",
+      "effect": "木属性技の威力+15%、PP消費+1。",
+      "condition": "PP1の技には追加消費なし",
+      "tags": [
+        "木",
+        "毒",
+        "ピーキー"
+      ],
+      "synergy": "木属性技 / 節約の栓",
+      "motif": "木色の装飾宝珠",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U004",
+      "name": "光の宝珠",
+      "rarity": "アンコモン",
+      "kind": "属性強化",
+      "effect": "光属性技の威力+15%、PP消費+1。",
+      "condition": "PP1の技には追加消費なし",
+      "tags": [
+        "光",
+        "直線",
+        "ピーキー"
+      ],
+      "synergy": "光属性技 / 節約の栓",
+      "motif": "光色の装飾宝珠",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U005",
+      "name": "闇の宝珠",
+      "rarity": "アンコモン",
+      "kind": "属性強化",
+      "effect": "闇属性技の威力+15%、PP消費+1。",
+      "condition": "PP1の技には追加消費なし",
+      "tags": [
+        "闇",
+        "呪い",
+        "ピーキー"
+      ],
+      "synergy": "闇属性技 / 節約の栓",
+      "motif": "闇色の装飾宝珠",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U006",
+      "name": "火の香炉",
+      "rarity": "アンコモン",
+      "kind": "属性耐性",
+      "effect": "火属性被ダメージ-18%。ただし隣接属性からの被ダメージ+8%。",
+      "condition": "属性五角形に従う",
+      "tags": [
+        "火",
+        "耐性",
+        "ピーキー"
+      ],
+      "synergy": "火ボス対策",
+      "motif": "火煙を出す小香炉",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U007",
+      "name": "水の香炉",
+      "rarity": "アンコモン",
+      "kind": "属性耐性",
+      "effect": "水属性被ダメージ-18%。ただし隣接属性からの被ダメージ+8%。",
+      "condition": "属性五角形に従う",
+      "tags": [
+        "水",
+        "耐性",
+        "ピーキー"
+      ],
+      "synergy": "水ボス対策",
+      "motif": "水煙を出す小香炉",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U008",
+      "name": "木の香炉",
+      "rarity": "アンコモン",
+      "kind": "属性耐性",
+      "effect": "木属性被ダメージ-18%。ただし隣接属性からの被ダメージ+8%。",
+      "condition": "属性五角形に従う",
+      "tags": [
+        "木",
+        "耐性",
+        "ピーキー"
+      ],
+      "synergy": "木ボス対策",
+      "motif": "木煙を出す小香炉",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U009",
+      "name": "光の香炉",
+      "rarity": "アンコモン",
+      "kind": "属性耐性",
+      "effect": "光属性被ダメージ-18%。ただし隣接属性からの被ダメージ+8%。",
+      "condition": "属性五角形に従う",
+      "tags": [
+        "光",
+        "耐性",
+        "ピーキー"
+      ],
+      "synergy": "光ボス対策",
+      "motif": "光煙を出す小香炉",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U010",
+      "name": "闇の香炉",
+      "rarity": "アンコモン",
+      "kind": "属性耐性",
+      "effect": "闇属性被ダメージ-18%。ただし隣接属性からの被ダメージ+8%。",
+      "condition": "属性五角形に従う",
+      "tags": [
+        "闇",
+        "耐性",
+        "ピーキー"
+      ],
+      "synergy": "闇ボス対策",
+      "motif": "闇煙を出す小香炉",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U011",
+      "name": "油染みの布",
+      "rarity": "アンコモン",
+      "kind": "コンボ起点",
+      "effect": "近接攻撃した敵を20%で油濡れにする。次の火属性攻撃が周囲1マス爆発。",
+      "condition": "水属性攻撃で油濡れ解除",
+      "tags": [
+        "火",
+        "油濡れ",
+        "爆発"
+      ],
+      "synergy": "火のこぶし / 延焼のランタン",
+      "motif": "煤と油で黒ずんだ布",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U012",
+      "name": "延焼のランタン",
+      "rarity": "アンコモン",
+      "kind": "状態連鎖",
+      "effect": "火傷中の敵を倒すと、周囲1マスへ火傷を付与。",
+      "condition": "味方にも付与する可能性あり",
+      "tags": [
+        "火傷",
+        "拡散"
+      ],
+      "synergy": "油染みの布 / 灰拾いの壺",
+      "motif": "ひび割れた赤いランタン",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U013",
+      "name": "灰拾いの壺",
+      "rarity": "アンコモン",
+      "kind": "PP",
+      "effect": "火傷中の敵を倒すとランダムな火技PP+1。",
+      "condition": "火傷以外の撃破では無効",
+      "tags": [
+        "火傷",
+        "PP回復"
+      ],
+      "synergy": "延焼のランタン",
+      "motif": "灰の入った小壺",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U014",
+      "name": "薄氷の杯",
+      "rarity": "アンコモン",
+      "kind": "コンボ起点",
+      "effect": "同じ敵へ水技を2回当てると凍結率+35%。",
+      "condition": "別の敵を攻撃すると回数リセット",
+      "tags": [
+        "水",
+        "凍結",
+        "蓄積"
+      ],
+      "synergy": "砕氷の槌印",
+      "motif": "薄い氷で作られた杯",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U015",
+      "name": "砕氷の槌印",
+      "rarity": "アンコモン",
+      "kind": "フィニッシャー",
+      "effect": "凍結中の敵への物理攻撃+50%。攻撃後に凍結解除。",
+      "condition": "凍結を消費",
+      "tags": [
+        "凍結",
+        "物理",
+        "ピーキー"
+      ],
+      "synergy": "薄氷の杯 / 雪崩の鈴",
+      "motif": "割れた氷槌の紋章",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U016",
+      "name": "雪崩の鈴",
+      "rarity": "アンコモン",
+      "kind": "位置",
+      "effect": "凍結が解除された敵を2マス吹き飛ばす。",
+      "condition": "壁に当たると追加ダメージ",
+      "tags": [
+        "凍結",
+        "吹き飛ばし",
+        "壁衝突"
+      ],
+      "synergy": "砕氷の槌印 / 壁打ちの小杭",
+      "motif": "雪を詰めた銀鈴",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U017",
+      "name": "胞子袋",
+      "rarity": "アンコモン",
+      "kind": "コンボ起点",
+      "effect": "木属性技の毒付与率+20%。",
+      "condition": "木属性技の直接威力-8%",
+      "tags": [
+        "木",
+        "毒",
+        "ピーキー"
+      ],
+      "synergy": "寄生芽 / 腐葉の冠",
+      "motif": "膨らんだ胞子袋",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U018",
+      "name": "寄生芽",
+      "rarity": "アンコモン",
+      "kind": "吸収",
+      "effect": "毒状態の敵の隣に召喚物がいると毎ターンHP3%吸収。",
+      "condition": "召喚物が離れると停止",
+      "tags": [
+        "毒",
+        "召喚",
+        "吸収"
+      ],
+      "synergy": "胞子袋 / 森食みの種",
+      "motif": "脈打つ小さな芽",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U019",
+      "name": "腐葉の冠",
+      "rarity": "アンコモン",
+      "kind": "床生成",
+      "effect": "毒状態の敵を倒すと、そのマスに毒床を生成。",
+      "condition": "味方も毒床の影響を受ける",
+      "tags": [
+        "毒",
+        "毒床"
+      ],
+      "synergy": "胞子袋 / 森食みの種",
+      "motif": "腐葉で編んだ冠",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U020",
+      "name": "森食みの種",
+      "rarity": "アンコモン",
+      "kind": "召喚",
+      "effect": "毒床上に召喚した味方の攻撃・防御+25%。",
+      "condition": "毒床を離れると解除",
+      "tags": [
+        "毒床",
+        "召喚"
+      ],
+      "synergy": "腐葉の冠 / 寄生芽",
+      "motif": "牙のある種子",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U021",
+      "name": "星の照準器",
+      "rarity": "アンコモン",
+      "kind": "直線",
+      "effect": "直線技の命中+15%、射程+1。",
+      "condition": "周囲技の命中-10%",
+      "tags": [
+        "光",
+        "直線",
+        "ピーキー"
+      ],
+      "synergy": "貫光のレンズ / 白線の定規",
+      "motif": "星形レンズ付き照準器",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U022",
+      "name": "貫光のレンズ",
+      "rarity": "アンコモン",
+      "kind": "直線",
+      "effect": "直線技が敵を1体貫通する。",
+      "condition": "貫通前から威力-15%",
+      "tags": [
+        "光",
+        "直線",
+        "貫通"
+      ],
+      "synergy": "星の照準器 / 連星の欠片",
+      "motif": "細長い白金レンズ",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U023",
+      "name": "連星の欠片",
+      "rarity": "アンコモン",
+      "kind": "PP",
+      "effect": "1回の技で2体以上に命中すると、その技PP+1。",
+      "condition": "1体だけでは無効",
+      "tags": [
+        "範囲",
+        "PP回復",
+        "直線"
+      ],
+      "synergy": "貫光のレンズ / 分光",
+      "motif": "二つ連なった星片",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U024",
+      "name": "影踏みの靴",
+      "rarity": "アンコモン",
+      "kind": "転移",
+      "effect": "転移後の最初の攻撃+35%。",
+      "condition": "攻撃しないまま2ターンで消失",
+      "tags": [
+        "闇",
+        "転移",
+        "背後"
+      ],
+      "synergy": "置き去りの影 / 黒幕の仮面",
+      "motif": "影の染みた短靴",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U025",
+      "name": "置き去りの影",
+      "rarity": "アンコモン",
+      "kind": "囮",
+      "effect": "転移前のマスに1ターンの囮を残す。",
+      "condition": "囮が倒れると自分の防御-1段階",
+      "tags": [
+        "転移",
+        "囮"
+      ],
+      "synergy": "影踏みの靴 / 裂け目の針",
+      "motif": "空洞の黒い人形",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U026",
+      "name": "裂け目の針",
+      "rarity": "アンコモン",
+      "kind": "再転移",
+      "effect": "囮を攻撃した敵の背後へ1回だけ転移できる。",
+      "condition": "背後マスが空いている場合のみ",
+      "tags": [
+        "転移",
+        "背後",
+        "囮"
+      ],
+      "synergy": "置き去りの影 / 黒幕の仮面",
+      "motif": "空間が裂けたような針",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U027",
+      "name": "黒幕の仮面",
+      "rarity": "アンコモン",
+      "kind": "背後",
+      "effect": "背後攻撃時、40%で呪い付与。",
+      "condition": "正面攻撃の命中-5%",
+      "tags": [
+        "背後",
+        "呪い",
+        "ピーキー"
+      ],
+      "synergy": "影踏みの靴 / 裂け目の針",
+      "motif": "片面だけ笑う黒仮面",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U028",
+      "name": "破戒の宝珠",
+      "rarity": "アンコモン",
+      "kind": "PP",
+      "effect": "技のPP消費が2倍、技威力+35%。",
+      "condition": "PP1の技も2消費",
+      "tags": [
+        "PP",
+        "高火力",
+        "ピーキー"
+      ],
+      "synergy": "節約の栓 / 灰拾いの壺",
+      "motif": "ひび割れた紫宝珠",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U029",
+      "name": "無技の首輪",
+      "rarity": "アンコモン",
+      "kind": "通常攻撃",
+      "effect": "技を使わず5ターン経過すると通常攻撃+35%。",
+      "condition": "技を使うとリセット",
+      "tags": [
+        "通常攻撃",
+        "蓄積"
+      ],
+      "synergy": "重ね牙 / 追撃の拍子木",
+      "motif": "無地の鉄首輪",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U030",
+      "name": "重ね牙",
+      "rarity": "アンコモン",
+      "kind": "通常攻撃",
+      "effect": "同じ敵へ通常攻撃するたび+15%、最大+60%。",
+      "condition": "別の敵を攻撃するとリセット",
+      "tags": [
+        "通常攻撃",
+        "蓄積",
+        "単体"
+      ],
+      "synergy": "無技の首輪 / 孤狼の鈴",
+      "motif": "二重に重なった牙",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U031",
+      "name": "追撃の拍子木",
+      "rarity": "アンコモン",
+      "kind": "通常攻撃",
+      "effect": "通常攻撃で敵を倒すと、隣接敵へ威力50%の追加攻撃。",
+      "condition": "PP技で倒すと無効",
+      "tags": [
+        "通常攻撃",
+        "撃破"
+      ],
+      "synergy": "無技の首輪 / 重ね牙",
+      "motif": "赤黒の拍子木",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U032",
+      "name": "無言の護符",
+      "rarity": "アンコモン",
+      "kind": "通常攻撃",
+      "effect": "全技PPが満タンなら通常攻撃に固定10追加。",
+      "condition": "いずれかのPPが減ると無効",
+      "tags": [
+        "通常攻撃",
+        "PP満タン",
+        "ピーキー"
+      ],
+      "synergy": "無技の首輪",
+      "motif": "文字のない白札",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U033",
+      "name": "背水の盾",
+      "rarity": "アンコモン",
+      "kind": "位置",
+      "effect": "背後が壁なら被ダメージ-35%。",
+      "condition": "開けた場所では被ダメージ+12%",
+      "tags": [
+        "壁際",
+        "防御",
+        "ピーキー"
+      ],
+      "synergy": "通路王の冠 / 角待ちの鏡",
+      "motif": "背面だけ厚い盾",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U034",
+      "name": "孤狼の鈴",
+      "rarity": "アンコモン",
+      "kind": "条件強化",
+      "effect": "同じ部屋の敵が1体だけなら与ダメージ+40%。",
+      "condition": "敵2体以上では被ダメージ+20%",
+      "tags": [
+        "孤立",
+        "単体",
+        "ピーキー"
+      ],
+      "synergy": "重ね牙 / 盲星の狩眼",
+      "motif": "一匹狼の刻印鈴",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U035",
+      "name": "通路王の冠",
+      "rarity": "アンコモン",
+      "kind": "地形",
+      "effect": "通路内で攻撃・防御+20%。",
+      "condition": "部屋内では両方-10%",
+      "tags": [
+        "通路",
+        "ピーキー"
+      ],
+      "synergy": "白線の定規 / 背水の盾",
+      "motif": "細長い鉄冠",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U036",
+      "name": "広間の旗",
+      "rarity": "アンコモン",
+      "kind": "地形",
+      "effect": "部屋内で範囲技の範囲+1。",
+      "condition": "通路内で命中-15%",
+      "tags": [
+        "部屋",
+        "範囲",
+        "ピーキー"
+      ],
+      "synergy": "星雨 / 毒花園",
+      "motif": "大きな広間紋の旗",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U037",
+      "name": "角待ちの鏡",
+      "rarity": "アンコモン",
+      "kind": "位置",
+      "effect": "曲がり角から最初に放つ技+40%。",
+      "condition": "同じ角では5ターン再発動しない",
+      "tags": [
+        "角",
+        "奇襲"
+      ],
+      "synergy": "背水の盾 / 直線技",
+      "motif": "L字に割れた鏡",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U038",
+      "name": "退路の靴",
+      "rarity": "アンコモン",
+      "kind": "移動",
+      "effect": "攻撃後、背後が空いていれば1マス後退。",
+      "condition": "後退できない場合、そのターン防御-25%",
+      "tags": [
+        "後退",
+        "位置",
+        "ピーキー"
+      ],
+      "synergy": "通路 / 遠距離",
+      "motif": "踵の長い靴",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U039",
+      "name": "一技の誓約",
+      "rarity": "アンコモン",
+      "kind": "技特化",
+      "effect": "最大PPが最も少ない技の威力+60%。",
+      "condition": "それ以外の技威力-25%",
+      "tags": [
+        "少PP",
+        "ピーキー"
+      ],
+      "synergy": "破戒の宝珠 / PP回復",
+      "motif": "一本だけ刻まれた誓約板",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "U040",
+      "name": "血染めの爪",
+      "rarity": "アンコモン",
+      "kind": "低HP",
+      "effect": "HP50%以下で与ダメージ+45%。",
+      "condition": "HP50%超では与ダメージ-12%",
+      "tags": [
+        "低HP",
+        "ピーキー"
+      ],
+      "synergy": "止血の布片 / 救済の代価",
+      "motif": "乾いた血のついた爪",
+      "availability": "B11F以降",
+      "notes": ""
+    },
+    {
+      "id": "R001",
+      "name": "空腹の王冠",
+      "rarity": "レア",
+      "kind": "満腹度",
+      "effect": "満腹度0の間、攻撃・特攻+60%。",
+      "condition": "空腹ダメージ2倍、食料効果-50%",
+      "tags": [
+        "空腹",
+        "ピーキー"
+      ],
+      "synergy": "空腹避けの種殻 / 拾い食いの匙",
+      "motif": "内側に牙のある王冠",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R002",
+      "name": "通路狩りの槍石",
+      "rarity": "レア",
+      "kind": "地形",
+      "effect": "通路内の直線技+35%、敵を1マス押す。",
+      "condition": "部屋内の技威力-20%",
+      "tags": [
+        "通路",
+        "直線",
+        "吹き飛ばし"
+      ],
+      "synergy": "通路王の冠 / 壁打ちの小杭",
+      "motif": "細長い槍形石",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R003",
+      "name": "広間喰いの鐘",
+      "rarity": "レア",
+      "kind": "地形",
+      "effect": "部屋内で敵を倒すたび範囲技+10%、フロア中累積。",
+      "condition": "通路へ入ると累積半減",
+      "tags": [
+        "部屋",
+        "撃破蓄積"
+      ],
+      "synergy": "広間の旗",
+      "motif": "口の大きな鐘",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R004",
+      "name": "逆巻きの砂時計",
+      "rarity": "レア",
+      "kind": "ターン",
+      "effect": "敵を倒すと20%で追加ターン。",
+      "condition": "発動しなかった次ターンは被ダメ+15%",
+      "tags": [
+        "撃破",
+        "追加ターン",
+        "ピーキー"
+      ],
+      "synergy": "追撃の拍子木",
+      "motif": "逆流する砂時計",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R005",
+      "name": "血盟の杯",
+      "rarity": "レア",
+      "kind": "低HP",
+      "effect": "HP25%以下で毎ターンPP1回復。",
+      "condition": "HP25%超では毎ターンHP2%減",
+      "tags": [
+        "低HP",
+        "PP回復",
+        "ピーキー"
+      ],
+      "synergy": "血染めの爪 / 破戒の宝珠",
+      "motif": "赤黒い杯",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R006",
+      "name": "回復反転の針",
+      "rarity": "レア",
+      "kind": "回復反転",
+      "effect": "自分への回復効果を無効化し、その値の50%を周囲敵へダメージ。",
+      "condition": "通常の回復ができない",
+      "tags": [
+        "回復反転",
+        "周囲",
+        "ピーキー"
+      ],
+      "synergy": "世界樹の雫 / 湧泉の杯",
+      "motif": "緑と黒の両頭針",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R007",
+      "name": "毒王の小冠",
+      "rarity": "レア",
+      "kind": "毒",
+      "effect": "毒ダメージ2倍、毒ターン+2。",
+      "condition": "自分が受ける毒ダメージも2倍",
+      "tags": [
+        "毒",
+        "ピーキー"
+      ],
+      "synergy": "胞子袋 / 腐葉の冠",
+      "motif": "毒液の滴る小冠",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R008",
+      "name": "氷葬の槌",
+      "rarity": "レア",
+      "kind": "凍結",
+      "effect": "凍結を砕いた時、周囲1マスにも50%ダメージ。",
+      "condition": "砕いた本人も固定5ダメージ",
+      "tags": [
+        "凍結",
+        "砕氷",
+        "爆発"
+      ],
+      "synergy": "薄氷の杯 / 雪崩の鈴",
+      "motif": "氷塊付きの槌",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R009",
+      "name": "炎上機関",
+      "rarity": "レア",
+      "kind": "火傷",
+      "effect": "火傷中の敵が行動するたび熱量+1。熱量5で部屋内火傷敵へ爆発。",
+      "condition": "爆発後自分も火傷",
+      "tags": [
+        "火傷",
+        "熱量",
+        "部屋"
+      ],
+      "synergy": "延焼のランタン / 灰拾いの壺",
+      "motif": "回転する小炉心",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R010",
+      "name": "呪詛の帳簿",
+      "rarity": "レア",
+      "kind": "呪い",
+      "effect": "呪い中の敵が技を使うたび、その技PP-1追加。",
+      "condition": "自分の闇技PP消費+1",
+      "tags": [
+        "呪い",
+        "PP妨害",
+        "ピーキー"
+      ],
+      "synergy": "黒幕の仮面 / PP封印",
+      "motif": "黒い帳簿",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R011",
+      "name": "転位の万華鏡",
+      "rarity": "レア",
+      "kind": "転移",
+      "effect": "転移するたび次の技属性がランダムな隣接属性へ変化し威力+25%。",
+      "condition": "属性を選べない",
+      "tags": [
+        "転移",
+        "属性変化",
+        "ランダム"
+      ],
+      "synergy": "影踏みの靴 / 裂け目の針",
+      "motif": "回る万華鏡",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R012",
+      "name": "召喚王の笛",
+      "rarity": "レア",
+      "kind": "召喚",
+      "effect": "召喚上限+1、召喚物与ダメ+25%。",
+      "condition": "主人公の与ダメ-20%",
+      "tags": [
+        "召喚",
+        "ピーキー"
+      ],
+      "synergy": "森食みの種 / 寄生芽",
+      "motif": "王冠付き骨笛",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R013",
+      "name": "無技の王印",
+      "rarity": "レア",
+      "kind": "通常攻撃",
+      "effect": "技を使えなくなる代わり、通常攻撃が正面3マスの貫通攻撃になる。",
+      "condition": "全技封印",
+      "tags": [
+        "通常攻撃",
+        "貫通",
+        "ピーキー"
+      ],
+      "synergy": "無技の首輪 / 重ね牙",
+      "motif": "技名の消えた王印",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R014",
+      "name": "一撃の賭札",
+      "rarity": "レア",
+      "kind": "単発",
+      "effect": "威力80以上の技+50%。",
+      "condition": "外した時、その技PPが0になる",
+      "tags": [
+        "高威力",
+        "ピーキー"
+      ],
+      "synergy": "一技の誓約 / 熾天一閃",
+      "motif": "一枚だけの黒札",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R015",
+      "name": "多段の歯車",
+      "rarity": "レア",
+      "kind": "多段",
+      "effect": "多段技の攻撃回数+1。",
+      "condition": "各段の命中-10%",
+      "tags": [
+        "多段",
+        "ピーキー"
+      ],
+      "synergy": "連撃の拍子木 / 白星連打",
+      "motif": "歯の多い歯車",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R016",
+      "name": "設置王の盤",
+      "rarity": "レア",
+      "kind": "設置",
+      "effect": "設置物上限+2、設置物持続+2。",
+      "condition": "主人公の移動時HP2%消費",
+      "tags": [
+        "設置",
+        "ピーキー"
+      ],
+      "synergy": "火床 / 毒床 / 聖域",
+      "motif": "升目入りの石盤",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R017",
+      "name": "罠喰らいの袋",
+      "rarity": "レア",
+      "kind": "罠",
+      "effect": "罠を踏むと無効化しPP2回復。",
+      "condition": "3回発動後に壊れる",
+      "tags": [
+        "罠",
+        "PP回復"
+      ],
+      "synergy": "罠師のチョーク",
+      "motif": "口のある布袋",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R018",
+      "name": "壁抜けの爪",
+      "rarity": "レア",
+      "kind": "移動",
+      "effect": "壁を1マスだけ越えて移動できる。",
+      "condition": "使用ごと最大HP5%減",
+      "tags": [
+        "壁抜け",
+        "移動",
+        "ピーキー"
+      ],
+      "synergy": "角待ちの鏡",
+      "motif": "黒曜石の細爪",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R019",
+      "name": "階段守りの鍵",
+      "rarity": "レア",
+      "kind": "探索",
+      "effect": "階段を発見すると、階段部屋内で全能力+1段階。",
+      "condition": "階段部屋を出ると解除",
+      "tags": [
+        "階段",
+        "部屋"
+      ],
+      "synergy": "帰路の糸巻き",
+      "motif": "階段形の金鍵",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R020",
+      "name": "泥棒王の小袋",
+      "rarity": "レア",
+      "kind": "店",
+      "effect": "店の商品を1つだけ盗んでもカルマ変動なし。",
+      "condition": "フロアを出るまで店主が敵対",
+      "tags": [
+        "店",
+        "泥棒",
+        "カルマ"
+      ],
+      "synergy": "盗賊の小袋",
+      "motif": "王冠印の黒い袋",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R021",
+      "name": "慈悲の刃",
+      "rarity": "レア",
+      "kind": "カルマ",
+      "effect": "敵をHP1で残した時、カルマ+1、次の技PP+1。",
+      "condition": "とどめを刺すと累積カルマ補正消失",
+      "tags": [
+        "カルマ",
+        "見逃し",
+        "PP回復"
+      ],
+      "synergy": "聖白の心臓",
+      "motif": "刃のない短剣",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R022",
+      "name": "悪逆の鉄面",
+      "rarity": "レア",
+      "kind": "カルマ",
+      "effect": "カルマが低いほど与ダメージ上昇、最大+45%。",
+      "condition": "カルマが正なら被ダメージ+20%",
+      "tags": [
+        "カルマ",
+        "邪悪",
+        "ピーキー"
+      ],
+      "synergy": "奈落の爪痕",
+      "motif": "歪んだ鉄仮面",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R023",
+      "name": "対称の双指輪",
+      "rarity": "レア",
+      "kind": "連携",
+      "effect": "同じ属性技を2回連続で使うと2回目+40%。",
+      "condition": "3回目以降はPP消費2倍",
+      "tags": [
+        "連続使用",
+        "ピーキー"
+      ],
+      "synergy": "属性特化",
+      "motif": "左右対称の双指輪",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R024",
+      "name": "五角の転輪",
+      "rarity": "レア",
+      "kind": "属性",
+      "effect": "技を使うたび属性五角形の次属性技+20%。",
+      "condition": "同属性連続使用では効果なし",
+      "tags": [
+        "属性連鎖",
+        "五角形"
+      ],
+      "synergy": "複合属性ビルド",
+      "motif": "五色の転輪",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R025",
+      "name": "敵討ちの紋章",
+      "rarity": "レア",
+      "kind": "撃破",
+      "effect": "味方召喚物が倒されると、次の攻撃+80%。",
+      "condition": "主人公単独では発動しない",
+      "tags": [
+        "召喚",
+        "撃破",
+        "単発"
+      ],
+      "synergy": "召喚王の笛",
+      "motif": "割れた仲間紋章",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R026",
+      "name": "無傷の勲章",
+      "rarity": "レア",
+      "kind": "ノーダメ",
+      "effect": "フロアで一度も被弾していない間、全技+35%。",
+      "condition": "一度被弾するとフロア中-10%",
+      "tags": [
+        "ノーダメ",
+        "ピーキー"
+      ],
+      "synergy": "聖神技",
+      "motif": "傷のない白金勲章",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R027",
+      "name": "一室の契り",
+      "rarity": "レア",
+      "kind": "部屋",
+      "effect": "同じ部屋に10ターン留まると全能力+2。",
+      "condition": "部屋を出るとHP20%失う",
+      "tags": [
+        "部屋",
+        "固定砲台",
+        "ピーキー"
+      ],
+      "synergy": "広間の旗",
+      "motif": "閉じた部屋の模型",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R028",
+      "name": "死線の糸",
+      "rarity": "レア",
+      "kind": "低HP",
+      "effect": "HP10%以下で戦闘不能を1回だけHP1で耐える。",
+      "condition": "発動後、全PP0",
+      "tags": [
+        "低HP",
+        "耐久",
+        "代償"
+      ],
+      "synergy": "血染めの爪",
+      "motif": "切れかけの赤糸",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R029",
+      "name": "模倣の鏡片",
+      "rarity": "レア",
+      "kind": "コピー",
+      "effect": "敵が直前に使った変化技を1回だけ使用可能。",
+      "condition": "攻撃技はコピー不可",
+      "tags": [
+        "コピー",
+        "変化技"
+      ],
+      "synergy": "鏡海の破片",
+      "motif": "ひび割れた鏡片",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "R030",
+      "name": "封印の空箱",
+      "rarity": "レア",
+      "kind": "所持品",
+      "effect": "持ち物枠-3。その代わり、各フロア最初に拾った消耗品を2個に増やす。",
+      "condition": "重要品は複製不可",
+      "tags": [
+        "アイテム",
+        "ピーキー"
+      ],
+      "synergy": "拾い手袋",
+      "motif": "中身のない鍵箱",
+      "availability": "B21F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR001",
+      "name": "星図の断章",
+      "rarity": "スターレア",
+      "kind": "進化",
+      "effect": "次回進化候補に通常より1つ多く表示。",
+      "condition": "一度使うと消滅する選択式効果",
+      "tags": [
+        "進化",
+        "選択肢"
+      ],
+      "synergy": "隠し進化条件",
+      "motif": "動く星図の紙片",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR002",
+      "name": "運命の天球儀",
+      "rarity": "スターレア",
+      "kind": "進化",
+      "effect": "進化候補のうち1枠を再抽選できる。",
+      "condition": "1進化につき1回",
+      "tags": [
+        "進化",
+        "再抽選"
+      ],
+      "synergy": "星図の断章",
+      "motif": "小型の天球儀",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR003",
+      "name": "界境の羅針冠",
+      "rarity": "スターレア",
+      "kind": "進化",
+      "effect": "光↔闇反転進化の条件を20緩和。",
+      "condition": "通常進化には効果なし",
+      "tags": [
+        "進化",
+        "光闇反転"
+      ],
+      "synergy": "カルマ",
+      "motif": "羅針盤付きの冠",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR004",
+      "name": "宿命の双輪",
+      "rarity": "スターレア",
+      "kind": "カルマ",
+      "effect": "聖神・邪悪進化条件を±50まで緩和。",
+      "condition": "進化後、カルマが0へ近づく20",
+      "tags": [
+        "進化",
+        "聖神",
+        "邪悪"
+      ],
+      "synergy": "カルマビルド",
+      "motif": "白黒の二重輪",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR005",
+      "name": "星喰いの杯",
+      "rarity": "スターレア",
+      "kind": "PP",
+      "effect": "技PPの代わりにHP8%を消費して使用できる。",
+      "condition": "PP0時のみ、HP8%以下では不可",
+      "tags": [
+        "PP",
+        "HP消費",
+        "ピーキー"
+      ],
+      "synergy": "破戒の宝珠 / 血染めの爪",
+      "motif": "黒い星を飲む杯",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR006",
+      "name": "共有の星核",
+      "rarity": "スターレア",
+      "kind": "PP",
+      "effect": "全技PPを共有プール化する。総量は元PP合計の70%。",
+      "condition": "低PP技を連打すると全技枯渇",
+      "tags": [
+        "PP共有",
+        "ピーキー"
+      ],
+      "synergy": "一技の誓約",
+      "motif": "脈打つ多面星核",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR007",
+      "name": "連続星の輪",
+      "rarity": "スターレア",
+      "kind": "連続使用",
+      "effect": "同じ技を連続使用するたび威力×1.5、最大×3。",
+      "condition": "外すか別技を使うと、その技PP0",
+      "tags": [
+        "連続使用",
+        "ピーキー"
+      ],
+      "synergy": "対称の双指輪",
+      "motif": "連なる星輪",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR008",
+      "name": "属性反転盤",
+      "rarity": "スターレア",
+      "kind": "属性",
+      "effect": "属性相性の有利・不利を反転する。",
+      "condition": "自分が受ける相性も反転",
+      "tags": [
+        "属性反転",
+        "ピーキー"
+      ],
+      "synergy": "五角の転輪",
+      "motif": "裏返る五色盤",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR009",
+      "name": "空位の王座片",
+      "rarity": "スターレア",
+      "kind": "部屋",
+      "effect": "部屋内の敵を全滅させると、その部屋で全能力+2。",
+      "condition": "部屋を出ると解除",
+      "tags": [
+        "部屋制圧",
+        "固定砲台"
+      ],
+      "synergy": "広間喰いの鐘",
+      "motif": "小さな玉座の破片",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR010",
+      "name": "一歩前の時計",
+      "rarity": "スターレア",
+      "kind": "ターン",
+      "effect": "フロアに1回、敵のターンを飛ばす。",
+      "condition": "使用後、次の自分のターンも移動不可",
+      "tags": [
+        "追加ターン",
+        "ピーキー"
+      ],
+      "synergy": "逆巻きの砂時計",
+      "motif": "針が一つ先へ進む時計",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR011",
+      "name": "反転の砂時計",
+      "rarity": "スターレア",
+      "kind": "防御",
+      "effect": "フロアに1回、受けた致命傷を無効化し直前の位置へ戻る。",
+      "condition": "全強化解除、PP半減",
+      "tags": [
+        "巻き戻し",
+        "復活",
+        "代償"
+      ],
+      "synergy": "死線の糸",
+      "motif": "上下が反転する砂時計",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR012",
+      "name": "写し身の糸玉",
+      "rarity": "スターレア",
+      "kind": "分身",
+      "effect": "フロア開始時、自分と同じHP25%の分身を1体生成。",
+      "condition": "分身が受けた状態異常は本体にも反映",
+      "tags": [
+        "分身",
+        "ピーキー"
+      ],
+      "synergy": "召喚王の笛",
+      "motif": "人影を編む糸玉",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR013",
+      "name": "模写の万華鏡",
+      "rarity": "スターレア",
+      "kind": "コピー",
+      "effect": "フロアに1回、敵が使った最後の技をコピー。",
+      "condition": "コピー技使用後、自分の同分類技PP-1",
+      "tags": [
+        "コピー",
+        "敵技"
+      ],
+      "synergy": "模倣の鏡片",
+      "motif": "虹色の万華鏡",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR014",
+      "name": "空間折りの定規",
+      "rarity": "スターレア",
+      "kind": "射程",
+      "effect": "直線技の射程を折り曲げ、曲がり角を1回曲がれる。",
+      "condition": "威力-20%",
+      "tags": [
+        "直線",
+        "曲射"
+      ],
+      "synergy": "星の照準器 / 角待ちの鏡",
+      "motif": "L字に折れる定規",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR015",
+      "name": "死者の進化殻",
+      "rarity": "スターレア",
+      "kind": "復活",
+      "effect": "戦闘不能時、進化段階を1つ失ってHP・PP全回復。",
+      "condition": "1周1回、最終進化では使用不可",
+      "tags": [
+        "復活",
+        "進化代償"
+      ],
+      "synergy": "星図の断章",
+      "motif": "脱皮した進化殻",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR016",
+      "name": "無限背水の盾",
+      "rarity": "スターレア",
+      "kind": "位置",
+      "effect": "背後が壁の間、被ダメージ-50%、技威力+30%。",
+      "condition": "壁から離れた瞬間HP20%失う",
+      "tags": [
+        "壁際",
+        "ピーキー"
+      ],
+      "synergy": "背水の盾 / 通路王の冠",
+      "motif": "壁に固定する巨大盾",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR017",
+      "name": "最後の一技碑",
+      "rarity": "スターレア",
+      "kind": "切り札",
+      "effect": "全技PP0の時、最も威力の高い技を1回だけ無消費で使える。",
+      "condition": "使用後HP1",
+      "tags": [
+        "PP0",
+        "切り札"
+      ],
+      "synergy": "最後の火花 / 大海の一滴",
+      "motif": "一文字だけ光る碑石",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR018",
+      "name": "慈悲の白心",
+      "rarity": "スターレア",
+      "kind": "カルマ",
+      "effect": "カルマ+60以上で被ダメージ-25%、回復量+30%。",
+      "condition": "敵を倒すたびカルマ-1",
+      "tags": [
+        "高カルマ",
+        "聖神"
+      ],
+      "synergy": "慈悲の刃",
+      "motif": "白金の心臓",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR019",
+      "name": "奈落の爪痕",
+      "rarity": "スターレア",
+      "kind": "カルマ",
+      "effect": "カルマ-60以下で与ダメージ+45%。",
+      "condition": "回復を受けるたびカルマ+2",
+      "tags": [
+        "低カルマ",
+        "邪悪",
+        "ピーキー"
+      ],
+      "synergy": "悪逆の鉄面",
+      "motif": "空間に残る黒赤の爪痕",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR020",
+      "name": "無貌の仮面",
+      "rarity": "スターレア",
+      "kind": "ランダム",
+      "effect": "各フロア開始時、レア以下のレリック効果を1つランダム獲得。",
+      "condition": "元のレリック名は表示されない",
+      "tags": [
+        "ランダム",
+        "コピー"
+      ],
+      "synergy": "あらゆるビルド",
+      "motif": "表情のない白仮面",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR021",
+      "name": "選別の星秤",
+      "rarity": "スターレア",
+      "kind": "報酬",
+      "effect": "ボス撃破後、進化か星遺物の選択肢を見た後に1回だけ再抽選。",
+      "condition": "再抽選後は必ず選択",
+      "tags": [
+        "ボス報酬",
+        "再抽選"
+      ],
+      "synergy": "運命の天球儀",
+      "motif": "星を載せた天秤",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR022",
+      "name": "星間の扉環",
+      "rarity": "スターレア",
+      "kind": "転移",
+      "effect": "フロアに1回、見えている任意の床へ転移。",
+      "condition": "転移後3ターン被ダメージ+30%",
+      "tags": [
+        "転移",
+        "ピーキー"
+      ],
+      "synergy": "影踏みの靴",
+      "motif": "小さな星空の扉",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR023",
+      "name": "零距離の針盤",
+      "rarity": "スターレア",
+      "kind": "近接",
+      "effect": "転移直後の近接技が必中・急所。",
+      "condition": "遠距離技PPが1減る",
+      "tags": [
+        "転移",
+        "近接",
+        "急所"
+      ],
+      "synergy": "星間の扉環 / 影裂き",
+      "motif": "針が中心を指す羅針盤",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR024",
+      "name": "黄昏の鐘",
+      "rarity": "スターレア",
+      "kind": "状態",
+      "effect": "敵の強化効果の発動を1ターン遅らせる。",
+      "condition": "味方の強化も1ターン遅れる",
+      "tags": [
+        "強化遅延",
+        "ピーキー"
+      ],
+      "synergy": "浄化光",
+      "motif": "夕暮れ色の大鐘",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "SR025",
+      "name": "星界の空箱",
+      "rarity": "スターレア",
+      "kind": "所持品",
+      "effect": "持ち物枠を0にする代わり、拾った消耗品を即座に自動使用。",
+      "condition": "使用タイミングを選べない",
+      "tags": [
+        "アイテム",
+        "ピーキー"
+      ],
+      "synergy": "拾い手袋 / 回復反転の針",
+      "motif": "内部が星空の空箱",
+      "availability": "B31F以降",
+      "notes": ""
+    },
+    {
+      "id": "B001",
+      "name": "樹牢の心核",
+      "rarity": "ボスレリック",
+      "kind": "グランモス",
+      "effect": "同じマスに3ターン留まると根を張り、毎ターンHP8%回復・防御+30%。",
+      "condition": "移動すると解除、火属性被ダメージ+25%",
+      "tags": [
+        "木",
+        "固定砲台",
+        "回復"
+      ],
+      "synergy": "一室の契り / 背水の盾",
+      "motif": "根に包まれた緑の心核",
+      "availability": "B10F撃破",
+      "notes": ""
+    },
+    {
+      "id": "B002",
+      "name": "逆潮の髪飾り",
+      "rarity": "ボスレリック",
+      "kind": "ネレイア",
+      "effect": "吹き飛ばし効果を引き寄せへ反転できる。引き寄せた敵への次の攻撃+40%。",
+      "condition": "自分が受ける吹き飛ばしも引き寄せへ反転",
+      "tags": [
+        "水",
+        "引き寄せ",
+        "位置"
+      ],
+      "synergy": "炎の鎖 / 黒鎖",
+      "motif": "逆向きに流れる髪飾り",
+      "availability": "B20F撃破",
+      "notes": ""
+    },
+    {
+      "id": "B003",
+      "name": "盲星の狩眼",
+      "rarity": "ボスレリック",
+      "kind": "ヴァルグ",
+      "effect": "視界外の敵への攻撃が必中・急所。",
+      "condition": "視界内の敵への命中-20%",
+      "tags": [
+        "闇",
+        "視界外",
+        "ピーキー"
+      ],
+      "synergy": "孤狼の鈴 / 無明一閃",
+      "motif": "閉じた瞳に星が浮かぶ眼球",
+      "availability": "B30F撃破",
+      "notes": ""
+    },
+    {
+      "id": "B004",
+      "name": "炉心王の熾冠",
+      "rarity": "ボスレリック",
+      "kind": "イグニバル",
+      "effect": "技を使うたび熱量+1。熱量ごと火力+12%、最大+60%。",
+      "condition": "熱量5で毎ターン最大HP10%自傷",
+      "tags": [
+        "火",
+        "熱量",
+        "ピーキー"
+      ],
+      "synergy": "炉心の構え / 火口封じ",
+      "motif": "燃える炉心王冠",
+      "availability": "B40F撃破",
+      "notes": ""
+    },
+    {
+      "id": "B005",
+      "name": "双面の聖印",
+      "rarity": "ボスレリック",
+      "kind": "ルクス＝ノクス",
+      "effect": "ターン開始時に光面・闇面を切替可能。光面は被ダメ-20%、闇面は与ダメ+25%。",
+      "condition": "切替ターンは技を使えない",
+      "tags": [
+        "光",
+        "闇",
+        "切替"
+      ],
+      "synergy": "光闇反転進化",
+      "motif": "半白半黒の回転聖印",
+      "availability": "B50F撃破",
+      "notes": ""
+    },
+    {
+      "id": "B006",
+      "name": "千節皇の環骨",
+      "rarity": "ボスレリック",
+      "kind": "ザルガ",
+      "effect": "多段技の攻撃回数+2。",
+      "condition": "各段の威力-20%、命中-5%",
+      "tags": [
+        "木",
+        "多段",
+        "ピーキー"
+      ],
+      "synergy": "多段の歯車 / 千葉乱舞",
+      "motif": "節が連なる骨の輪",
+      "availability": "B60F撃破",
+      "notes": ""
+    },
+    {
+      "id": "B007",
+      "name": "亡国王の焼旗",
+      "rarity": "ボスレリック",
+      "kind": "アルデオン",
+      "effect": "防御行動後の次の攻撃+70%。攻撃を受けなかった場合は+100%。",
+      "condition": "防御しないターンは防御-10%",
+      "tags": [
+        "火",
+        "光",
+        "ガード",
+        "反撃"
+      ],
+      "synergy": "背水の盾 / 守りの頁",
+      "motif": "焼け焦げた王国旗",
+      "availability": "B70F撃破",
+      "notes": ""
+    },
+    {
+      "id": "B008",
+      "name": "鏡海の破片",
+      "rarity": "ボスレリック",
+      "kind": "セレネ",
+      "effect": "フロアに1回、敵が使った最後の技を完全コピー。",
+      "condition": "コピー後、同じ技を使う敵から受けるダメージ+50%",
+      "tags": [
+        "水",
+        "闇",
+        "コピー"
+      ],
+      "synergy": "模写の万華鏡 / 模倣の鏡片",
+      "motif": "水面のように揺れる鏡片",
+      "availability": "B80F撃破",
+      "notes": ""
+    },
+    {
+      "id": "B009",
+      "name": "第五光輪",
+      "rarity": "ボスレリック",
+      "kind": "アストライオス",
+      "effect": "4回被弾するまで全属性被ダメージ-20%。4回被弾後、次の光技+100%。",
+      "condition": "強化光技使用後、光輪はフロア終了まで復活しない",
+      "tags": [
+        "光",
+        "聖神",
+        "防御",
+        "蓄積"
+      ],
+      "synergy": "神護 / 光輪砲",
+      "motif": "欠けた第五の光輪",
+      "availability": "B90F撃破",
+      "notes": ""
+    },
+    {
+      "id": "B010",
+      "name": "星喰らいの欠片",
+      "rarity": "ボスレリック",
+      "kind": "ヴォイド",
+      "effect": "フロアに1回、敵1体の強化・状態・最も残PPの多い技を吸収。",
+      "condition": "使用後HP1、全技PP半減",
+      "tags": [
+        "闇",
+        "邪悪",
+        "吸収",
+        "切り札"
+      ],
+      "synergy": "星喰い / 魂の前借り",
+      "motif": "光を吸う漆黒の星片",
+      "availability": "B100F撃破",
+      "notes": ""
+    }
+  ]
+}

@@ -1,0 +1,85 @@
+{
+  "id": "astraios",
+  "display_name": "聖神獣アストライオス",
+  "category": "bosses",
+  "rows": 4,
+  "cols": 6,
+  "frame_canvas": {
+    "width": 440,
+    "height": 192
+  },
+  "n_frames": 14,
+  "frame_files": [
+    {
+      "row": 1,
+      "col": 1,
+      "file": "frames/r01_c01.png"
+    },
+    {
+      "row": 1,
+      "col": 2,
+      "file": "frames/r01_c02.png"
+    },
+    {
+      "row": 1,
+      "col": 3,
+      "file": "frames/r01_c03.png"
+    },
+    {
+      "row": 1,
+      "col": 4,
+      "file": "frames/r01_c04.png"
+    },
+    {
+      "row": 1,
+      "col": 5,
+      "file": "frames/r01_c05.png"
+    },
+    {
+      "row": 1,
+      "col": 6,
+      "file": "frames/r01_c06.png"
+    },
+    {
+      "row": 2,
+      "col": 3,
+      "file": "frames/r02_c03.png"
+    },
+    {
+      "row": 2,
+      "col": 6,
+      "file": "frames/r02_c06.png"
+    },
+    {
+      "row": 3,
+      "col": 3,
+      "file": "frames/r03_c03.png"
+    },
+    {
+      "row": 3,
+      "col": 4,
+      "file": "frames/r03_c04.png"
+    },
+    {
+      "row": 3,
+      "col": 6,
+      "file": "frames/r03_c06.png"
+    },
+    {
+      "row": 4,
+      "col": 3,
+      "file": "frames/r04_c03.png"
+    },
+    {
+      "row": 4,
+      "col": 4,
+      "file": "frames/r04_c04.png"
+    },
+    {
+      "row": 4,
+      "col": 6,
+      "file": "frames/r04_c06.png"
+    }
+  ],
+  "notes": "Rows and columns follow the original sheet layout in reading order. Use generic row/column semantics unless you relabel after review."
+}

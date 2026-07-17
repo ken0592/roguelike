@@ -1,0 +1,720 @@
+{
+  "pack_name": "FOXBOUND Codex Asset Pack",
+  "entities": [
+    {
+      "id": "kohaku",
+      "display_name": "コハク",
+      "category": "heroes",
+      "path": "assets/heroes/kohaku",
+      "rows": 4,
+      "cols": 3,
+      "frame_canvas": {
+        "width": 112,
+        "height": 152
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "regulus",
+      "display_name": "レグルス",
+      "category": "heroes",
+      "path": "assets/heroes/regulus",
+      "rows": 4,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 232,
+        "height": 176
+      },
+      "n_frames": 14
+    },
+    {
+      "id": "mira",
+      "display_name": "ミラ",
+      "category": "heroes",
+      "path": "assets/heroes/mira",
+      "rows": 4,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 208,
+        "height": 152
+      },
+      "n_frames": 16
+    },
+    {
+      "id": "horn_crown_slime",
+      "display_name": "角冠スライム",
+      "category": "enemies",
+      "path": "assets/enemies/horn_crown_slime",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 104,
+        "height": 88
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "purple_wing_demon",
+      "display_name": "紫翼デーモン",
+      "category": "enemies",
+      "path": "assets/enemies/purple_wing_demon",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 128,
+        "height": 104
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "skeleton_soldier",
+      "display_name": "骸剣兵",
+      "category": "enemies",
+      "path": "assets/enemies/skeleton_soldier",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 112,
+        "height": 96
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "poison_mushroom",
+      "display_name": "毒胞キノコ",
+      "category": "enemies",
+      "path": "assets/enemies/poison_mushroom",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 112,
+        "height": 88
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "moss_rock_golem",
+      "display_name": "苔岩ゴーレム",
+      "category": "enemies",
+      "path": "assets/enemies/moss_rock_golem",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 224,
+        "height": 104
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "lava_salamander",
+      "display_name": "火砕サラマンダー",
+      "category": "enemies",
+      "path": "assets/enemies/lava_salamander",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 128,
+        "height": 104
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "ice_crystal_spider",
+      "display_name": "氷晶グモ",
+      "category": "enemies",
+      "path": "assets/enemies/ice_crystal_spider",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 144,
+        "height": 256
+      },
+      "n_frames": 10
+    },
+    {
+      "id": "mimic_chest",
+      "display_name": "ミミックチェスト",
+      "category": "enemies",
+      "path": "assets/enemies/mimic_chest",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 128,
+        "height": 88
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "shadow_lantern_mage",
+      "display_name": "影灯魔導士",
+      "category": "enemies",
+      "path": "assets/enemies/shadow_lantern_mage",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 144,
+        "height": 168
+      },
+      "n_frames": 11
+    },
+    {
+      "id": "bomb_imp",
+      "display_name": "爆弾インプ",
+      "category": "enemies",
+      "path": "assets/enemies/bomb_imp",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 144,
+        "height": 88
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "moonfang_wolf",
+      "display_name": "雷牙ウルフ",
+      "category": "enemies",
+      "path": "assets/enemies/moonfang_wolf",
+      "rows": 4,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 224,
+        "height": 96
+      },
+      "n_frames": 15
+    },
+    {
+      "id": "moss_ancient_tree",
+      "display_name": "苔古樹",
+      "category": "enemies",
+      "path": "assets/enemies/moss_ancient_tree",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 168,
+        "height": 120
+      },
+      "n_frames": 17
+    },
+    {
+      "id": "sand_poison_scorpion",
+      "display_name": "砂毒サソリ",
+      "category": "enemies",
+      "path": "assets/enemies/sand_poison_scorpion",
+      "rows": 3,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 136,
+        "height": 232
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "crystal_shell_crab",
+      "display_name": "晶殻クラブ",
+      "category": "enemies",
+      "path": "assets/enemies/crystal_shell_crab",
+      "rows": 4,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 184,
+        "height": 240
+      },
+      "n_frames": 11
+    },
+    {
+      "id": "possessed_armor",
+      "display_name": "憑依鎧",
+      "category": "enemies",
+      "path": "assets/enemies/possessed_armor",
+      "rows": 2,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 152,
+        "height": 248
+      },
+      "n_frames": 8
+    },
+    {
+      "id": "frost_armor_turtle",
+      "display_name": "霜甲タートル",
+      "category": "enemies",
+      "path": "assets/enemies/frost_armor_turtle",
+      "rows": 4,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 184,
+        "height": 216
+      },
+      "n_frames": 14
+    },
+    {
+      "id": "plague_crow",
+      "display_name": "疫病カラス",
+      "category": "enemies",
+      "path": "assets/enemies/plague_crow",
+      "rows": 3,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 144,
+        "height": 88
+      },
+      "n_frames": 15
+    },
+    {
+      "id": "poison_frog",
+      "display_name": "毒薬ガエル",
+      "category": "enemies",
+      "path": "assets/enemies/poison_frog",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 144,
+        "height": 80
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "lava_boar",
+      "display_name": "溶岩ボア",
+      "category": "enemies",
+      "path": "assets/enemies/lava_boar",
+      "rows": 3,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 144,
+        "height": 80
+      },
+      "n_frames": 15
+    },
+    {
+      "id": "cursed_lantern",
+      "display_name": "呪灯籠",
+      "category": "enemies",
+      "path": "assets/enemies/cursed_lantern",
+      "rows": 3,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 128,
+        "height": 96
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "void_eye",
+      "display_name": "虚眼",
+      "category": "enemies",
+      "path": "assets/enemies/void_eye",
+      "rows": 3,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 152,
+        "height": 80
+      },
+      "n_frames": 16
+    },
+    {
+      "id": "armored_beetle",
+      "display_name": "装甲カブト",
+      "category": "enemies",
+      "path": "assets/enemies/armored_beetle",
+      "rows": 4,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 144,
+        "height": 144
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "snake_priest",
+      "display_name": "蛇神官",
+      "category": "enemies",
+      "path": "assets/enemies/snake_priest",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 136,
+        "height": 88
+      },
+      "n_frames": 16
+    },
+    {
+      "id": "bone_drake_whelp",
+      "display_name": "骨竜幼体",
+      "category": "enemies",
+      "path": "assets/enemies/bone_drake_whelp",
+      "rows": 4,
+      "cols": 4,
+      "frame_canvas": {
+        "width": 184,
+        "height": 80
+      },
+      "n_frames": 14
+    },
+    {
+      "id": "stitched_doll",
+      "display_name": "縫い人形",
+      "category": "enemies",
+      "path": "assets/enemies/stitched_doll",
+      "rows": 3,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 96,
+        "height": 112
+      },
+      "n_frames": 18
+    },
+    {
+      "id": "gear_drone",
+      "display_name": "歯車ドローン",
+      "category": "enemies",
+      "path": "assets/enemies/gear_drone",
+      "rows": 3,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 104,
+        "height": 104
+      },
+      "n_frames": 18
+    },
+    {
+      "id": "acid_mud",
+      "display_name": "酸泥",
+      "category": "enemies",
+      "path": "assets/enemies/acid_mud",
+      "rows": 3,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 112,
+        "height": 112
+      },
+      "n_frames": 18
+    },
+    {
+      "id": "storm_harpy",
+      "display_name": "嵐ハーピー",
+      "category": "enemies",
+      "path": "assets/enemies/storm_harpy",
+      "rows": 3,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 128,
+        "height": 112
+      },
+      "n_frames": 18
+    },
+    {
+      "id": "black_dog_knight",
+      "display_name": "黒犬騎士",
+      "category": "enemies",
+      "path": "assets/enemies/black_dog_knight",
+      "rows": 4,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 112,
+        "height": 216
+      },
+      "n_frames": 16
+    },
+    {
+      "id": "briar_vine_beast",
+      "display_name": "茨蔓獣",
+      "category": "enemies",
+      "path": "assets/enemies/briar_vine_beast",
+      "rows": 3,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 120,
+        "height": 168
+      },
+      "n_frames": 13
+    },
+    {
+      "id": "thunder_horn_ram",
+      "display_name": "雷角ラム",
+      "category": "enemies",
+      "path": "assets/enemies/thunder_horn_ram",
+      "rows": 4,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 240,
+        "height": 136
+      },
+      "n_frames": 22
+    },
+    {
+      "id": "mummy_jackal",
+      "display_name": "ミイラジャッカル",
+      "category": "enemies",
+      "path": "assets/enemies/mummy_jackal",
+      "rows": 4,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 128,
+        "height": 120
+      },
+      "n_frames": 24
+    },
+    {
+      "id": "coral_jellyfish",
+      "display_name": "珊瑚クラゲ",
+      "category": "enemies",
+      "path": "assets/enemies/coral_jellyfish",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 104,
+        "height": 88
+      },
+      "n_frames": 19
+    },
+    {
+      "id": "gear_imp",
+      "display_name": "歯車インプ",
+      "category": "enemies",
+      "path": "assets/enemies/gear_imp",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 128,
+        "height": 80
+      },
+      "n_frames": 19
+    },
+    {
+      "id": "shadow_centipede",
+      "display_name": "影百足",
+      "category": "enemies",
+      "path": "assets/enemies/shadow_centipede",
+      "rows": 3,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 192,
+        "height": 80
+      },
+      "n_frames": 13
+    },
+    {
+      "id": "curse_pumpkin",
+      "display_name": "呪いカボチャ",
+      "category": "enemies",
+      "path": "assets/enemies/curse_pumpkin",
+      "rows": 3,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 128,
+        "height": 152
+      },
+      "n_frames": 14
+    },
+    {
+      "id": "frost_owl",
+      "display_name": "霜梟",
+      "category": "enemies",
+      "path": "assets/enemies/frost_owl",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 192,
+        "height": 144
+      },
+      "n_frames": 18
+    },
+    {
+      "id": "poison_shell_tank",
+      "display_name": "毒殻戦車",
+      "category": "enemies",
+      "path": "assets/enemies/poison_shell_tank",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 128,
+        "height": 80
+      },
+      "n_frames": 19
+    },
+    {
+      "id": "obsidian_gargoyle",
+      "display_name": "黒曜ガーゴイル",
+      "category": "enemies",
+      "path": "assets/enemies/obsidian_gargoyle",
+      "rows": 3,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 128,
+        "height": 88
+      },
+      "n_frames": 15
+    },
+    {
+      "id": "moonlight_samurai",
+      "display_name": "月光武者",
+      "category": "enemies",
+      "path": "assets/enemies/moonlight_samurai",
+      "rows": 3,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 136,
+        "height": 168
+      },
+      "n_frames": 12
+    },
+    {
+      "id": "granmos",
+      "display_name": "樹牢の番獣グランモス",
+      "category": "bosses",
+      "path": "assets/bosses/granmos",
+      "rows": 3,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 256,
+        "height": 344
+      },
+      "n_frames": 11
+    },
+    {
+      "id": "nereiya",
+      "display_name": "氷潮姫ネレイア",
+      "category": "bosses",
+      "path": "assets/bosses/nereiya",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 368,
+        "height": 232
+      },
+      "n_frames": 11
+    },
+    {
+      "id": "varg",
+      "display_name": "盲星狩りヴァルグ",
+      "category": "bosses",
+      "path": "assets/bosses/varg",
+      "rows": 4,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 400,
+        "height": 128
+      },
+      "n_frames": 16
+    },
+    {
+      "id": "ignibal",
+      "display_name": "炉心王イグニバル",
+      "category": "bosses",
+      "path": "assets/bosses/ignibal",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 304,
+        "height": 352
+      },
+      "n_frames": 11
+    },
+    {
+      "id": "lux_nox",
+      "display_name": "双面司祭ルクス＝ノクス",
+      "category": "bosses",
+      "path": "assets/bosses/lux_nox",
+      "rows": 4,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 168,
+        "height": 328
+      },
+      "n_frames": 8
+    },
+    {
+      "id": "zarga",
+      "display_name": "千節皇ザルガ",
+      "category": "bosses",
+      "path": "assets/bosses/zarga",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 248,
+        "height": 136
+      },
+      "n_frames": 19
+    },
+    {
+      "id": "aldeon",
+      "display_name": "亡国王アルデオン",
+      "category": "bosses",
+      "path": "assets/bosses/aldeon",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 376,
+        "height": 152
+      },
+      "n_frames": 13
+    },
+    {
+      "id": "selene",
+      "display_name": "鏡海魔女セレネ",
+      "category": "bosses",
+      "path": "assets/bosses/selene",
+      "rows": 4,
+      "cols": 5,
+      "frame_canvas": {
+        "width": 152,
+        "height": 256
+      },
+      "n_frames": 19
+    },
+    {
+      "id": "astraios",
+      "display_name": "聖神獣アストライオス",
+      "category": "bosses",
+      "path": "assets/bosses/astraios",
+      "rows": 4,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 440,
+        "height": 192
+      },
+      "n_frames": 14
+    },
+    {
+      "id": "void_eater",
+      "display_name": "星喰らいヴォイド",
+      "category": "bosses",
+      "path": "assets/bosses/void_eater",
+      "rows": 4,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 248,
+        "height": 192
+      },
+      "n_frames": 16
+    },
+    {
+      "id": "angelic_treasure_chest",
+      "display_name": "天輝宝箱",
+      "category": "rares",
+      "path": "assets/rares/angelic_treasure_chest",
+      "rows": 3,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 216,
+        "height": 160
+      },
+      "n_frames": 18
+    },
+    {
+      "id": "night_moth",
+      "display_name": "宵星モス",
+      "category": "rares",
+      "path": "assets/rares/night_moth",
+      "rows": 4,
+      "cols": 6,
+      "frame_canvas": {
+        "width": 216,
+        "height": 168
+      },
+      "n_frames": 20
+    }
+  ]
+}

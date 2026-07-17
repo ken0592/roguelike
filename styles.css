@@ -2374,9 +2374,10 @@ button {
   width: 100%;
   height: 100%;
   display: block;
-  background-image: url("assets/tokens/foxbound-relics-v1.jpg?v=pwa11");
-  background-size: 500% 400%;
+  background-image: var(--relic-sheet);
+  background-size: var(--relic-size-x) var(--relic-size-y);
   background-position: var(--relic-x) var(--relic-y);
+  background-repeat: no-repeat;
 }
 
 .relic-ribbon > b {
@@ -5831,8 +5832,8 @@ button {
   height: 50px;
   display: block;
   border: 1px solid color-mix(in srgb, var(--relic-color) 58%, transparent);
-  background-image: url("assets/tokens/foxbound-relics-v1.jpg?v=pwa11");
-  background-size: 500% 400%;
+  background-image: var(--relic-sheet);
+  background-size: var(--relic-size-x) var(--relic-size-y);
   background-position: var(--relic-x) var(--relic-y);
   background-repeat: no-repeat;
 }
@@ -6321,7 +6322,7 @@ button {
 
 .boss-dex-card {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 96px minmax(0, 1fr);
   gap: 10px;
   align-items: center;
   border: 1px solid rgba(255, 245, 223, 0.12);
@@ -6331,14 +6332,11 @@ button {
   padding: 10px;
 }
 
-.boss-dex-mark {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
+.boss-dex-portrait {
+  width: 96px;
+  height: 96px;
   border: 1px solid var(--dex-color, #e5ae48);
-  color: var(--dex-color, #e5ae48);
-  font-weight: 900;
+  background: rgba(0, 0, 0, 0.22);
 }
 
 .boss-dex-card div:last-child {

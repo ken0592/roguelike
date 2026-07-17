@@ -52,6 +52,97 @@ const enemyArtSheets = Array.from({ length: 4 }, (_, index) => {
   sheet.src = `assets/tokens/foxbound-enemies-${index + 1}-v1.png?v=pwa11`;
   return sheet;
 });
+const FOXBOUND_ASSET_VERSION = "pwa18a";
+const FOXBOUND_SPRITE_ROOT = "assets/foxbound-codex-v1";
+const FOXBOUND_HERO_SPRITE_IDS = Object.freeze({
+  kohaku: "kohaku",
+  knight: "regulus",
+  magician: "mira",
+});
+const FOXBOUND_ENEMY_SPRITE_IDS = Object.freeze([
+  "horn_crown_slime", "purple_wing_demon", "skeleton_soldier", "poison_mushroom", "moss_rock_golem",
+  "lava_salamander", "ice_crystal_spider", "mimic_chest", "shadow_lantern_mage", "bomb_imp",
+  "moonfang_wolf", "moss_ancient_tree", "sand_poison_scorpion", "crystal_shell_crab", "possessed_armor",
+  "frost_armor_turtle", "plague_crow", "poison_frog", "lava_boar", "cursed_lantern",
+  "void_eye", "armored_beetle", "snake_priest", "bone_drake_whelp", "stitched_doll",
+  "gear_drone", "acid_mud", "storm_harpy", "black_dog_knight", "briar_vine_beast",
+  "thunder_horn_ram", "mummy_jackal", "coral_jellyfish", "gear_imp", "shadow_centipede",
+  "curse_pumpkin", "frost_owl", "poison_shell_tank", "obsidian_gargoyle", "moonlight_samurai",
+]);
+const FOXBOUND_BOSS_SPRITE_IDS = Object.freeze([
+  "granmos", "nereiya", "varg", "ignibal", "lux_nox",
+  "zarga", "aldeon", "selene", "astraios", "void_eater",
+]);
+const FOXBOUND_RARE_SPRITE_IDS = Object.freeze({
+  "rare-stargold": "angelic_treasure_chest",
+  "rare-rainbow": "night_moth",
+});
+const foxboundSpriteEntries = new Map();
+const foxboundSpriteImages = new Map();
+let foxboundSpriteRefreshQueued = false;
+
+function foxboundSpriteKey(category, id) {
+  return `${category}/${id}`;
+}
+
+function scheduleFoxboundSpriteRefresh() {
+  if (foxboundSpriteRefreshQueued) return;
+  foxboundSpriteRefreshQueued = true;
+  requestAnimationFrame(() => {
+    foxboundSpriteRefreshQueued = false;
+    if (!game) return;
+    updateAll();
+    if (ui?.townDialog?.open && ui.townDialog.dataset.view === "loadout") {
+      renderExpeditionLoadout();
+    } else if (ui?.townDialog?.open && game.townView === "characters") {
+      renderCharacterSelection();
+    } else if (ui?.townDialog?.open && game.townView === "guild") {
+      const codexHost = ui.townDialogBody.querySelector(".town-codex-host");
+      if (codexHost) renderCodexMenu(codexHost);
+    }
+    if (ui?.gameMenuDialog?.open && game.menuView === "codex") {
+      renderCodexMenu();
+    }
+  });
+}
+
+function requestFoxboundSprite(category, id) {
+  if (!id) return null;
+  const key = foxboundSpriteKey(category, id);
+  const entry = foxboundSpriteEntries.get(key);
+  if (!entry) return null;
+  let record = foxboundSpriteImages.get(key);
+  if (!record) {
+    const image = new Image();
+    image.decoding = "async";
+    record = { image, failed: false };
+    foxboundSpriteImages.set(key, record);
+    image.addEventListener("load", scheduleFoxboundSpriteRefresh, { once: true });
+    image.addEventListener("error", () => { record.failed = true; }, { once: true });
+    image.src = `${FOXBOUND_SPRITE_ROOT}/${entry.path}/spritesheet.png?v=${FOXBOUND_ASSET_VERSION}`;
+  }
+  if (record.failed || !record.image.complete || !record.image.naturalWidth) return null;
+  return { entry, image: record.image };
+}
+
+function loadFoxboundSpriteManifest() {
+  fetch(`${FOXBOUND_SPRITE_ROOT}/runtime-manifest.json?v=${FOXBOUND_ASSET_VERSION}`)
+    .then((response) => {
+      if (!response.ok) throw new Error(`sprite manifest ${response.status}`);
+      return response.json();
+    })
+    .then((manifest) => {
+      for (const entry of manifest.entities || []) {
+        foxboundSpriteEntries.set(foxboundSpriteKey(entry.category, entry.id), entry);
+      }
+      Object.values(FOXBOUND_HERO_SPRITE_IDS).forEach((id) => requestFoxboundSprite("heroes", id));
+      FOXBOUND_ENEMY_SPRITE_IDS.slice(0, 8).forEach((id) => requestFoxboundSprite("enemies", id));
+      scheduleFoxboundSpriteRefresh();
+    })
+    .catch(() => {
+      // The legacy atlas remains available if the optional art pack cannot load.
+    });
+}
 const townFacilities = [
   { key: "characters", name: "継承の鏡", detail: "探索者と進化を選ぶ", x: 286, y: 340, radius: 70, color: "#9de6ed" },
   { key: "board", name: "塔の経路板", detail: "門番と休憩所を確認", x: 446, y: 350, radius: 64, color: "#efc867" },
@@ -193,27 +284,22 @@ const elementCatalog = {
   wood: { name: "木", symbol: "木", color: "#75ad58", accent: "#e2f5ad" },
   light: { name: "光", symbol: "光", color: "#e8c958", accent: "#fff6bd" },
   dark: { name: "闇", symbol: "闇", color: "#9568d8", accent: "#eadfff" },
-  ice: { name: "氷", symbol: "氷", color: "#8bdff2", accent: "#e8fbff", special: true },
-  poison: { name: "毒", symbol: "毒", color: "#a6c943", accent: "#efffb5", special: true },
+  divine: { name: "聖神", symbol: "聖", color: "#f4e7a2", accent: "#fffdf0", special: true },
+  evil: { name: "邪悪", symbol: "邪", color: "#d8589b", accent: "#ffd5ef", special: true },
 };
 
 const elementAdvantages = {
-  fire: ["wood", "ice"],
+  fire: ["wood"],
   water: ["fire"],
   wood: ["water"],
   light: ["dark"],
   dark: ["light"],
-  ice: ["water", "wood"],
-  poison: ["water", "wood"],
 };
 
 const elementResistances = {
   fire: ["water"],
   water: ["wood"],
-  wood: ["fire", "ice", "poison"],
-  light: ["poison"],
-  ice: ["fire", "ice"],
-  poison: ["light", "poison"],
+  wood: ["fire"],
 };
 
 function elementInfo(key) {
@@ -222,9 +308,12 @@ function elementInfo(key) {
 
 function elementEffectiveness(attackKey, defenseKey) {
   if (!attackKey || !defenseKey) return 1;
-  if (elementAdvantages[attackKey]?.includes(defenseKey)) return 1.35;
-  if (elementResistances[attackKey]?.includes(defenseKey)) return 0.75;
-  return 1;
+  let multiplier = 1;
+  if (elementAdvantages[attackKey]?.includes(defenseKey)) multiplier *= 1.35;
+  if (elementResistances[attackKey]?.includes(defenseKey)) multiplier *= 0.75;
+  if (defenseKey === "divine" && attackKey !== "divine") multiplier *= 0.8;
+  if (attackKey === "evil") multiplier *= 1.2;
+  return multiplier;
 }
 
 function elementBadgeMarkup(key) {
@@ -352,9 +441,9 @@ const moveCatalog = [
   { key: "shieldCrash", name: "城壁崩し", hint: "正面・防御低下", maxPp: 7, style: "physical", element: "water" },
   { key: "kingsGuard", name: "王城の構え", hint: "防御・魔防を強化", maxPp: 6, style: "physical", element: "light" },
   { key: "lionRoar", name: "残響の号令", hint: "周囲2マス・威圧", maxPp: 4, style: "physical", element: "fire" },
-  { key: "arcBolt", name: "アストラル弾", hint: "前方6マス・貫通", maxPp: 13, style: "magic", element: "ice" },
+  { key: "arcBolt", name: "アストラル弾", hint: "前方6マス・貫通", maxPp: 13, style: "magic", element: "water" },
   { key: "blinkHex", name: "転位呪", hint: "前方へ瞬間移動", maxPp: 7, style: "magic", element: "dark" },
-  { key: "mirrorCurse", name: "鏡界の呪詛", hint: "周囲・敵を弱体化", maxPp: 6, style: "magic", element: "poison" },
+  { key: "mirrorCurse", name: "鏡界の呪詛", hint: "周囲・敵を弱体化", maxPp: 6, style: "magic", element: "dark" },
   { key: "timeLoop", name: "時返し", hint: "HPとPPを巻き戻す", maxPp: 3, style: "magic", element: "water" },
 ];
 
@@ -506,25 +595,25 @@ const ascensionMoveThemes = {
     fang: { suffix: "紅牙", style: "physical", element: "fire", signature: "line", hint: "前方を裂く物理技" },
     lumen: { suffix: "星燈", style: "magic", element: "light", signature: "beam", hint: "直線を照らす魔法技" },
     shade: { suffix: "宵渡り", style: "magic", element: "dark", signature: "trick", hint: "転位と弱体の奇襲技" },
-    ascetic: { suffix: "無印尾", style: "physical", element: "light", signature: "burst", hint: "周囲を払う均衡技" },
+    ascetic: { suffix: "無印尾", style: "physical", element: "divine", signature: "burst", hint: "周囲を払う均衡技" },
     relic: { suffix: "遺星尾", style: "magic", element: "light", signature: "burst", hint: "星遺物を響かせる範囲技" },
-    karma: { suffix: "咎尾", style: "magic", element: "dark", signature: "trick", hint: "カルマを刻む闇技" },
+    karma: { suffix: "咎尾", style: "magic", element: "evil", signature: "trick", hint: "カルマを刻む邪悪技" },
   },
   knight: {
     warlord: { suffix: "覇剣", style: "physical", element: "fire", signature: "line", hint: "前方を薙ぐ物理技" },
     guardian: { suffix: "星盾", style: "physical", element: "water", signature: "guard", hint: "守りながら押し返す技" },
     revenant: { suffix: "亡刃", style: "physical", element: "dark", signature: "trick", hint: "影で斬り込み弱らせる技" },
-    ascetic: { suffix: "無冠剣", style: "physical", element: "light", signature: "guard", hint: "耐えて反撃する無印技" },
+    ascetic: { suffix: "無冠剣", style: "physical", element: "divine", signature: "guard", hint: "耐えて反撃する無印技" },
     relic: { suffix: "遺物剣", style: "physical", element: "fire", signature: "line", hint: "星遺物を込めた斬撃技" },
-    karma: { suffix: "咎王剣", style: "physical", element: "dark", signature: "line", hint: "カルマで切り裂く重い斬撃" },
+    karma: { suffix: "咎王剣", style: "physical", element: "evil", signature: "line", hint: "カルマで切り裂く重い斬撃" },
   },
   magician: {
-    archmage: { suffix: "星晶術", style: "magic", element: "ice", signature: "beam", hint: "長い直線を貫く魔法技" },
-    chaos: { suffix: "奇術札", style: "magic", element: "poison", signature: "burst", hint: "周囲を乱す範囲魔法" },
+    archmage: { suffix: "星晶術", style: "magic", element: "water", signature: "beam", hint: "長い直線を貫く魔法技" },
+    chaos: { suffix: "奇術札", style: "magic", element: "fire", signature: "burst", hint: "周囲を乱す範囲魔法" },
     void: { suffix: "虚空呪", style: "magic", element: "dark", signature: "trick", hint: "位置と能力を崩す呪術" },
-    ascetic: { suffix: "無印星", style: "magic", element: "light", signature: "beam", hint: "素の力で放つ星術" },
+    ascetic: { suffix: "無印星", style: "magic", element: "divine", signature: "beam", hint: "素の力で放つ星術" },
     relic: { suffix: "遺星術", style: "magic", element: "light", signature: "burst", hint: "星遺物を核にする範囲術" },
-    karma: { suffix: "咎星呪", style: "magic", element: "poison", signature: "burst", hint: "毒と闇で周囲を崩す術" },
+    karma: { suffix: "咎星呪", style: "magic", element: "evil", signature: "burst", hint: "邪気で周囲を崩す術" },
   },
 };
 
@@ -569,6 +658,96 @@ function buildAscensionMoveCatalog() {
 }
 
 moveCatalog.push(...buildAscensionMoveCatalog());
+
+const FOXBOUND_MOVE_ELEMENT_KEYS = Object.freeze({
+  "火": "fire",
+  "水": "water",
+  "木": "wood",
+  "光": "light",
+  "闇": "dark",
+  "聖神": "divine",
+  "邪悪": "evil",
+});
+
+function moveDesignStage(stage, elementKey) {
+  if (["divine", "evil"].includes(elementKey)) return "特殊進化";
+  if (stage <= 3) return "序盤";
+  if (stage <= 6) return "中盤";
+  if (stage <= 9) return "終盤";
+  return "最終盤";
+}
+
+function scoreMoveDesign(move, design) {
+  const desiredStage = moveDesignStage(move.stage || 1, move.element);
+  const range = String(design.range || "");
+  const effect = String(design.effect || "");
+  const attackMove = move.signature !== "guard";
+  let score = design.stage === desiredStage ? 20 : 0;
+  if (move.style === "physical" && design.category === "物理") score += 14;
+  if (move.style === "magic" && design.category === "特殊") score += 14;
+  if (["guard", "trick"].includes(move.signature) && design.category === "変化") score += 11;
+  if (["line", "beam"].includes(move.signature) && /直線|正面|指定/.test(range)) score += 10;
+  if (move.signature === "burst" && /周囲|部屋|全体/.test(range)) score += 10;
+  if (move.signature === "guard" && /自分|味方/.test(range)) score += 10;
+  if (move.signature === "trick" && /転移|移動|位置|入れ替/.test(`${range}${effect}`)) score += 10;
+  if (attackMove === (Number(design.power) > 0)) score += 7;
+  return score;
+}
+
+function syncKnownMoveDesigns() {
+  if (!game) return;
+  const actors = [
+    ...(game.team || []),
+    ...Object.values(game.roster || {}),
+    game.towerCheckpoint?.leader,
+  ].filter(Boolean);
+  for (const actor of actors) {
+    for (const known of actor.moves || []) {
+      const catalogMove = moveCatalog.find((entry) => entry.key === known.key);
+      if (!catalogMove?.designId) continue;
+      known.name = catalogMove.name;
+      known.designId = catalogMove.designId;
+      known.designEffect = catalogMove.designEffect;
+    }
+  }
+}
+
+function applyFoxboundMoveDesigns(designs) {
+  const normalized = (designs || []).map((design) => ({
+    ...design,
+    elementKey: FOXBOUND_MOVE_ELEMENT_KEYS[design.element],
+  }));
+  const used = new Set();
+  for (const move of moveCatalog.filter((entry) => String(entry.key).startsWith("asc-"))) {
+    const candidates = normalized
+      .filter((design) => design.elementKey === move.element && !used.has(design.id))
+      .map((design) => ({ design, score: scoreMoveDesign(move, design) }))
+      .sort((a, b) => b.score - a.score || a.design.id.localeCompare(b.design.id, "ja"));
+    const selected = candidates[0]?.design;
+    if (!selected) continue;
+    used.add(selected.id);
+    move.name = selected.name;
+    move.designId = selected.id;
+    move.designEffect = selected.effect;
+  }
+  syncKnownMoveDesigns();
+  updateAll();
+  if (ui?.townDialog?.open && ui.townDialog.dataset.view === "loadout") renderExpeditionLoadout();
+  if (ui?.gameMenuDialog?.open) renderGameMenu(game.menuView);
+  if (ui?.levelDialog?.open) renderLevelMoveChoices();
+}
+
+function loadFoxboundMoveDesigns() {
+  fetch(`assets/data/foxbound-move-designs-v1.json?v=${FOXBOUND_ASSET_VERSION}`)
+    .then((response) => {
+      if (!response.ok) throw new Error(`move designs ${response.status}`);
+      return response.json();
+    })
+    .then((catalog) => applyFoxboundMoveDesigns(catalog.moves))
+    .catch(() => {
+      // Generated evolution moves remain available if the optional design catalog cannot load.
+    });
+}
 
 const itemCatalog = {
   apple: {
@@ -874,13 +1053,13 @@ const relicCatalog = [
   { key: "campfireCoal", name: "旅火の炭", icon: "火", rarity: "UNCOMMON", color: "#ee865d", detail: "階段を降りるたびHPを8回復。", effect: "stairHeal" },
   { key: "crackedShield", name: "割れ盾の誓い", icon: "誓", rarity: "UNCOMMON", color: "#8bb5d0", detail: "HP35%以下で受けるダメージを軽減。", effect: "lowHpGuard" },
   { key: "triadCompass", name: "三相の羅針", icon: "三", rarity: "RARE", color: "#8de0bf", detail: "炎→木→水→炎の順で技を使うと威力 +45%、HPを3回復。", effect: "elementCycle" },
-  { key: "karmaBrand", name: "咎星の刻印", icon: "咎", rarity: "RARE", color: "#b26ce8", detail: "カルマが高いほど闇・毒技の威力上昇。最大 +60%。", effect: "karmaDarkness" },
+  { key: "karmaBrand", name: "咎星の刻印", icon: "咎", rarity: "RARE", color: "#b26ce8", detail: "カルマが高いほど闇・邪悪技の威力上昇。最大 +60%。", effect: "karmaDarkness" },
   { key: "stormKite", name: "避雷の凧", icon: "凧", rarity: "UNCOMMON", color: "#7fd4ed", detail: "敵の遠距離攻撃ダメージを30%軽減。", effect: "rangedGuard" },
   { key: "emptySatchel", name: "空袋の誓い", icon: "袋", rarity: "UNCOMMON", color: "#d9bd78", detail: "バッグ空きが10枠以上なら、技の威力 +20%。拾いすぎないほど強い。", effect: "emptyBagPower" },
   { key: "foxMask", name: "白狐の仮面", icon: "狐", rarity: "RARE", color: "#f0dca2", detail: "物理・魔力 +2、運 +1。", bonus: { atk: 2, magic: 2, luck: 1 } },
   { key: "voidLedger", name: "宵闇の帳簿", icon: "帳", rarity: "RARE", color: "#a575e2", detail: "倒すたび探索ptが少し増えるが、最大HP -6。", bonus: { hp: -6 }, effect: "scoreOnKill" },
-  { key: "frostNeedle", name: "霜針の星飾り", icon: "霜", rarity: "RARE", color: "#8bdff2", detail: "氷属性の技ダメージ +4。", effect: "iceDamage" },
-  { key: "venomLamp", name: "毒灯の小瓶", icon: "毒", rarity: "RARE", color: "#a6c943", detail: "毒属性の技ダメージ +4。", effect: "poisonDamage" },
+  { key: "frostNeedle", name: "霜針の星飾り", icon: "霜", rarity: "RARE", color: "#8bdff2", detail: "水属性の技ダメージ +4。凍結系の技にも有効。", effect: "waterDamage" },
+  { key: "venomLamp", name: "毒灯の小瓶", icon: "毒", rarity: "RARE", color: "#a6c943", detail: "木属性の技ダメージ +4。毒系の技にも有効。", effect: "woodDamage" },
   { key: "lineSigil", name: "一直線の星印", icon: "線", rarity: "UNCOMMON", color: "#7fcfe8", detail: "直線・貫通技の威力 +18%。", effect: "linePower" },
   { key: "burstBloom", name: "円花の結晶", icon: "円", rarity: "UNCOMMON", color: "#91d57d", detail: "周囲技の威力 +18%。周囲技を使うとHPを2回復。", effect: "burstPower" },
   { key: "openingCharm", name: "開幕の護符", icon: "開", rarity: "COMMON", color: "#f3c66a", detail: "各階の最初の18ターン、技威力 +20%。", effect: "openingPower" },
@@ -888,7 +1067,64 @@ const relicCatalog = [
   { key: "quietHourglass", name: "静刻の砂時計", icon: "刻", rarity: "RARE", color: "#b9a4ef", detail: "同じ階の150ターン目まで、受けるダメージを少し軽減。", effect: "earlyGuard" },
   { key: "thiefRibbon", name: "盗星のリボン", icon: "盗", rarity: "RARE", color: "#d9b06f", detail: "泥棒後、次の門番まで技威力 +25%。", effect: "theftPower" },
   { key: "zeroFragment", name: "零星の欠片", icon: "零", rarity: "BOSS", color: "#ffdd83", detail: "全能力 +2。最深部へ近づくほどさらに輝く。", bonus: { atk: 2, magic: 2, def: 2, res: 2 } },
+  { key: "design-C001", designId: "C001", name: "赤熱の小石", icon: "炎", rarity: "COMMON", color: "#ef684f", detail: "炎属性技の威力 +8%。", elementPower: { element: "fire", value: 0.08 } },
+  { key: "design-C002", designId: "C002", name: "潮騒の貝片", icon: "水", rarity: "COMMON", color: "#52aee8", detail: "水属性技の威力 +8%。", elementPower: { element: "water", value: 0.08 } },
+  { key: "design-C003", designId: "C003", name: "若葉の護り木", icon: "木", rarity: "COMMON", color: "#75ad58", detail: "木属性技の威力 +8%。", elementPower: { element: "wood", value: 0.08 } },
+  { key: "design-C004", designId: "C004", name: "白星の欠片", icon: "光", rarity: "COMMON", color: "#e8c958", detail: "光属性技の威力 +8%。", elementPower: { element: "light", value: 0.08 } },
+  { key: "design-C005", designId: "C005", name: "黒月の破片", icon: "闇", rarity: "COMMON", color: "#9568d8", detail: "闇属性技の威力 +8%。", elementPower: { element: "dark", value: 0.08 } },
+  { key: "design-C011", designId: "C011", name: "火避けの布", icon: "炎", rarity: "COMMON", color: "#ef684f", detail: "炎属性から受けるダメージ -8%。", elementGuard: { element: "fire", value: 0.08 } },
+  { key: "design-C012", designId: "C012", name: "水避けの布", icon: "水", rarity: "COMMON", color: "#52aee8", detail: "水属性から受けるダメージ -8%。", elementGuard: { element: "water", value: 0.08 } },
+  { key: "design-C013", designId: "C013", name: "木避けの布", icon: "木", rarity: "COMMON", color: "#75ad58", detail: "木属性から受けるダメージ -8%。", elementGuard: { element: "wood", value: 0.08 } },
+  { key: "design-C014", designId: "C014", name: "光避けの布", icon: "光", rarity: "COMMON", color: "#e8c958", detail: "光属性から受けるダメージ -8%。", elementGuard: { element: "light", value: 0.08 } },
+  { key: "design-C015", designId: "C015", name: "闇避けの布", icon: "闇", rarity: "COMMON", color: "#9568d8", detail: "闇属性から受けるダメージ -8%。", elementGuard: { element: "dark", value: 0.08 } },
 ];
+
+function relicElementModifier(field, elementKey) {
+  return (game?.relics || []).reduce((total, key) => {
+    const relic = relicCatalog.find((entry) => entry.key === key);
+    const modifier = relic?.[field];
+    return modifier?.element === elementKey ? total + (Number(modifier.value) || 0) : total;
+  }, 0);
+}
+
+const RELIC_ICON_SHEET_LAYOUTS = Object.freeze({
+  C: { file: "common", cols: 10, rows: 5 },
+  U: { file: "uncommon", cols: 8, rows: 5 },
+  R: { file: "rare", cols: 6, rows: 5 },
+  SR: { file: "star", cols: 5, rows: 5 },
+  B: { file: "boss", cols: 5, rows: 2 },
+});
+const RELIC_VISUAL_IDS = Object.freeze({
+  ironFang: "C016", moonLens: "U022", shellSeed: "C046", heartMeteor: "SR018",
+  emberStep: "U011", echoBell: "U016", bossClaw: "U040", trapEye: "U037",
+  glassCannon: "R009", prismCore: "R023", secondMoon: "R004", mutationSeal: "R030",
+  starCompass: "U021", hungryCrown: "R001", luckyAsh: "U013", arcaneVein: "U004",
+  warDrum: "R003", firstDawn: "C024", starVessel: "R005", oakMedal: "C003",
+  mageThread: "C040", duelistCoin: "C050", thornMantle: "U019", campfireCoal: "U012",
+  crackedShield: "U033", triadCompass: "SR003", karmaBrand: "R022", stormKite: "C032",
+  emptySatchel: "R020", foxMask: "SR020", voidLedger: "R010", frostNeedle: "R008",
+  venomLamp: "R007", lineSigil: "U022", burstBloom: "U018", openingCharm: "C030",
+  scarletPearl: "R015", quietHourglass: "SR010", thiefRibbon: "C048", zeroFragment: "B010",
+});
+
+function relicIconStyle(relic) {
+  const designId = relic.designId || RELIC_VISUAL_IDS[relic.key] || "C050";
+  const match = /^(SR|C|U|R|B)(\d{3})$/.exec(designId);
+  const layout = match ? RELIC_ICON_SHEET_LAYOUTS[match[1]] : null;
+  if (!layout) return "";
+  const index = clamp(Number(match[2]) - 1, 0, layout.cols * layout.rows - 1);
+  const column = index % layout.cols;
+  const row = Math.floor(index / layout.cols);
+  const x = layout.cols > 1 ? (column / (layout.cols - 1)) * 100 : 0;
+  const y = layout.rows > 1 ? (row / (layout.rows - 1)) * 100 : 0;
+  return [
+    `--relic-sheet:url('assets/relics/foxbound-relic-icons-v1/relic-icons-${layout.file}-v1.png?v=${FOXBOUND_ASSET_VERSION}')`,
+    `--relic-size-x:${layout.cols * 100}%`,
+    `--relic-size-y:${layout.rows * 100}%`,
+    `--relic-x:${x}%`,
+    `--relic-y:${y}%`,
+  ].join(";");
+}
 
 const evolutionCatalog = [
   {
@@ -1155,25 +1391,23 @@ function elementComboBonus(previous, next) {
     "fire>wood": { name: "延焼", power: 0.12, color: "#f29d54" },
     "wood>water": { name: "繁茂", power: 0.12, color: "#9edb74", heal: 2 },
     "water>fire": { name: "蒸気", power: 0.1, color: "#9fe5ef" },
-    "water>ice": { name: "凍結準備", power: 0.14, color: "#8bdff2" },
-    "ice>water": { name: "融解", power: 0.1, color: "#a8eaff", heal: 2 },
     "light>dark": { name: "蝕光", power: 0.15, color: "#d7b6ff" },
     "dark>light": { name: "払暁", power: 0.15, color: "#fff0a1" },
-    "wood>poison": { name: "毒花", power: 0.15, color: "#a6c943" },
-    "poison>fire": { name: "毒煙", power: 0.16, color: "#d6b06a" },
+    "divine>evil": { name: "聖断", power: 0.12, color: "#fff4b8", heal: 2 },
+    "evil>divine": { name: "冒涜", power: 0.18, color: "#e778b5" },
   };
   return combos[`${previous}>${next}`] || null;
 }
 
 const specialEnemyElements = {
-  toxicMushroom: "poison",
-  toxicToad: "poison",
-  acidOoze: "poison",
-  toxicSnail: "poison",
-  iceSpider: "ice",
-  frostTurtle: "ice",
-  frostOwl: "ice",
-  crystalCrab: "ice",
+  toxicMushroom: "wood",
+  toxicToad: "wood",
+  acidOoze: "wood",
+  toxicSnail: "wood",
+  iceSpider: "water",
+  frostTurtle: "water",
+  frostOwl: "water",
+  crystalCrab: "water",
 };
 
 function enemyElementKey(catalog) {
@@ -1247,6 +1481,7 @@ const enemyFamilies = enemyFamilySeeds.map(([key, name, friendName], index) => {
     name,
     friendName,
     artIndex: index,
+    spritePackId: FOXBOUND_ENEMY_SPRITE_IDS[index],
     minFloor,
     maxFloor: band === 3 ? 100 : Math.min(100, minFloor + 38),
     hp: 12 + band * 11 + (localIndex % 5) * 3,
@@ -1281,17 +1516,17 @@ const rareEnemyCatalog = [
   {
     key: "rare-stargold", name: "星金ミミック", friendName: "キンボシ", minDungeon: 1,
     hp: 32, atk: 9, def: 3, exp: 110, recruit: 0.004, sprite: 554,
-    color: "#e9bd58", accent: "#fff3ae", elementKey: "light", rare: true, artIndex: 7,
+    color: "#e9bd58", accent: "#fff3ae", elementKey: "light", rare: true, artIndex: 7, spritePackId: "angelic_treasure_chest",
   },
   {
     key: "rare-rainbow", name: "虹羽フェニクス", friendName: "ニジハ", minDungeon: 2,
     hp: 38, atk: 12, def: 3, exp: 155, recruit: 0.0035, sprite: 800,
-    color: "#ef7b72", accent: "#9de9df", elementKey: "fire", rare: true, artIndex: 27,
+    color: "#ef7b72", accent: "#9de9df", elementKey: "fire", rare: true, artIndex: 27, spritePackId: "night_moth",
   },
   {
     key: "rare-moonwhite", name: "月白ユニコーン", friendName: "ハクギン", minDungeon: 3,
     hp: 46, atk: 14, def: 5, exp: 210, recruit: 0.003, sprite: 690,
-    color: "#d9d4f2", accent: "#fffbd6", elementKey: "ice", rare: true, artIndex: 36,
+    color: "#d9d4f2", accent: "#fffbd6", elementKey: "water", rare: true, artIndex: 36,
   },
   {
     key: "rare-timehare", name: "時渡りウサギ", friendName: "トキノ", minDungeon: 4,
@@ -1500,29 +1735,29 @@ const towerContract = {
 };
 
 const towerBossCatalog = [
-  { name: "苔冠ゴルム", title: "九階の門番", sprite: 690, color: "#76a85d", accent: "#e6f4ad", hp: 92, atk: 10, def: 3, exp: 140, special: "岩星崩し" },
-  { name: "幻灯ミラージュ", title: "十九階の門番", sprite: 744, color: "#8d73d4", accent: "#f0e2ff", hp: 142, atk: 15, def: 4, exp: 230, special: "幻星波" },
-  { name: "炎角グレンガ", title: "二十九階の門番", sprite: 856, color: "#e56651", accent: "#ffd09b", hp: 205, atk: 20, def: 6, exp: 340, special: "灼星突進" },
-  { name: "氷鏡セレネ", title: "三十九階の門番", sprite: 801, color: "#69bfe4", accent: "#e8fbff", hp: 270, atk: 25, def: 7, exp: 470, special: "凍星鏡" },
-  { name: "変異王ヴェルド", title: "四十九階の門番", sprite: 857, color: "#4fd1b4", accent: "#d8fff6", hp: 355, atk: 31, def: 9, exp: 620, special: "変異連鎖" },
-  { name: "灰都機神ガルド", title: "五十九階の門番", sprite: 602, color: "#b87965", accent: "#f5d5b8", hp: 450, atk: 37, def: 11, exp: 800, special: "機星砲" },
-  { name: "月蝕ノクティス", title: "六十九階の門番", sprite: 556, color: "#925bc7", accent: "#eed6ff", hp: 565, atk: 44, def: 13, exp: 1010, special: "月蝕断" },
-  { name: "天嵐ヴァルグ", title: "七十九階の門番", sprite: 800, color: "#52afe8", accent: "#e2f7ff", hp: 700, atk: 51, def: 15, exp: 1280, special: "天星嵐" },
-  { name: "冥晶アビサル", title: "八十九階の門番", sprite: 857, color: "#5f3a91", accent: "#e9c9ff", hp: 870, atk: 59, def: 18, exp: 1600, special: "冥晶界" },
-  { name: "星喰皇ゼロム", title: "九十九階の最後の門番", sprite: 857, color: "#d34bc2", accent: "#fff0ff", hp: 1120, atk: 68, def: 21, exp: 2400, special: "終星落とし" },
+  { name: "樹牢の番獣グランモス", title: "九階の門番", sprite: 690, spritePackId: "granmos", color: "#76a85d", accent: "#e6f4ad", hp: 92, atk: 10, def: 3, exp: 140, special: "樹牢圧壊" },
+  { name: "氷潮姫ネレイア", title: "十九階の門番", sprite: 744, spritePackId: "nereiya", color: "#69bfe4", accent: "#e8fbff", hp: 142, atk: 15, def: 4, exp: 230, special: "逆潮氷界" },
+  { name: "盲星狩りヴァルグ", title: "二十九階の門番", sprite: 800, spritePackId: "varg", color: "#9568d8", accent: "#eadfff", hp: 205, atk: 20, def: 6, exp: 340, special: "盲星狩り" },
+  { name: "炉心王イグニバル", title: "三十九階の門番", sprite: 856, spritePackId: "ignibal", color: "#e56651", accent: "#ffd09b", hp: 270, atk: 25, def: 7, exp: 470, special: "炉心暴走" },
+  { name: "双面司祭ルクス＝ノクス", title: "四十九階の門番", sprite: 857, spritePackId: "lux_nox", color: "#e8c958", accent: "#fff6bd", hp: 355, atk: 31, def: 9, exp: 620, special: "双面審判" },
+  { name: "千節皇ザルガ", title: "五十九階の門番", sprite: 857, spritePackId: "zarga", color: "#9568d8", accent: "#eadfff", hp: 450, atk: 37, def: 11, exp: 800, special: "千節封陣" },
+  { name: "亡国王アルデオン", title: "六十九階の門番", sprite: 556, spritePackId: "aldeon", color: "#9568d8", accent: "#eadfff", hp: 565, atk: 44, def: 13, exp: 1010, special: "王城断罪" },
+  { name: "鏡海魔女セレネ", title: "七十九階の門番", sprite: 801, spritePackId: "selene", color: "#52aee8", accent: "#d9f3ff", hp: 700, atk: 51, def: 15, exp: 1280, special: "鏡海反照" },
+  { name: "聖神獣アストライオス", title: "八十九階の門番", sprite: 602, spritePackId: "astraios", color: "#f4e7a2", accent: "#fffdf0", hp: 870, atk: 59, def: 18, exp: 1600, special: "第五光輪" },
+  { name: "星喰らいヴォイド", title: "九十九階の最後の門番", sprite: 857, spritePackId: "void_eater", color: "#d8589b", accent: "#ffd5ef", hp: 1120, atk: 68, def: 21, exp: 2400, special: "終星捕食" },
 ];
 
 const bossThemeCatalog = [
   { elementKey: "wood", plan: "召喚型", warning: "蔦で退路を狭め、取り巻きを呼ぶ。範囲技か早期決着が有効。", gimmick: "summon", reward: "wisdomSeed" },
-  { elementKey: "dark", plan: "幻惑型", warning: "魔法耐性が高く、特殊技の後に分身を呼ぶ。物理で削ると安定。", gimmick: "mirror", reward: "shadowFang" },
-  { elementKey: "fire", plan: "突撃型", warning: "HPが減るほど火力が上がる。守りを固めて短期決戦。", gimmick: "rage", reward: "emberCore" },
-  { elementKey: "ice", plan: "防壁型", warning: "前半は硬い氷鏡でダメージを抑える。弱点を突いて割る。", gimmick: "shield", reward: "moonShard" },
-  { elementKey: "poison", plan: "変異型", warning: "特殊技で変異種を呼ぶ。放置すると盤面が危険になる。", gimmick: "mutate", reward: "bossCore" },
-  { elementKey: "light", plan: "砲台型", warning: "直線射撃が強い。壁や斜め移動で射線を切る。", gimmick: "cannon", reward: "moonShard" },
+  { elementKey: "water", plan: "逆潮型", warning: "押し流しと氷壁で位置を崩す。壁際に追い込まれないこと。", gimmick: "shield", reward: "moonShard" },
+  { elementKey: "dark", plan: "狩猟型", warning: "一直線の射線から獲物を狙う。斜め移動で照準を外そう。", gimmick: "cannon", reward: "shadowFang" },
+  { elementKey: "fire", plan: "暴走型", warning: "HPが減るほど炉心火力が上がる。守りを固めて短期決戦。", gimmick: "rage", reward: "emberCore" },
+  { elementKey: "light", plan: "双面型", warning: "特殊技のたび光と闇の性質を切り替える。技属性を見て攻める。", gimmick: "mirror", reward: "moonShard" },
+  { elementKey: "dark", plan: "増殖型", warning: "千の節から変異種を呼ぶ。囲まれる前に数を減らそう。", gimmick: "mutate", reward: "bossCore" },
   { elementKey: "dark", plan: "吸収型", warning: "与えた痛みを力に変える。大技の連打より回復管理が重要。", gimmick: "drain", reward: "shadowFang" },
-  { elementKey: "water", plan: "嵐型", warning: "遠距離圧が高い。避雷の凧や通路戦が効く。", gimmick: "storm", reward: "moonShard" },
-  { elementKey: "ice", plan: "結晶型", warning: "同じ属性の攻撃を受け流す。技の属性を切り替えよう。", gimmick: "crystal", reward: "bossCore" },
-  { elementKey: "dark", plan: "最終型", warning: "召喚・吸収・遠距離を混ぜる総力戦。星遺物の組み合わせが鍵。", gimmick: "final", reward: "bossCore" },
+  { elementKey: "water", plan: "反照型", warning: "同じ属性の攻撃を鏡海で受け流す。技属性を切り替えよう。", gimmick: "crystal", reward: "moonShard" },
+  { elementKey: "divine", plan: "聖域型", warning: "他属性から受けるダメージを2割減らす。弱点だけに頼らず手数を整えよう。", gimmick: "storm", reward: "bossCore" },
+  { elementKey: "evil", plan: "捕食型", warning: "すべての与ダメージが2割高い。召喚・吸収・遠距離を混ぜる総力戦。", gimmick: "final", reward: "bossCore" },
 ];
 
 const routeCatalog = [
@@ -2179,9 +2414,9 @@ function expRequirementForLevel(level) {
 
 function lineageElementKey(profileKey, branch, fallback = "light") {
   const branches = {
-    kohaku: { fang: "fire", lumen: "light", shade: "dark", ascetic: "light" },
-    knight: { warlord: "fire", guardian: "water", revenant: "dark", ascetic: "light" },
-    magician: { archmage: "ice", chaos: "poison", void: "dark", ascetic: "light" },
+    kohaku: { fang: "fire", lumen: "light", shade: "dark", ascetic: "divine", karma: "evil" },
+    knight: { warlord: "fire", guardian: "water", revenant: "dark", ascetic: "divine", karma: "evil" },
+    magician: { archmage: "water", chaos: "fire", void: "dark", ascetic: "divine", karma: "evil" },
   };
   return branches[profileKey]?.[branch] || fallback;
 }
@@ -3016,7 +3251,7 @@ function createEnemy(catalog, point, alerted = false) {
     type: element.name,
     color: element.color,
     accent: element.accent,
-    attackStyle: mutation?.magic || ["starwater", "moonshade", "skywind"].includes(catalog.typeKey) || ["ice", "poison"].includes(elementKey) ? "magic" : "physical",
+    attackStyle: mutation?.magic || ["starwater", "moonshade", "skywind"].includes(catalog.typeKey) || ["divine", "evil"].includes(elementKey) ? "magic" : "physical",
     mutation,
     mutated: Boolean(mutation),
     x: point.x,
@@ -3037,7 +3272,7 @@ function enemyAbilityForCatalog(catalog, elementKey, mutation) {
   if (["toxicToad", "plagueCrow", "cursedLantern", "frostOwl"].includes(catalog.familyKey)) return "heal";
   if (["stitchedRogue", "mimicChest", "darkJackal"].includes(catalog.familyKey)) return "steal";
   if (["serpentPriest", "mossTreant", "voidEye"].includes(catalog.familyKey)) return "summon";
-  if (elementKey === "poison" && game.floor >= 35) return "heal";
+  if (["toxicMushroom", "toxicSnail", "acidOoze"].includes(catalog.familyKey) && game.floor >= 35) return "heal";
   return null;
 }
 
@@ -3056,6 +3291,7 @@ function spawnBoss(profile, point) {
     typeKey: bossTheme.elementKey,
     elementKey: bossTheme.elementKey,
     artIndex: bossArt,
+    spritePackId: profile.spritePackId || FOXBOUND_BOSS_SPRITE_IDS[Math.min(9, bossIndex)],
     friendName: profile.name,
     color: bossElement.color,
     accent: bossElement.accent,
@@ -3395,7 +3631,7 @@ function useSelectedMove() {
   const triadBoost = hasRelic("triadCompass")
     && previousCycleElement
     && cycleNext[previousCycleElement] === move.element;
-  const karmaBoost = hasRelic("karmaBrand") && ["dark", "poison"].includes(move.element)
+  const karmaBoost = hasRelic("karmaBrand") && ["dark", "evil"].includes(move.element)
     ? Math.min(0.6, game.karma * 0.06)
     : 0;
   const emptyBagBoost = hasRelic("emptySatchel") && game.bagCapacity - bagTotal() >= 10;
@@ -3404,6 +3640,7 @@ function useSelectedMove() {
   const burstPower = hasRelic("burstBloom") && moveShape.kind === "burst";
   const openingPower = hasRelic("openingCharm") && game.turn < 18;
   const theftPower = hasRelic("thiefRibbon") && game.runStats.thefts > 0;
+  const relicElementBoost = relicElementModifier("elementPower", move.element);
   const passiveBoost = characterMovePassive(leader, move, previousElement, previousStyle);
   const echoed = move.style === "magic" && hasSkill("spellEcho") && Math.random() < 0.24;
   const freeCast = move.style === "magic" && hasRelic("arcaneVein") && Math.random() < 0.28;
@@ -3417,6 +3654,7 @@ function useSelectedMove() {
     * (burstPower ? 1.18 : 1)
     * (openingPower ? 1.2 : 1)
     * (theftPower ? 1.25 : 1)
+    * (1 + relicElementBoost)
     * (passiveBoost.multiplier || 1)
     * (1 + (move.powerBonus || 0))
     * (echoed ? 1.55 : 1)
@@ -3433,6 +3671,7 @@ function useSelectedMove() {
     burstPower ? "円花 +18%" : "",
     openingPower ? "開幕 +20%" : "",
     theftPower ? "盗星 +25%" : "",
+    relicElementBoost ? `属性遺物 +${Math.round(relicElementBoost * 100)}%` : "",
     passiveBoost.note || "",
     move.powerBonus ? `技強化 +${Math.round(move.powerBonus * 100)}%` : "",
     echoed ? "術式残響" : "",
@@ -3475,6 +3714,7 @@ function useSelectedMove() {
   }
   game.relicFloorState.triadElement = ["fire", "wood", "water"].includes(move.element) ? move.element : null;
   game.lastMoveElement = move.element;
+  markActorAction(leader, 420);
   playSfx("move");
   let used = false;
   if (move.key === "spark") used = useSpark(leader, move);
@@ -4262,7 +4502,10 @@ function bossSpecialAttack(enemy, target) {
   const defense = enemy.attackStyle === "magic" ? target.res : target.def;
   const effectiveness = elementEffectiveness(enemy.elementKey, target.elementKey);
   const rawDamage = Math.max(2, Math.ceil((base + randInt(-2, 3) - defense) * effectiveness));
-  const damage = target.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
+  let damage = target.guardTurns > 0 ? Math.max(1, Math.ceil(rawDamage / 2)) : rawDamage;
+  const relicGuard = target.id === "leader" ? relicElementModifier("elementGuard", enemy.elementKey) : 0;
+  if (relicGuard) damage = Math.max(1, Math.ceil(damage * (1 - relicGuard)));
+  markActorAction(enemy, 520);
   if (target.id === "leader") {
     game.lastDamageSource = {
       kind: "boss",
@@ -4292,6 +4535,15 @@ function bossSpecialAttack(enemy, target) {
 
 function applyBossSpecialGimmick(enemy, target, damage) {
   if (!enemy.boss) return;
+  if (enemy.bossGimmick === "mirror") {
+    enemy.elementKey = enemy.elementKey === "light" ? "dark" : "light";
+    const mirroredElement = elementInfo(enemy.elementKey);
+    enemy.color = mirroredElement.color;
+    enemy.accent = mirroredElement.accent;
+    addEffect("runes", enemy.x, enemy.y, mirroredElement.color);
+    addFloatingText(enemy.x, enemy.y, `${mirroredElement.name}相`, mirroredElement.color);
+    addLog(`${enemy.name}は双面を返し、${mirroredElement.name}属性へ切り替わった。`);
+  }
   if (enemy.bossGimmick === "summon" || enemy.bossGimmick === "mutate" || enemy.bossGimmick === "final") {
     const summonCount = enemy.bossGimmick === "final" ? 2 : 1;
     for (let index = 0; index < summonCount; index += 1) {
@@ -4376,8 +4628,8 @@ function damageEnemy(enemy, amount, source, label) {
     addFloatingText(source.x, source.y, "FIRST", "#ffe08a");
   }
   if (source.id === "leader" && hasRelic("duelistCoin") && source.hp >= source.maxHp) amount += 3;
-  if (source.id === "leader" && hasRelic("frostNeedle") && attackElement === "ice") amount += 4;
-  if (source.id === "leader" && hasRelic("venomLamp") && attackElement === "poison") amount += 4;
+  if (source.id === "leader" && hasRelic("frostNeedle") && attackElement === "water") amount += 4;
+  if (source.id === "leader" && hasRelic("venomLamp") && attackElement === "wood") amount += 4;
   enemy.hp -= amount;
   enemy.alerted = true;
   addEffect("hit", enemy.x, enemy.y, source.color || palette.brass);
@@ -4521,7 +4773,13 @@ function enemyAttack(enemy, actor, ranged = false) {
     damage = Math.max(1, Math.ceil(damage * 0.84));
     addFloatingText(actor.x, actor.y, "静刻", "#cab8ff");
   }
+  const relicGuard = actor.id === "leader" ? relicElementModifier("elementGuard", enemy.elementKey) : 0;
+  if (relicGuard) {
+    damage = Math.max(1, Math.ceil(damage * (1 - relicGuard)));
+    addFloatingText(actor.x, actor.y, "属性耐性", elementInfo(enemy.elementKey).accent);
+  }
   const moveName = enemyMoveName(enemy, ranged);
+  markActorAction(enemy, ranged ? 440 : 320);
   if (actor.id === "leader") {
     game.lastDamageSource = {
       kind: ranged ? "ranged" : (enemy.boss ? "boss" : "enemy"),
@@ -4584,8 +4842,8 @@ function enemyMoveName(enemy, ranged) {
     wood: ranged ? "木霊の種砲" : "森角突き",
     dark: ranged ? "月影弾" : "影裂き",
     light: ranged ? "光輪刃" : "閃光斬り",
-    ice: ranged ? "氷晶弾" : "凍結牙",
-    poison: ranged ? "毒泡弾" : "毒蝕爪",
+    divine: ranged ? "聖星光" : "聖獣牙",
+    evil: ranged ? "邪星弾" : "邪爪裂き",
   };
   const baseName = moveNames[enemy.elementKey] || (ranged ? "魔力弾" : "強襲");
   if (!enemy.mutation) return baseName;
@@ -6365,11 +6623,8 @@ function renderRelicRibbon() {
   ui.relicRibbon.innerHTML = visible.map((key) => {
     const relic = relicCatalog.find((entry) => entry.key === key);
     if (!relic) return "";
-    const index = relicCatalog.findIndex((entry) => entry.key === key);
-    const column = index % 5;
-    const row = Math.floor(index / 5) % 4;
     return `<button type="button" title="${relic.name}: ${relic.detail}" aria-label="${relic.name}">
-      <i style="--relic-x:${column * 25}%;--relic-y:${row * 33.3333}%"></i>
+      <i style="${relicIconStyle(relic)}"></i>
     </button>`;
   }).join("") + (game.relics.length > visible.length ? `<b>+${game.relics.length - visible.length}</b>` : "");
   ui.relicRibbon.querySelectorAll("button").forEach((button) => {
@@ -6420,11 +6675,8 @@ function renderRelicReward() {
 }
 
 function relicCardMarkup(relic) {
-  const index = Math.max(0, relicCatalog.findIndex((entry) => entry.key === relic.key));
-  const column = index % 5;
-  const row = Math.floor(index / 5) % 4;
   return `<article class="relic-card" style="--relic-color:${relic.color}">
-    <i class="relic-art" style="--relic-x:${column * 25}%;--relic-y:${row * 33.3333}%"></i>
+    <i class="relic-art" style="${relicIconStyle(relic)}"></i>
     <div><span>${relic.rarity}</span><strong>${relic.name}</strong><small>${relic.detail}</small></div>
   </article>`;
 }
@@ -7657,7 +7909,7 @@ function renderBossCodex(container) {
     card.className = `boss-dex-card ${cleared ? "defeated" : ""}`;
     card.style.setProperty("--dex-color", theme.color || elementInfo(theme.elementKey).color);
     card.innerHTML = `
-      <div class="boss-dex-mark">${index + 1}</div>
+      <canvas class="boss-dex-portrait" width="96" height="96" aria-hidden="true"></canvas>
       <div>
         <span>B${floor}F / ${elementBadgeMarkup(theme.elementKey)}${elementInfo(theme.elementKey).name} / ${theme.plan}</span>
         <strong>${boss.title} ${boss.name}</strong>
@@ -7666,6 +7918,17 @@ function renderBossCodex(container) {
       </div>
     `;
     list.appendChild(card);
+    drawEnemyPortrait(card.querySelector("canvas"), {
+      ...boss,
+      key: `boss-${floor}`,
+      familyKey: "boss",
+      boss: true,
+      hp: boss.hp,
+      maxHp: boss.hp,
+      elementKey: theme.elementKey,
+      bossGimmick: theme.gimmick,
+      artIndex: [4, 9, 14, 19, 24, 29, 34, 35, 38, 39][index],
+    });
   });
 }
 
@@ -8241,7 +8504,7 @@ function renderTownFacility() {
       <div class="menu-stat"><span>永続進化</span><strong>${evolution?.name || "未進化 コハク"}</strong></div>
       <div class="menu-stat"><span>今回の進化素材</span><strong>${evolutionMaterialTotal()}個</strong></div>
     </div>
-    <p class="town-note">進化素材は挑戦ごとにリセット。炎・水・木・光・闇と、特殊な氷・毒の相性を読んで100階踏破を目指します。</p>
+    <p class="town-note">進化素材は挑戦ごとにリセット。炎・水・木・光・闇に加え、聖神は他属性ダメージを2割軽減、邪悪は与ダメージが2割上がります。</p>
     ${game.lastRunSummary ? runSummaryMarkup(game.lastRunSummary, "直近の冒険") : ""}
     <div class="town-codex-host"></div>
   `;
@@ -10054,9 +10317,108 @@ function drawActorBody(targetCtx, actor, px, py, scale, time) {
   targetCtx.restore();
 }
 
+function foxboundSpriteDirectionRow(entry, actor) {
+  if (entry.rows <= 1) return 0;
+  const dx = Number(actor.dx) || 0;
+  const dy = Number(actor.dy) || 0;
+  if (entry.rows === 2) return dy < 0 ? 0 : 1;
+  if (entry.rows === 3) {
+    if (dy < 0 && Math.abs(dy) >= Math.abs(dx)) return 2;
+    if (Math.abs(dx) >= Math.abs(dy) && dx !== 0) return 1;
+    return 0;
+  }
+  if (dy < 0 && Math.abs(dy) >= Math.abs(dx)) return 3;
+  if (dx < 0 && Math.abs(dx) >= Math.abs(dy)) return 1;
+  if (dx > 0 && Math.abs(dx) >= Math.abs(dy)) return 2;
+  return 0;
+}
+
+function foxboundSpriteFrame(entry, actor, time, category) {
+  const usable = (entry.frames || []).filter((frame) => frame.usable !== false && frame.w > 0 && frame.h > 0);
+  if (!usable.length) return null;
+  const maxWidth = Math.max(...usable.map((frame) => frame.w));
+  const maxHeight = Math.max(...usable.map((frame) => frame.h));
+  const maxInk = Math.max(...usable.map((frame) => frame.ink || 0));
+  let candidates = usable.filter((frame) => (
+    frame.w >= maxWidth * 0.28
+    && frame.h >= maxHeight * 0.55
+    && (frame.ink || 0) >= maxInk * 0.18
+  ));
+  if (!candidates.length) candidates = usable;
+
+  const desiredRow = foxboundSpriteDirectionRow(entry, actor);
+  const rowCandidates = candidates.filter((frame) => frame.row === desiredRow);
+  if (rowCandidates.length) candidates = rowCandidates;
+
+  const actionActive = time < (actor.actionUntil || 0)
+    || (actor.motion?.kind === "bump" && time >= actor.motion.started && time < actor.motion.started + actor.motion.duration);
+  const walking = actor.motion?.kind === "walk"
+    && time >= actor.motion.started
+    && time < actor.motion.started + actor.motion.duration;
+  let desiredColumn = 0;
+  if (actionActive) desiredColumn = category === "bosses" || category === "rares" ? Math.min(3, entry.cols - 1) : Math.min(2, entry.cols - 1);
+  else if (category === "heroes" && entry.id !== "kohaku") desiredColumn = 1;
+  else if (walking) desiredColumn = 1;
+
+  if (category === "heroes" && entry.id !== "kohaku") {
+    const cleanCandidates = candidates.filter((frame) => frame.col !== 0);
+    if (cleanCandidates.length) candidates = cleanCandidates;
+  }
+
+  return [...candidates].sort((a, b) => {
+    const columnDistance = Math.abs(a.col - desiredColumn) - Math.abs(b.col - desiredColumn);
+    if (columnDistance) return columnDistance;
+    const rowDistance = Math.abs(a.row - desiredRow) - Math.abs(b.row - desiredRow);
+    if (rowDistance) return rowDistance;
+    return (b.ink || 0) - (a.ink || 0);
+  })[0] || null;
+}
+
+function drawFoxboundSprite(targetCtx, category, id, actor, time = performance.now()) {
+  const loaded = requestFoxboundSprite(category, id);
+  if (!loaded) return false;
+  const { entry, image } = loaded;
+  const frame = foxboundSpriteFrame(entry, actor, time, category);
+  if (!frame) return false;
+
+  const sourceX = frame.col * entry.cellWidth + frame.x;
+  const sourceY = frame.row * entry.cellHeight + frame.y;
+  const availableSize = category === "bosses" ? 46 : 44;
+  const scale = Math.min(availableSize / frame.w, availableSize / frame.h);
+  const drawWidth = Math.max(1, frame.w * scale);
+  const drawHeight = Math.max(1, frame.h * scale);
+  const drawX = (TILE - drawWidth) / 2;
+  const drawY = TILE - drawHeight - 1;
+  const flipSide = entry.rows === 3 && Math.abs(actor.dx || 0) >= Math.abs(actor.dy || 0) && (actor.dx || 0) < 0;
+  const actionPulse = time < (actor.actionUntil || 0) ? 1.035 : 1;
+
+  targetCtx.save();
+  targetCtx.imageSmoothingEnabled = true;
+  targetCtx.translate(TILE / 2, TILE / 2);
+  targetCtx.scale(flipSide ? -actionPulse : actionPulse, actionPulse);
+  targetCtx.translate(-TILE / 2, -TILE / 2);
+  targetCtx.drawImage(
+    image,
+    sourceX,
+    sourceY,
+    frame.w,
+    frame.h,
+    drawX,
+    drawY,
+    drawWidth,
+    drawHeight,
+  );
+  targetCtx.restore();
+  return true;
+}
+
 function drawLineageArt(targetCtx, actor, time = performance.now()) {
   if (actor.kind !== "leader") return false;
   const profile = characterCatalog.find((entry) => entry.key === actor.profileKey) || characterCatalog[0];
+  if ((actor.evolutionStage || 0) === 0) {
+    const spriteId = FOXBOUND_HERO_SPRITE_IDS[profile.key];
+    if (drawFoxboundSprite(targetCtx, "heroes", spriteId, actor, time)) return true;
+  }
   if (Number.isInteger(actor.artIndex)) {
     return drawArtIndexCell(targetCtx, actor.artIndex, actor.evolutionStage || 0, time, actor.color);
   }
@@ -10325,6 +10687,11 @@ function enemyArtIndex(enemy) {
 }
 
 function drawEnemyArt(targetCtx, enemy, time) {
+  const category = enemy.boss ? "bosses" : enemy.rare ? "rares" : "enemies";
+  const spriteId = enemy.spritePackId
+    || (enemy.rare ? FOXBOUND_RARE_SPRITE_IDS[enemy.key] : null)
+    || (!enemy.boss && Number.isInteger(enemy.artIndex) ? FOXBOUND_ENEMY_SPRITE_IDS[enemy.artIndex] : null);
+  if (spriteId && drawFoxboundSprite(targetCtx, category, spriteId, enemy, time)) return true;
   const artIndex = enemyArtIndex(enemy);
   const sheet = enemyArtSheets[Math.floor(artIndex / 10)];
   if (!sheet?.complete || !sheet.naturalWidth) return false;
@@ -11422,6 +11789,7 @@ function startWalkMotion(actor, fromX, fromY, toX, toY, delay = 0) {
 }
 
 function startBumpMotion(actor, dx, dy, strength = 0.2, delay = 0) {
+  markActorAction(actor, 320 + delay);
   actor.motion = {
     kind: "bump",
     fromX: actor.x,
@@ -11431,6 +11799,11 @@ function startBumpMotion(actor, dx, dy, strength = 0.2, delay = 0) {
     started: performance.now() + delay,
     duration: 170,
   };
+}
+
+function markActorAction(actor, duration = 360) {
+  if (!actor) return;
+  actor.actionUntil = Math.max(actor.actionUntil || 0, performance.now() + duration);
 }
 
 function getActorVisualPosition(actor, time) {
@@ -12508,6 +12881,8 @@ function bindEvents() {
 
 bindEvents();
 createGame();
+loadFoxboundSpriteManifest();
+loadFoxboundMoveDesigns();
 if (!loadSaveSlot(1)) saveCurrentGame(true);
 updateSoundButton();
 queueLoadoutPrompt(180);
