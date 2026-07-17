@@ -18,9 +18,15 @@ const SAVE_SLOT_COUNT = 1;
 const SPRITE_TILE = 16;
 const SPRITE_MARGIN = 1;
 const SPRITE_COLS = 56;
+const ACTIVE_FRAME_INTERVAL = 1000 / 30;
+const IDLE_FRAME_INTERVAL = 1000 / 18;
+const MODAL_FRAME_INTERVAL = 1000 / 6;
+const ENTITY_OUTLINE_CACHE_LIMIT = 384;
+const DUNGEON_TILE_CACHE_LIMIT = 640;
+const DUNGEON_TILE_PADDING = 12;
 
 const canvas = document.querySelector("#gameCanvas");
-const ctx = canvas.getContext("2d");
+let ctx = canvas.getContext("2d");
 const entityBuffer = document.createElement("canvas");
 entityBuffer.width = TILE;
 entityBuffer.height = TILE;
@@ -29,13 +35,15 @@ const entityTint = document.createElement("canvas");
 entityTint.width = TILE;
 entityTint.height = TILE;
 const entityTintCtx = entityTint.getContext("2d");
+const entityOutlineCache = new Map();
+const dungeonTileCache = new Map();
 const miniCanvas = document.querySelector("#miniMap");
 const miniCtx = miniCanvas.getContext("2d");
 const townCanvas = document.querySelector("#townCanvas");
 const townCtx = townCanvas.getContext("2d");
 const USE_TOWN_BACKDROP = false;
 const townBackdrop = new Image();
-townBackdrop.src = "assets/town/foxbound-spire-hub-v1.jpg?v=pwa11";
+if (USE_TOWN_BACKDROP) townBackdrop.src = "assets/town/foxbound-spire-hub-v1.jpg?v=pwa11";
 const spriteSheet = new Image();
 spriteSheet.src = "assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png";
 const mapTokenSheet = new Image();
@@ -45,14 +53,8 @@ const mapTokenCtx = mapTokenCanvas.getContext("2d", { willReadFrequently: true }
 let mapTokenReady = false;
 const itemIconSheet = new Image();
 itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa11";
-const relicIconSheet = new Image();
-relicIconSheet.src = "assets/tokens/foxbound-relics-v1.jpg?v=pwa11";
-const enemyArtSheets = Array.from({ length: 4 }, (_, index) => {
-  const sheet = new Image();
-  sheet.src = `assets/tokens/foxbound-enemies-${index + 1}-v1.png?v=pwa11`;
-  return sheet;
-});
-const FOXBOUND_ASSET_VERSION = "pwa18a";
+const enemyArtSheets = Array(4).fill(null);
+const FOXBOUND_ASSET_VERSION = "pwa18d";
 const FOXBOUND_SPRITE_ROOT = "assets/foxbound-codex-v1";
 const FOXBOUND_HERO_SPRITE_IDS = Object.freeze({
   kohaku: "kohaku",
@@ -80,6 +82,8 @@ const FOXBOUND_RARE_SPRITE_IDS = Object.freeze({
 const foxboundSpriteEntries = new Map();
 const foxboundSpriteImages = new Map();
 let foxboundSpriteRefreshQueued = false;
+let miniMapRenderKey = "";
+let lastCanvasDrawTime = 0;
 
 function foxboundSpriteKey(category, id) {
   return `${category}/${id}`;
@@ -125,6 +129,18 @@ function requestFoxboundSprite(category, id) {
   return { entry, image: record.image };
 }
 
+function requestEnemyArtSheet(index) {
+  if (index < 0 || index >= enemyArtSheets.length) return null;
+  let sheet = enemyArtSheets[index];
+  if (sheet) return sheet;
+  sheet = new Image();
+  sheet.decoding = "async";
+  sheet.addEventListener("load", scheduleFoxboundSpriteRefresh, { once: true });
+  sheet.src = `assets/tokens/foxbound-enemies-${index + 1}-v1.png?v=pwa11`;
+  enemyArtSheets[index] = sheet;
+  return sheet;
+}
+
 function loadFoxboundSpriteManifest() {
   fetch(`${FOXBOUND_SPRITE_ROOT}/runtime-manifest.json?v=${FOXBOUND_ASSET_VERSION}`)
     .then((response) => {
@@ -136,7 +152,6 @@ function loadFoxboundSpriteManifest() {
         foxboundSpriteEntries.set(foxboundSpriteKey(entry.category, entry.id), entry);
       }
       Object.values(FOXBOUND_HERO_SPRITE_IDS).forEach((id) => requestFoxboundSprite("heroes", id));
-      FOXBOUND_ENEMY_SPRITE_IDS.slice(0, 8).forEach((id) => requestFoxboundSprite("enemies", id));
       scheduleFoxboundSpriteRefresh();
     })
     .catch(() => {
@@ -2494,6 +2509,8 @@ function applyEvolutionBonus(actor, evolution) {
 function buildFloor() {
   const restFloor = isRestFloor(game.floor);
   const dungeon = restFloor ? generateRestSanctuary(game.floor) : generateDungeon();
+  dungeonTileCache.clear();
+  miniMapRenderKey = "";
   game.map = dungeon.map;
   game.rooms = dungeon.rooms;
   game.floorLayoutName = dungeon.layoutName;
@@ -8633,14 +8650,29 @@ function currentRank() {
   return rank;
 }
 
+function sceneHasActiveAnimation(time) {
+  if (!game) return false;
+  if (game.mode === "town") return (game.townPlayer?.movingUntil || 0) > time;
+  if (game.effects.length || game.floating.length || game.screenFlash || game.screenShake) return true;
+  return [...game.team, ...game.enemies].some((actor) => {
+    const motion = actor.motion;
+    return motion && time < motion.started + motion.duration;
+  });
+}
+
+function canvasFrameInterval(time) {
+  if (document.querySelector("dialog[open]")) return MODAL_FRAME_INTERVAL;
+  return sceneHasActiveAnimation(time) ? ACTIVE_FRAME_INTERVAL : IDLE_FRAME_INTERVAL;
+}
+
 function draw(time = 0) {
-  if (!game) {
-    requestAnimationFrame(draw);
-    return;
-  }
+  requestAnimationFrame(draw);
+  if (!game || document.hidden) return;
+  const interval = canvasFrameInterval(time);
+  if (lastCanvasDrawTime && time - lastCanvasDrawTime < interval) return;
+  lastCanvasDrawTime = time;
   if (game.mode === "town") {
     drawTown(time);
-    requestAnimationFrame(draw);
     return;
   }
   renderCamera = getCamera(time);
@@ -8654,7 +8686,6 @@ function draw(time = 0) {
   drawDungeon(time);
   ctx.restore();
   drawMiniMap();
-  requestAnimationFrame(draw);
 }
 
 function drawTown(time) {
@@ -9090,7 +9121,81 @@ function drawDungeon(time) {
   game.floating = game.floating.filter((text) => time - text.created < text.life);
 }
 
+function setLimitedCanvasCache(cache, key, value, limit) {
+  if (cache.size >= limit) cache.delete(cache.keys().next().value);
+  cache.set(key, value);
+  return value;
+}
+
+function dungeonTileVisualKey(x, y, type, visible, unknown) {
+  if (unknown) {
+    const variant = Math.floor(noise(x, y, 171) * 8);
+    return [currentDungeonThemeKey(), game.floorKind, game.restTheme?.index ?? "-", "unknown", variant].join(":");
+  }
+  const shopState = isMerchantShopTile(x, y) ? (game.merchant?.robbed ? "robbed" : "shop") : "none";
+  return [
+    game.floor,
+    currentDungeonThemeKey(),
+    game.floorKind,
+    game.restTheme?.index ?? "-",
+    x,
+    y,
+    unknown ? "unknown" : type,
+    visible ? 1 : 0,
+    shopState,
+  ].join(":");
+}
+
+function buildDungeonTileCanvas(x, y, type, visible, unknown) {
+  const tileCanvas = document.createElement("canvas");
+  const padding = unknown ? 24 : DUNGEON_TILE_PADDING;
+  tileCanvas.width = TILE + padding * 2;
+  tileCanvas.height = TILE + padding * 2;
+  const tileCtx = tileCanvas.getContext("2d");
+  const previousCtx = ctx;
+  const previousCamera = renderCamera;
+  try {
+    ctx = tileCtx;
+    renderCamera = {
+      x: x - padding / TILE,
+      y: y - padding / TILE,
+      width: 1,
+      height: 1,
+    };
+    if (unknown) renderUnknownTile(x, y);
+    else renderDungeonTile(x, y, type, visible);
+  } finally {
+    ctx = previousCtx;
+    renderCamera = previousCamera;
+  }
+  return { canvas: tileCanvas, padding };
+}
+
+function cachedDungeonTile(x, y, type, visible, unknown = false) {
+  const key = dungeonTileVisualKey(x, y, type, visible, unknown);
+  const cached = dungeonTileCache.get(key);
+  if (cached) return cached;
+  return setLimitedCanvasCache(
+    dungeonTileCache,
+    key,
+    buildDungeonTileCanvas(x, y, type, visible, unknown),
+    DUNGEON_TILE_CACHE_LIMIT,
+  );
+}
+
 function drawUnknownTile(x, y) {
+  const { x: px, y: py } = toScreen(x, y);
+  const cached = cachedDungeonTile(x, y, "unknown", false, true);
+  ctx.drawImage(cached.canvas, px - cached.padding, py - cached.padding);
+}
+
+function drawTile(x, y, type, visible) {
+  const { x: px, y: py } = toScreen(x, y);
+  const cached = cachedDungeonTile(x, y, type, visible, false);
+  ctx.drawImage(cached.canvas, px - cached.padding, py - cached.padding);
+}
+
+function renderUnknownTile(x, y) {
   const { x: px, y: py } = toScreen(x, y);
   const theme = currentDungeonTheme();
   const themeKey = currentDungeonThemeKey();
@@ -9151,7 +9256,7 @@ function drawUnknownTile(x, y) {
   ctx.restore();
 }
 
-function drawTile(x, y, type, visible) {
+function renderDungeonTile(x, y, type, visible) {
   const { x: px, y: py } = toScreen(x, y);
   const theme = currentDungeonTheme();
   const themeKey = currentDungeonThemeKey();
@@ -10209,6 +10314,7 @@ function drawActor(actor, time) {
     py + bob,
     "#62efff",
     3,
+    actorOutlineVisualKey(actor, time),
   );
 }
 
@@ -10412,6 +10518,44 @@ function drawFoxboundSprite(targetCtx, category, id, actor, time = performance.n
   return true;
 }
 
+function foxboundSpriteVisualKey(category, id, actor, time) {
+  const loaded = requestFoxboundSprite(category, id);
+  if (!loaded) return null;
+  const frame = foxboundSpriteFrame(loaded.entry, actor, time, category);
+  if (!frame) return null;
+  const flipSide = loaded.entry.rows === 3
+    && Math.abs(actor.dx || 0) >= Math.abs(actor.dy || 0)
+    && (actor.dx || 0) < 0;
+  const actionActive = time < (actor.actionUntil || 0)
+    || (actor.motion?.kind === "bump" && time < actor.motion.started + actor.motion.duration);
+  return [
+    category,
+    id,
+    frame.row,
+    frame.col,
+    frame.x,
+    frame.y,
+    frame.w,
+    frame.h,
+    flipSide ? "flip" : "normal",
+    actionActive ? "action" : "idle",
+  ].join(":");
+}
+
+function actorOutlineVisualKey(actor, time) {
+  if (actor.kind !== "leader" || (actor.evolutionStage || 0) !== 0) return null;
+  const profile = characterCatalog.find((entry) => entry.key === actor.profileKey) || characterCatalog[0];
+  return foxboundSpriteVisualKey("heroes", FOXBOUND_HERO_SPRITE_IDS[profile.key], actor, time);
+}
+
+function enemyOutlineVisualKey(enemy, time) {
+  const category = enemy.boss ? "bosses" : enemy.rare ? "rares" : "enemies";
+  const spriteId = enemy.spritePackId
+    || (enemy.rare ? FOXBOUND_RARE_SPRITE_IDS[enemy.key] : null)
+    || (!enemy.boss && Number.isInteger(enemy.artIndex) ? FOXBOUND_ENEMY_SPRITE_IDS[enemy.artIndex] : null);
+  return spriteId ? foxboundSpriteVisualKey(category, spriteId, enemy, time) : null;
+}
+
 function drawLineageArt(targetCtx, actor, time = performance.now()) {
   if (actor.kind !== "leader") return false;
   const profile = characterCatalog.find((entry) => entry.key === actor.profileKey) || characterCatalog[0];
@@ -10440,7 +10584,7 @@ function drawLineageArt(targetCtx, actor, time = performance.now()) {
 }
 
 function drawArtIndexCell(targetCtx, artIndex, stage = 0, time = performance.now(), ringColor = "#fff0a1") {
-  const sheet = enemyArtSheets[Math.floor(artIndex / 10)];
+  const sheet = requestEnemyArtSheet(Math.floor(artIndex / 10));
   if (!sheet?.complete || !sheet.naturalWidth) return false;
   const localIndex = artIndex % 10;
   const sourceColumn = localIndex % 5;
@@ -10574,7 +10718,7 @@ function drawEnemy(enemy, time) {
       drawPixelStar(targetCtx, 9, 9, 7, "#ffe978");
       drawPixelStar(targetCtx, 39, 12, 6, "#fff7c7");
     }
-  }, px, py + wobble, elementInfo(enemy.elementKey).color, enemy.boss || enemy.rare ? 3 : 2);
+  }, px, py + wobble, elementInfo(enemy.elementKey).color, enemy.boss || enemy.rare ? 3 : 2, enemyOutlineVisualKey(enemy, time));
   if (enemy.rare) {
     ctx.fillStyle = "rgba(23, 16, 8, 0.9)";
     ctx.fillRect(px + 7, py - 4 + wobble, 34, 9);
@@ -10693,7 +10837,7 @@ function drawEnemyArt(targetCtx, enemy, time) {
     || (!enemy.boss && Number.isInteger(enemy.artIndex) ? FOXBOUND_ENEMY_SPRITE_IDS[enemy.artIndex] : null);
   if (spriteId && drawFoxboundSprite(targetCtx, category, spriteId, enemy, time)) return true;
   const artIndex = enemyArtIndex(enemy);
-  const sheet = enemyArtSheets[Math.floor(artIndex / 10)];
+  const sheet = requestEnemyArtSheet(Math.floor(artIndex / 10));
   if (!sheet?.complete || !sheet.naturalWidth) return false;
   const localIndex = artIndex % 10;
   const column = localIndex % 5;
@@ -10765,20 +10909,7 @@ function drawBossHud() {
   ctx.restore();
 }
 
-function drawOutlinedEntity(drawEntity, px, py, color, radius) {
-  entityBufferCtx.clearRect(0, 0, TILE, TILE);
-  entityBufferCtx.imageSmoothingEnabled = true;
-  drawEntity(entityBufferCtx);
-
-  ctx.save();
-  ctx.imageSmoothingEnabled = true;
-  stampEntitySilhouette(px, py, "rgba(3, 6, 5, 0.96)", radius + 2);
-  stampEntitySilhouette(px, py, color, radius);
-  ctx.drawImage(entityBuffer, px, py);
-  ctx.restore();
-}
-
-function stampEntitySilhouette(px, py, color, radius) {
+function tintEntityBuffer(color) {
   entityTintCtx.clearRect(0, 0, TILE, TILE);
   entityTintCtx.globalCompositeOperation = "source-over";
   entityTintCtx.drawImage(entityBuffer, 0, 0);
@@ -10786,13 +10917,74 @@ function stampEntitySilhouette(px, py, color, radius) {
   entityTintCtx.fillStyle = color;
   entityTintCtx.fillRect(0, 0, TILE, TILE);
   entityTintCtx.globalCompositeOperation = "source-over";
+}
+
+function stampEntitySilhouette(targetCtx, x, y, color, radius, exhaustive = false) {
+  tintEntityBuffer(color);
+  if (!exhaustive) {
+    const offsets = new Map();
+    for (let index = 0; index < 16; index += 1) {
+      const angle = (Math.PI * 2 * index) / 16;
+      const dx = Math.round(Math.cos(angle) * radius);
+      const dy = Math.round(Math.sin(angle) * radius);
+      if (dx || dy) offsets.set(`${dx},${dy}`, { dx, dy });
+    }
+    for (const offset of offsets.values()) {
+      targetCtx.drawImage(entityTint, x + offset.dx, y + offset.dy);
+    }
+    return;
+  }
   for (let dy = -radius; dy <= radius; dy += 1) {
     for (let dx = -radius; dx <= radius; dx += 1) {
       if (dx === 0 && dy === 0) continue;
       if (dx * dx + dy * dy > radius * radius + 1) continue;
-      ctx.drawImage(entityTint, px + dx, py + dy);
+      targetCtx.drawImage(entityTint, x + dx, y + dy);
     }
   }
+}
+
+function buildOutlinedEntityCache(color, radius) {
+  const padding = radius + 3;
+  const outlined = document.createElement("canvas");
+  outlined.width = TILE + padding * 2;
+  outlined.height = TILE + padding * 2;
+  const outlinedCtx = outlined.getContext("2d");
+  outlinedCtx.imageSmoothingEnabled = true;
+  stampEntitySilhouette(outlinedCtx, padding, padding, "rgba(3, 6, 5, 0.96)", radius + 2, true);
+  stampEntitySilhouette(outlinedCtx, padding, padding, color, radius, true);
+  outlinedCtx.drawImage(entityBuffer, padding, padding);
+  return { canvas: outlined, padding };
+}
+
+function drawOutlinedEntity(drawEntity, px, py, color, radius, visualKey = null) {
+  const cacheKey = visualKey ? `${visualKey}|${color}|${radius}` : null;
+  const cached = cacheKey ? entityOutlineCache.get(cacheKey) : null;
+  if (cached) {
+    ctx.drawImage(cached.canvas, px - cached.padding, py - cached.padding);
+    return;
+  }
+
+  entityBufferCtx.clearRect(0, 0, TILE, TILE);
+  entityBufferCtx.imageSmoothingEnabled = true;
+  drawEntity(entityBufferCtx);
+
+  if (cacheKey) {
+    const created = setLimitedCanvasCache(
+      entityOutlineCache,
+      cacheKey,
+      buildOutlinedEntityCache(color, radius),
+      ENTITY_OUTLINE_CACHE_LIMIT,
+    );
+    ctx.drawImage(created.canvas, px - created.padding, py - created.padding);
+    return;
+  }
+
+  ctx.save();
+  ctx.imageSmoothingEnabled = true;
+  stampEntitySilhouette(ctx, px, py, "rgba(3, 6, 5, 0.96)", radius + 2);
+  stampEntitySilhouette(ctx, px, py, color, radius);
+  ctx.drawImage(entityBuffer, px, py);
+  ctx.restore();
 }
 
 function drawEnemyHp(enemy, px, py) {
@@ -11374,7 +11566,29 @@ function clearPointerAim() {
   game.aimTile = null;
 }
 
+function miniMapStateSignature() {
+  const teamState = game.team.map((actor) => `${actor.id}:${actor.x},${actor.y}:${actor.down ? 1 : 0}`).join("|");
+  const enemyState = game.enemies.map((enemy) => `${enemy.id}:${enemy.x},${enemy.y}`).join("|");
+  const revealedTraps = game.traps.reduce((count, trap) => count + (trap.revealed && !trap.used ? 1 : 0), 0);
+  return [
+    game.floor,
+    game.turn,
+    game.items.length,
+    game.guidanceActive ? 1 : 0,
+    game.stairsRevealed ? 1 : 0,
+    game.secretStairs?.revealed ? 1 : 0,
+    game.merchant?.robbed ? 1 : 0,
+    game.mission?.complete ? 1 : 0,
+    revealedTraps,
+    teamState,
+    enemyState,
+  ].join(";");
+}
+
 function drawMiniMap() {
+  const nextRenderKey = miniMapStateSignature();
+  if (nextRenderKey === miniMapRenderKey) return;
+  miniMapRenderKey = nextRenderKey;
   const sx = miniCanvas.width / MAP_W;
   const sy = miniCanvas.height / MAP_H;
   const markerRadius = Math.max(2.8, Math.min(4.1, Math.min(sx, sy) * 0.56));
@@ -12892,6 +13106,10 @@ spriteSheet.addEventListener("load", () => {
 mapTokenSheet.addEventListener("load", () => {
   prepareMapTokenAtlas();
   if (game) updateAll();
+});
+document.addEventListener("visibilitychange", () => {
+  lastCanvasDrawTime = 0;
+  if (!document.hidden) miniMapRenderKey = "";
 });
 requestAnimationFrame(draw);
 
