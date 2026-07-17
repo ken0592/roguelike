@@ -37,6 +37,7 @@ entityTint.height = TILE;
 const entityTintCtx = entityTint.getContext("2d");
 const entityOutlineCache = new Map();
 const dungeonTileCache = new Map();
+const atlasCellBoundsCache = new WeakMap();
 const miniCanvas = document.querySelector("#miniMap");
 const miniCtx = miniCanvas.getContext("2d");
 const townCanvas = document.querySelector("#townCanvas");
@@ -54,12 +55,17 @@ let mapTokenReady = false;
 const itemIconSheet = new Image();
 itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa11";
 const enemyArtSheets = Array(4).fill(null);
-const FOXBOUND_ASSET_VERSION = "pwa18d";
+const FOXBOUND_ASSET_VERSION = "pwa18e";
 const FOXBOUND_SPRITE_ROOT = "assets/foxbound-codex-v1";
 const FOXBOUND_HERO_SPRITE_IDS = Object.freeze({
   kohaku: "kohaku",
   knight: "regulus",
   magician: "mira",
+});
+const FOXBOUND_HERO_SAFE_COLUMNS = Object.freeze({
+  kohaku: Object.freeze({ idle: 0, walk: 1, action: 1, allowed: Object.freeze([0, 1]) }),
+  regulus: Object.freeze({ idle: 1, walk: 1, action: 1, allowed: Object.freeze([1]) }),
+  mira: Object.freeze({ idle: 1, walk: 1, action: 3, allowed: Object.freeze([1, 3]) }),
 });
 const FOXBOUND_ENEMY_SPRITE_IDS = Object.freeze([
   "horn_crown_slime", "purple_wing_demon", "skeleton_soldier", "poison_mushroom", "moss_rock_golem",
@@ -10171,12 +10177,22 @@ function drawItemIcon(target, kind, gear) {
   iconCtx.restore();
 }
 
-function drawAtlasCell(targetCtx, sheet, columns, rows, cell, width = 48, height = 48) {
-  if (!cell || !sheet.complete || !sheet.naturalWidth) return false;
-  const [column, row] = cell;
-  const sourceWidth = sheet.naturalWidth / columns;
-  const sourceHeight = sheet.naturalHeight / rows;
-  targetCtx.drawImage(
+function atlasCellBounds(sheet, columns, rows, column, row) {
+  let sheetCache = atlasCellBoundsCache.get(sheet);
+  if (!sheetCache) {
+    sheetCache = new Map();
+    atlasCellBoundsCache.set(sheet, sheetCache);
+  }
+  const key = `${columns}:${rows}:${column}:${row}`;
+  if (sheetCache.has(key)) return sheetCache.get(key);
+
+  const sourceWidth = Math.floor(sheet.naturalWidth / columns);
+  const sourceHeight = Math.floor(sheet.naturalHeight / rows);
+  const sample = document.createElement("canvas");
+  sample.width = sourceWidth;
+  sample.height = sourceHeight;
+  const sampleCtx = sample.getContext("2d", { willReadFrequently: true });
+  sampleCtx.drawImage(
     sheet,
     column * sourceWidth,
     row * sourceHeight,
@@ -10184,8 +10200,65 @@ function drawAtlasCell(targetCtx, sheet, columns, rows, cell, width = 48, height
     sourceHeight,
     0,
     0,
-    width,
-    height,
+    sourceWidth,
+    sourceHeight,
+  );
+
+  let bounds = { x: 0, y: 0, width: sourceWidth, height: sourceHeight };
+  try {
+    const pixels = sampleCtx.getImageData(0, 0, sourceWidth, sourceHeight).data;
+    let left = sourceWidth;
+    let top = sourceHeight;
+    let right = -1;
+    let bottom = -1;
+    for (let y = 0; y < sourceHeight; y += 1) {
+      for (let x = 0; x < sourceWidth; x += 1) {
+        if (pixels[(y * sourceWidth + x) * 4 + 3] < 10) continue;
+        left = Math.min(left, x);
+        top = Math.min(top, y);
+        right = Math.max(right, x);
+        bottom = Math.max(bottom, y);
+      }
+    }
+    if (right >= left && bottom >= top) {
+      const inset = Math.max(2, Math.round(Math.min(sourceWidth, sourceHeight) * 0.018));
+      bounds = {
+        x: Math.max(0, left - inset),
+        y: Math.max(0, top - inset),
+        width: Math.min(sourceWidth - Math.max(0, left - inset), right - left + 1 + inset * 2),
+        height: Math.min(sourceHeight - Math.max(0, top - inset), bottom - top + 1 + inset * 2),
+      };
+    }
+  } catch {
+    // The untrimmed cell is still usable if pixel inspection is unavailable.
+  }
+  sheetCache.set(key, bounds);
+  return bounds;
+}
+
+function drawAtlasCell(targetCtx, sheet, columns, rows, cell, width = 48, height = 48) {
+  if (!cell || !sheet.complete || !sheet.naturalWidth) return false;
+  const [column, row] = cell;
+  const sourceWidth = Math.floor(sheet.naturalWidth / columns);
+  const sourceHeight = Math.floor(sheet.naturalHeight / rows);
+  const bounds = atlasCellBounds(sheet, columns, rows, column, row);
+  const padding = Math.max(2, Math.min(width, height) * 0.075);
+  const scale = Math.min(
+    (width - padding * 2) / bounds.width,
+    (height - padding * 2) / bounds.height,
+  );
+  const drawWidth = Math.max(1, bounds.width * scale);
+  const drawHeight = Math.max(1, bounds.height * scale);
+  targetCtx.drawImage(
+    sheet,
+    column * sourceWidth + bounds.x,
+    row * sourceHeight + bounds.y,
+    bounds.width,
+    bounds.height,
+    (width - drawWidth) / 2,
+    (height - drawHeight) / 2,
+    drawWidth,
+    drawHeight,
   );
   return true;
 }
@@ -10462,13 +10535,17 @@ function foxboundSpriteFrame(entry, actor, time, category) {
     && time >= actor.motion.started
     && time < actor.motion.started + actor.motion.duration;
   let desiredColumn = 0;
-  if (actionActive) desiredColumn = category === "bosses" || category === "rares" ? Math.min(3, entry.cols - 1) : Math.min(2, entry.cols - 1);
-  else if (category === "heroes" && entry.id !== "kohaku") desiredColumn = 1;
-  else if (walking) desiredColumn = 1;
-
-  if (category === "heroes" && entry.id !== "kohaku") {
-    const cleanCandidates = candidates.filter((frame) => frame.col !== 0);
+  if (category === "heroes") {
+    const safeColumns = FOXBOUND_HERO_SAFE_COLUMNS[entry.id] || FOXBOUND_HERO_SAFE_COLUMNS.kohaku;
+    const cleanCandidates = candidates.filter((frame) => safeColumns.allowed.includes(frame.col));
     if (cleanCandidates.length) candidates = cleanCandidates;
+    desiredColumn = actionActive ? safeColumns.action : walking ? safeColumns.walk : safeColumns.idle;
+  } else if (actionActive) {
+    desiredColumn = category === "bosses" || category === "rares"
+      ? Math.min(3, entry.cols - 1)
+      : Math.min(2, entry.cols - 1);
+  } else if (walking) {
+    desiredColumn = 1;
   }
 
   return [...candidates].sort((a, b) => {
@@ -10543,9 +10620,11 @@ function foxboundSpriteVisualKey(category, id, actor, time) {
 }
 
 function actorOutlineVisualKey(actor, time) {
-  if (actor.kind !== "leader" || (actor.evolutionStage || 0) !== 0) return null;
+  if (actor.kind !== "leader") return null;
   const profile = characterCatalog.find((entry) => entry.key === actor.profileKey) || characterCatalog[0];
-  return foxboundSpriteVisualKey("heroes", FOXBOUND_HERO_SPRITE_IDS[profile.key], actor, time);
+  const baseKey = foxboundSpriteVisualKey("heroes", FOXBOUND_HERO_SPRITE_IDS[profile.key], actor, time);
+  if (!baseKey) return null;
+  return `${baseKey}|evolution:${heroEvolutionBranch(actor)}:${clamp(actor.evolutionStage || 0, 0, 10)}`;
 }
 
 function enemyOutlineVisualKey(enemy, time) {
@@ -10559,28 +10638,12 @@ function enemyOutlineVisualKey(enemy, time) {
 function drawLineageArt(targetCtx, actor, time = performance.now()) {
   if (actor.kind !== "leader") return false;
   const profile = characterCatalog.find((entry) => entry.key === actor.profileKey) || characterCatalog[0];
-  if ((actor.evolutionStage || 0) === 0) {
-    const spriteId = FOXBOUND_HERO_SPRITE_IDS[profile.key];
-    if (drawFoxboundSprite(targetCtx, "heroes", spriteId, actor, time)) return true;
-  }
-  if (Number.isInteger(actor.artIndex)) {
-    return drawArtIndexCell(targetCtx, actor.artIndex, actor.evolutionStage || 0, time, actor.color);
-  }
-  let column = Number.isInteger(actor.artColumn) ? actor.artColumn : 0;
-  if (!Number.isInteger(actor.artColumn) && actor.evolutionBranch && actor.evolutionBranch !== "base") {
-    const branch = (ascensionBranches[profile.key] || []).find((entry) => entry.key === actor.evolutionBranch);
-    column = branch?.artColumn || 0;
-  }
-  if (profile.key === "kohaku") {
-    return drawMapTokenCell(targetCtx, [clamp(column, 0, 3), 0]);
-  }
-  const artSets = {
-    knight: [2, 28, 14, 39],
-    magician: [8, 36, 22, 8],
-  };
-  const artIndex = artSets[profile.key]?.[clamp(column, 0, 3)];
-  if (!Number.isInteger(artIndex)) return false;
-  return drawArtIndexCell(targetCtx, artIndex, actor.evolutionStage || 0, time, actor.color);
+  const stage = clamp(actor.evolutionStage || 0, 0, 10);
+  if (stage > 0) drawEvolutionAura(targetCtx, actor);
+  const spriteId = FOXBOUND_HERO_SPRITE_IDS[profile.key];
+  if (!drawFoxboundSprite(targetCtx, "heroes", spriteId, actor, time)) return false;
+  if (stage > 0) drawEvolutionAdornment(targetCtx, actor, actor.accent || "#fff1b6");
+  return true;
 }
 
 function drawArtIndexCell(targetCtx, artIndex, stage = 0, time = performance.now(), ringColor = "#fff0a1") {
@@ -10619,70 +10682,197 @@ function drawArtIndexCell(targetCtx, artIndex, stage = 0, time = performance.now
   return true;
 }
 
-function drawEvolutionAdornment(targetCtx, actor, light) {
-  const key = actor.evolutionKey;
-  if (!key || key === "base") return;
+function heroEvolutionBranch(actor) {
+  const branch = normalizeAscensionBranchKey(actor.evolutionBranch || "base");
+  if (branch !== "base") return branch;
+  return {
+    lumina: "lumen",
+    seraph: "ascetic",
+    agni: "fang",
+    vajra: "fang",
+    nox: "shade",
+    abyss: "karma",
+    sage: "archmage",
+    astera: "relic",
+  }[actor.evolutionKey] || "base";
+}
+
+function heroEvolutionVisual(actor) {
+  const branch = heroEvolutionBranch(actor);
+  const style = {
+    fang: "physical",
+    warlord: "physical",
+    lumen: "radiant",
+    archmage: "radiant",
+    guardian: "guard",
+    shade: "shadow",
+    revenant: "shadow",
+    void: "shadow",
+    chaos: "chaos",
+    ascetic: "ascetic",
+    relic: "relic",
+    karma: "karma",
+  }[branch] || "radiant";
+  const accents = {
+    physical: "#ffbd59",
+    radiant: "#d8fbff",
+    guard: "#a9ddff",
+    shadow: "#d6a4ff",
+    chaos: "#ffcf63",
+    ascetic: "#fff4bd",
+    relic: "#ffe277",
+    karma: "#ef76c8",
+  };
+  return {
+    branch,
+    style,
+    color: actor.color || elementInfo(actor.elementKey).color,
+    accent: accents[style],
+  };
+}
+
+function drawEvolutionDiamond(targetCtx, x, y, size, color) {
+  targetCtx.fillStyle = color;
+  targetCtx.beginPath();
+  targetCtx.moveTo(x, y - size);
+  targetCtx.lineTo(x + size, y);
+  targetCtx.lineTo(x, y + size);
+  targetCtx.lineTo(x - size, y);
+  targetCtx.closePath();
+  targetCtx.fill();
+}
+
+function drawEvolutionSpike(targetCtx, x, y, size, direction, color) {
+  targetCtx.fillStyle = color;
+  targetCtx.beginPath();
+  targetCtx.moveTo(x, y - size * 0.55);
+  targetCtx.lineTo(x + direction * size, y);
+  targetCtx.lineTo(x, y + size * 0.55);
+  targetCtx.closePath();
+  targetCtx.fill();
+}
+
+function drawEvolutionAura(targetCtx, actor) {
+  const stage = clamp(actor.evolutionStage || 0, 0, 10);
+  if (!stage) return;
+  const visual = heroEvolutionVisual(actor);
+  const tier = Math.ceil(stage / 2);
   targetCtx.save();
-  if (key === "lumina" || key === "seraph") {
-    targetCtx.fillStyle = key === "seraph" ? "#ffffff" : "#9ff5ff";
-    targetCtx.fillRect(10, 9, 4, 13);
-    targetCtx.fillRect(35, 9, 4, 13);
-    targetCtx.fillRect(6, 14, 4, 8);
-    targetCtx.fillRect(39, 14, 4, 8);
-    if (key === "seraph") {
-      targetCtx.strokeStyle = "#f5d877";
-      targetCtx.lineWidth = 2;
+  targetCtx.lineCap = "round";
+  targetCtx.lineJoin = "round";
+  targetCtx.globalAlpha = 0.36 + tier * 0.045;
+  targetCtx.strokeStyle = visual.color;
+  targetCtx.lineWidth = stage >= 7 ? 2 : 1.4;
+  targetCtx.beginPath();
+  targetCtx.ellipse(24, 39, 12 + tier * 1.5, 3 + tier * 0.25, 0, 0, Math.PI * 2);
+  targetCtx.stroke();
+
+  if (visual.style === "physical" || visual.style === "chaos") {
+    for (let index = 0; index < tier; index += 1) {
+      const y = 34 - index * 5.5;
+      const size = 4 + index * 0.55;
+      drawEvolutionSpike(targetCtx, 12 - index * 0.7, y, size, -1, index % 2 ? visual.accent : visual.color);
+      drawEvolutionSpike(targetCtx, 36 + index * 0.7, y, size, 1, index % 2 ? visual.accent : visual.color);
+    }
+  } else if (visual.style === "guard") {
+    targetCtx.fillStyle = visual.color;
+    for (let index = 0; index < tier; index += 1) {
+      const y = 17 + index * 4.3;
+      targetCtx.fillRect(5 + index * 0.7, y, 4 + index * 0.45, 7);
+      targetCtx.fillRect(39 - index * 1.1, y, 4 + index * 0.45, 7);
+    }
+  } else if (visual.style === "shadow" || visual.style === "karma") {
+    for (let index = 0; index < tier; index += 1) {
+      targetCtx.strokeStyle = index % 2 ? visual.accent : visual.color;
+      targetCtx.lineWidth = 1.5 + index * 0.18;
       targetCtx.beginPath();
-      targetCtx.ellipse(24, 3, 10, 3, 0, 0, Math.PI * 2);
+      targetCtx.arc(24, 25, 14 + index * 1.6, Math.PI * (0.72 + index * 0.04), Math.PI * (1.28 - index * 0.04));
       targetCtx.stroke();
     }
-  } else if (key === "agni" || key === "vajra") {
-    targetCtx.fillStyle = "#ffbd43";
-    targetCtx.fillRect(11, 7, 5, 12);
-    targetCtx.fillRect(33, 7, 5, 12);
-    targetCtx.fillRect(19, 2, 4, 8);
-    targetCtx.fillRect(27, 1, 4, 9);
-    if (key === "vajra") {
-      targetCtx.fillStyle = "#f5d36d";
-      targetCtx.fillRect(10, 27, 7, 5);
-      targetCtx.fillRect(33, 27, 7, 5);
-      drawPixelStar(targetCtx, 24, 8, 7, "#fff0a1");
+  } else {
+    for (let index = 0; index < tier; index += 1) {
+      const y = 30 - index * 4.4;
+      targetCtx.strokeStyle = index % 2 ? visual.accent : visual.color;
+      targetCtx.lineWidth = 2.2;
+      targetCtx.beginPath();
+      targetCtx.moveTo(15, 31);
+      targetCtx.lineTo(6 - index * 0.7, y - 4);
+      targetCtx.moveTo(33, 31);
+      targetCtx.lineTo(42 + index * 0.7, y - 4);
+      targetCtx.stroke();
     }
-  } else if (key === "nox" || key === "abyss") {
-    targetCtx.fillStyle = "#d7a8ff";
-    targetCtx.beginPath();
-    targetCtx.arc(10, 10, 7, 0, Math.PI * 2);
-    targetCtx.fill();
-    targetCtx.fillStyle = actor.color;
-    targetCtx.beginPath();
-    targetCtx.arc(13, 8, 6, 0, Math.PI * 2);
-    targetCtx.fill();
-    if (key === "abyss") {
-      targetCtx.fillStyle = "#d85b9c";
-      targetCtx.fillRect(17, 3, 4, 7);
-      targetCtx.fillRect(23, 0, 4, 10);
-      targetCtx.fillRect(29, 3, 4, 7);
-    }
-  } else if (key === "sage") {
-    targetCtx.strokeStyle = "#c9a95f";
-    targetCtx.lineWidth = 3;
-    targetCtx.beginPath();
-    targetCtx.moveTo(17, 10);
-    targetCtx.lineTo(11, 2);
-    targetCtx.moveTo(31, 10);
-    targetCtx.lineTo(37, 2);
-    targetCtx.stroke();
-    targetCtx.fillStyle = "#92d875";
-    targetCtx.fillRect(7, 2, 7, 4);
-    targetCtx.fillRect(34, 2, 7, 4);
-  } else if (key === "astera") {
-    targetCtx.fillStyle = "#ffe982";
-    drawPixelStar(targetCtx, 24, 4, 10, "#ffe982");
-    targetCtx.fillRect(13, 8, 5, 6);
-    targetCtx.fillRect(31, 8, 5, 6);
   }
-  targetCtx.fillStyle = light;
-  targetCtx.fillRect(22, 8, 5, 4);
+
+  if (stage >= 8) {
+    const orbitCount = stage - 6;
+    for (let index = 0; index < orbitCount; index += 1) {
+      const angle = -Math.PI * 0.82 + (Math.PI * 1.64 * index) / Math.max(1, orbitCount - 1);
+      drawEvolutionDiamond(
+        targetCtx,
+        24 + Math.cos(angle) * 20,
+        23 + Math.sin(angle) * 17,
+        stage === 10 ? 2.2 : 1.7,
+        index % 2 ? visual.accent : visual.color,
+      );
+    }
+  }
+  targetCtx.restore();
+}
+
+function drawEvolutionAdornment(targetCtx, actor, light) {
+  const stage = clamp(actor.evolutionStage || 0, 0, 10);
+  if (!stage) return;
+  const profile = actor.profileKey || "kohaku";
+  const visual = heroEvolutionVisual(actor);
+  const tier = Math.ceil(stage / 2);
+  targetCtx.save();
+  targetCtx.globalAlpha = 0.88;
+
+  if (profile === "kohaku") {
+    targetCtx.strokeStyle = visual.color;
+    targetCtx.lineWidth = 1.5 + tier * 0.16;
+    targetCtx.beginPath();
+    targetCtx.arc(24, 26, 13 + tier * 0.6, 0.12 * Math.PI, 0.88 * Math.PI);
+    targetCtx.stroke();
+    if (stage >= 4) {
+      drawEvolutionSpike(targetCtx, 16, 9, 3 + tier * 0.35, -1, visual.accent);
+      drawEvolutionSpike(targetCtx, 32, 9, 3 + tier * 0.35, 1, visual.accent);
+    }
+  } else if (profile === "knight") {
+    drawEvolutionDiamond(targetCtx, 13, 24, 2.5 + tier * 0.28, visual.color);
+    drawEvolutionDiamond(targetCtx, 35, 24, 2.5 + tier * 0.28, visual.color);
+    if (stage >= 5) {
+      for (let index = 0; index < Math.min(3, tier - 1); index += 1) {
+        drawEvolutionSpike(targetCtx, 20 + index * 4, 6, 3 + index * 0.7, index === 0 ? -1 : 1, visual.accent);
+      }
+    }
+  } else {
+    const orbCount = Math.min(5, tier + 1);
+    for (let index = 0; index < orbCount; index += 1) {
+      const angle = (Math.PI * 2 * index) / orbCount - Math.PI / 2;
+      drawEvolutionDiamond(
+        targetCtx,
+        24 + Math.cos(angle) * (15 + tier * 0.7),
+        22 + Math.sin(angle) * (12 + tier * 0.5),
+        1.5 + (stage >= 9 ? 0.6 : 0),
+        index % 2 ? visual.accent : visual.color,
+      );
+    }
+  }
+
+  const pipRadius = 19;
+  for (let index = 0; index < stage; index += 1) {
+    const angle = Math.PI + (Math.PI * index) / 9;
+    drawEvolutionDiamond(
+      targetCtx,
+      24 + Math.cos(angle) * pipRadius,
+      23 + Math.sin(angle) * pipRadius,
+      stage === 10 && index === 9 ? 2.2 : 1.25,
+      index % 2 ? visual.accent : visual.color,
+    );
+  }
+  drawEvolutionDiamond(targetCtx, 24, 8, 1.7 + tier * 0.28, stage === 10 ? "#fff7c9" : light || visual.accent);
+  if (stage === 10) drawPixelStar(targetCtx, 24, 4, 7, visual.accent);
   targetCtx.restore();
 }
 
