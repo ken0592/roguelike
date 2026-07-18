@@ -55,7 +55,7 @@ let mapTokenReady = false;
 const itemIconSheet = new Image();
 itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa11";
 const enemyArtSheets = Array(4).fill(null);
-const FOXBOUND_ASSET_VERSION = "pwa18f";
+const FOXBOUND_ASSET_VERSION = "pwa18g";
 const FOXBOUND_SPRITE_ROOT = "assets/foxbound-codex-v1";
 const FOXBOUND_HERO_SPRITE_IDS = Object.freeze({
   kohaku: "kohaku",
@@ -2163,20 +2163,20 @@ function renderExpeditionLoadout() {
   }
 
   const characterStep = game.loadoutStep !== "relic";
-  ui.townDialogTitle.textContent = characterStep ? "探索者を選ぶ" : "初期星遺物を選ぶ";
+  ui.townDialogTitle.textContent = characterStep ? "挑戦者を選べ" : "星遺物を選べ";
   if (characterStep) {
     ui.townDialogBody.innerHTML = `
       <div class="loadout-stage-head">
         <div class="loadout-step-track" aria-label="遠征準備">
           <b class="active">1</b><span>探索者</span><i></i><b>2</b><span>星遺物</span>
         </div>
-        <strong>この挑戦の主人公を選ぶ</strong>
-        <small>三人は初期能力・技・進化分岐が異なります。グラフで得意分野を比べられます。</small>
+        <strong>100階の頂へ挑む者</strong>
+        <small>剣、術、変化。選んだ一人の軌跡が、この挑戦の運命を決める。</small>
       </div>
       <div class="loadout-character-grid loadout-character-stage"></div>
       <div class="loadout-actions">
         ${inheritedProgress ? '<button type="button" class="secondary-button loadout-new-game">ニューゲーム</button>' : ""}
-        <button type="button" class="primary-button loadout-next">星遺物選択へ</button>
+        <button type="button" class="primary-button loadout-next">この探索者で進む</button>
       </div>
     `;
     const characterGrid = ui.townDialogBody.querySelector(".loadout-character-grid");
@@ -2243,8 +2243,8 @@ function renderExpeditionLoadout() {
       <div class="loadout-step-track" aria-label="遠征準備">
         <b>1</b><span>探索者</span><i></i><b class="active">2</b><span>星遺物</span>
       </div>
-      <strong>最初の運命をひとつ選ぶ</strong>
-      <small>初期星遺物は序盤の戦い方を決めます。あえて持たずに出ると、無印進化が解放されます。</small>
+      <strong>運命を歪める星遺物</strong>
+      <small>選択はひとつ。持たずに挑めば、まだ誰も知らない進化へ近づく。</small>
     </div>
     <section class="loadout-relic-stage">
       <div class="loadout-selected-hero" style="--hero-color:${profile.color}">
@@ -2255,7 +2255,7 @@ function renderExpeditionLoadout() {
     </section>
     <div class="loadout-actions loadout-final-actions">
       <button type="button" class="secondary-button loadout-back">探索者を選び直す</button>
-      <button type="button" class="primary-button loadout-depart">この運命でB1Fへ</button>
+      <button type="button" class="primary-button loadout-depart">星喰いの塔へ出発</button>
     </div>
   `;
   drawPortrait(ui.townDialogBody.querySelector(".loadout-selected-hero canvas"), selectedActor);
@@ -2313,8 +2313,8 @@ function startExpedition() {
   announceEvent(checkpoint ? "TRY RESUME" : "TRY START", `星喰い塔 B${game.floor}F`, "発", "mystic");
   playSfx("depart");
   updateAll();
-  queueRouteChoiceIfNeeded(220);
-  queueFloorChoiceIfNeeded(720);
+  queueRouteChoiceIfNeeded(1050);
+  queueFloorChoiceIfNeeded(1450);
 }
 
 function prepareNewTry() {
@@ -4140,7 +4140,7 @@ function applyTowerWind() {
     };
     leader.hp = Math.max(0, leader.hp - damage);
     addEffect("vortex", leader.x, leader.y, "#ad8ae8");
-    addFloatingText(leader.x, leader.y, `-${damage}`, "#d6b7ff");
+    addDamageNumber(leader.x, leader.y, damage, { received: true, color: "#d6b7ff", outline: "#3d245e" });
     addLog(`塔風の侵食。${leader.name}は${damage}ダメージを受けた。`);
     triggerScreenShake(8, 260);
     if (leader.hp <= 0 && !tryReviveActor(leader)) leader.down = true;
@@ -4475,7 +4475,7 @@ function explodeEnemyBomb(enemy, target) {
     const defense = actor.res;
     const damage = Math.max(3, 9 + Math.floor(game.floor / 8) - defense);
     actor.hp = Math.max(0, actor.hp - damage);
-    addFloatingText(actor.x, actor.y, `-${damage}`, "#ff8c65");
+    addDamageNumber(actor.x, actor.y, damage, { received: true });
     addEffect("impact", actor.x, actor.y, "#ffffff");
     if (actor.id === "leader") {
       game.lastDamageSource = {
@@ -4554,7 +4554,7 @@ function bossSpecialAttack(enemy, target) {
   addEffect("runes", enemy.x, enemy.y, enemy.color);
   addEffect("impact", target.x, target.y, "#ffffff");
   addEffect("hit", target.x, target.y, enemy.color);
-  addFloatingText(target.x, target.y, `-${damage}`, palette.coral);
+  addDamageNumber(target.x, target.y, damage, { received: true, outline: enemy.color });
   const effectivenessText = effectiveness > 1 ? "　効果抜群" : effectiveness < 1 ? "　いまひとつ" : "";
   addLog(`${enemy.name}の${enemy.special}。${target.name}に${damage}ダメージ${effectivenessText}。`);
   announceEvent(enemy.special, `【${elementInfo(enemy.elementKey).name}】${target.name}に${damage}ダメージ${effectivenessText}`, elementInfo(enemy.elementKey).symbol, "danger", enemy);
@@ -4631,10 +4631,10 @@ function actorStrikeEnemy(actor, enemy, label) {
   const damage = Math.max(1, actor.atk + focusBonus + strongHit + executeBonus + knightBonus + randInt(-1, 2) - enemy.def);
   if (knightBonus && actor.id === "leader") addFloatingText(actor.x, actor.y, "王城剣", "#ffb078");
   if (strongHit) announceEvent("強撃", `${enemy.name}の急所を捉えた`, "狩", "good");
-  return damageEnemy(enemy, damage, actor, label);
+  return damageEnemy(enemy, damage, actor, label, { critical: Boolean(strongHit) });
 }
 
-function damageEnemy(enemy, amount, source, label) {
+function damageEnemy(enemy, amount, source, label, hitMeta = {}) {
   if (!game.enemies.includes(enemy)) return 0;
   const attackElement = source.id === "leader"
     ? game.currentActionElement || source.elementKey
@@ -4668,7 +4668,12 @@ function damageEnemy(enemy, amount, source, label) {
   enemy.hp -= amount;
   enemy.alerted = true;
   addEffect("hit", enemy.x, enemy.y, source.color || palette.brass);
-  addFloatingText(enemy.x, enemy.y, `-${amount}`, palette.brass);
+  addDamageNumber(enemy.x, enemy.y, amount, {
+    color: hitMeta.critical || effectiveness > 1 ? "#fff0a6" : "#fff8e7",
+    outline: elementInfo(attackElement).color,
+    critical: Boolean(hitMeta.critical),
+  });
+  triggerScreenShake(hitMeta.critical ? 7 : amount >= 12 ? 5 : 3, hitMeta.critical ? 180 : 120);
   if (effectiveness > 1) {
     addFloatingText(enemy.x, enemy.y, "効果抜群", elementInfo(attackElement).color);
     addEffect("burst", enemy.x, enemy.y, elementInfo(attackElement).color);
@@ -4786,7 +4791,7 @@ function triggerMutationExplosion(enemy) {
   const damage = Math.max(3, 5 + Math.floor(game.floor / 20) - leader.res);
   leader.hp = Math.max(0, leader.hp - damage);
   addEffect("nova", enemy.x, enemy.y, "#ff9b58");
-  addFloatingText(leader.x, leader.y, `-${damage}`, "#ff8c65");
+  addDamageNumber(leader.x, leader.y, damage, { received: true });
   triggerScreenShake(12, 320);
   addLog(`${enemy.name}の爆核が砕け、${damage}ダメージ。`);
 }
@@ -4840,7 +4845,7 @@ function enemyAttack(enemy, actor, ranged = false) {
     );
   }
   addEffect("hit", actor.x, actor.y, enemy.color);
-  addFloatingText(actor.x, actor.y, `-${damage}`, palette.coral);
+  addDamageNumber(actor.x, actor.y, damage, { received: true, outline: enemy.color });
   const effectivenessText = effectiveness > 1 ? "　効果抜群" : effectiveness < 1 ? "　いまひとつ" : "";
   addLog(`${enemy.name}の${moveName}。${actor.name}に${damage}ダメージ${effectivenessText}。`);
   announceEvent(moveName, `【${elementInfo(enemy.elementKey).name}】${enemy.name}から ${actor.name}へ ${damage}ダメージ${effectivenessText}`, elementInfo(enemy.elementKey).symbol, "danger", enemy);
@@ -5294,7 +5299,7 @@ function triggerHiddenTrap(actor, trap) {
       };
     }
     actor.hp = Math.max(0, actor.hp - damage);
-    addFloatingText(actor.x, actor.y, `-${damage}`, "#ff806c");
+    addDamageNumber(actor.x, actor.y, damage, { received: true });
     detail = `星針が突き上がり ${damage}ダメージ`;
   } else if (trap.kind === "sleep") {
     actor.guardTurns = 0;
@@ -6210,12 +6215,12 @@ function renderTargetHud(tile = game.aimTile) {
   const enemy = enemyAt(tile.x, tile.y);
   if (enemy && isVisible(enemy.x, enemy.y)) {
     const intent = enemyIntent(enemy);
-    const attackPrediction = gridDistance(leader, enemy) <= 1 ? estimateBasicAttackDamage(leader, enemy) : null;
-    const movePrediction = moveCanReachTarget(leader, move, tile) ? estimateMoveDamage(leader, move, enemy) : null;
     ui.targetHud.dataset.tone = "danger";
     ui.targetHudKicker.textContent = `${elementInfo(enemy.elementKey).symbol} ${intent?.label || "ENEMY"}`;
-    ui.targetHudTitle.textContent = `${enemy.name}　HP ${enemy.hp}/${enemy.maxHp}`;
-    ui.targetHudDetail.textContent = `通常 ${attackPrediction ? `${attackPrediction.damage}${attackPrediction.mark}` : "射程外"}　/　${move.name} ${movePrediction ? `${movePrediction.damage}${movePrediction.mark}` : "射程外"}`;
+    ui.targetHudTitle.textContent = enemy.name;
+    ui.targetHudDetail.textContent = move
+      ? `選択技　${move.name} / ${elementInfo(move.element).name} / ${style.label} / ${moveAimShape(move).label}`
+      : "攻撃するマスを選択中";
     return;
   }
 
@@ -9130,10 +9135,10 @@ function drawDungeon(time) {
   if (game.seen[leader.y][leader.x] && inCamera(leader.x, leader.y)) drawActor(leader, time);
 
   for (const effect of game.effects) drawEffect(effect, time);
-  for (const text of game.floating) drawFloatingText(text, time);
   drawFog();
   drawObjectivePointer(time);
   drawAimIndicator();
+  for (const text of game.floating) drawFloatingText(text, time);
   drawBossHud();
   drawScreenFlash(time);
   game.effects = game.effects.filter((effect) => time - effect.created < effect.life);
@@ -9725,55 +9730,73 @@ function drawRestTileMotif(px, py, x, y, visible) {
 function drawStairs(time) {
   const { x: px, y: py } = toScreen(game.stairs.x, game.stairs.y);
   const open = game.mission?.complete;
-  const pulse = Math.sin(time / 190) * 2;
+  const pulse = 0.5 + Math.sin(time / 240) * 0.5;
   ctx.save();
-  ctx.fillStyle = "rgba(0,0,0,0.34)";
+  ctx.fillStyle = "rgba(0,0,0,0.42)";
   ctx.beginPath();
-  ctx.ellipse(px + 24, py + 40, 20, 6, 0, 0, Math.PI * 2);
+  ctx.ellipse(px + 24, py + 43, 22, 5, 0, 0, Math.PI * 2);
   ctx.fill();
-  if (open) {
-    ctx.fillStyle = "rgba(255, 215, 113, 0.18)";
+
+  const openingGradient = ctx.createLinearGradient(px, py + 7, px, py + 25);
+  openingGradient.addColorStop(0, open ? "#090705" : "#242827");
+  openingGradient.addColorStop(1, open ? `rgba(247, 181, 63, ${0.32 + pulse * 0.18})` : "#343a38");
+  ctx.fillStyle = openingGradient;
+  ctx.beginPath();
+  ctx.moveTo(px + 15, py + 7);
+  ctx.lineTo(px + 33, py + 7);
+  ctx.lineTo(px + 38, py + 23);
+  ctx.lineTo(px + 10, py + 23);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = open ? "#9c6d2f" : "#555e5a";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  for (let index = 0; index < 4; index += 1) {
+    const left = px + 13 - index * 3;
+    const right = px + 35 + index * 3;
+    const y = py + 19 + index * 6;
+    ctx.fillStyle = open
+      ? ["#e8c274", "#d5a755", "#bd873b", "#9c672e"][index]
+      : ["#7d8581", "#69716e", "#575e5c", "#454a49"][index];
     ctx.beginPath();
-    ctx.arc(px + 24, py + 23, 23 + pulse, 0, Math.PI * 2);
+    ctx.moveTo(left + 3, y);
+    ctx.lineTo(right - 3, y);
+    ctx.lineTo(right, y + 3);
+    ctx.lineTo(left, y + 3);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = "#ffe49a";
+    ctx.fillStyle = open
+      ? ["#9b6c31", "#845828", "#6c451f", "#543416"][index]
+      : ["#4e5552", "#414745", "#343937", "#292d2c"][index];
+    ctx.fillRect(left, y + 3, right - left, 3);
+    ctx.strokeStyle = open ? "rgba(255, 233, 174, 0.72)" : "rgba(199, 208, 202, 0.34)";
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(left + 2, y + 0.5);
+    ctx.lineTo(right - 2, y + 0.5);
+    ctx.stroke();
+  }
+
+  if (!open) {
+    ctx.strokeStyle = "#2b302f";
     ctx.lineWidth = 3;
     ctx.beginPath();
-    ctx.arc(px + 24, py + 23, 17 + pulse * 0.4, 0, Math.PI * 2);
+    ctx.moveTo(px + 11, py + 17);
+    ctx.lineTo(px + 37, py + 35);
+    ctx.moveTo(px + 37, py + 17);
+    ctx.lineTo(px + 11, py + 35);
     ctx.stroke();
-    ctx.fillStyle = "rgba(240, 179, 77, 0.5)";
-    ctx.fillRect(px + 11, py + 8, 26, 31);
-    ctx.fillStyle = "#fff7ce";
-    for (let y = 0; y < 2; y += 1) {
-      const offset = y * 11;
-      ctx.beginPath();
-      ctx.moveTo(px + 16, py + 25 - offset);
-      ctx.lineTo(px + 24, py + 17 - offset);
-      ctx.lineTo(px + 32, py + 25 - offset);
-      ctx.lineTo(px + 32, py + 30 - offset);
-      ctx.lineTo(px + 24, py + 22 - offset);
-      ctx.lineTo(px + 16, py + 30 - offset);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.fillStyle = "#251d12";
-    ctx.fillRect(px + 8, py + 39, 32, 8);
-    ctx.fillStyle = "#ffe7a6";
-    ctx.font = "900 7px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText(game.floor >= game.targetFloor ? "TOWN" : "NEXT", px + 24, py + 46);
   } else {
-    ctx.fillStyle = "#555b5a";
-    ctx.fillRect(px + 8, py + 32, 32, 10);
-    ctx.fillStyle = "#707776";
-    ctx.fillRect(px + 13, py + 25, 22, 10);
-    ctx.strokeStyle = "#a5aaa6";
-    ctx.lineWidth = 4;
+    ctx.fillStyle = `rgba(255, 226, 137, ${0.1 + pulse * 0.12})`;
     ctx.beginPath();
-    ctx.arc(px + 24, py + 23, 9, Math.PI, 0);
-    ctx.stroke();
-    ctx.fillStyle = "#2a2e2d";
-    ctx.fillRect(px + 21, py + 30, 6, 7);
+    ctx.moveTo(px + 15, py + 12);
+    ctx.lineTo(px + 33, py + 12);
+    ctx.lineTo(px + 43, py + 45);
+    ctx.lineTo(px + 5, py + 45);
+    ctx.closePath();
+    ctx.globalCompositeOperation = "screen";
+    ctx.fill();
   }
   ctx.restore();
 }
@@ -10971,7 +10994,6 @@ function drawEnemy(enemy, time) {
     ctx.fillText("Z", px + 37, py + 10 + wobble);
   }
   drawEnemyIntent(enemy, px, py, wobble);
-  drawEnemyHp(enemy, px, py);
 }
 
 function drawEnemyIntent(enemy, px, py, wobble) {
@@ -11109,23 +11131,19 @@ function drawBossHud() {
   const boss = game.enemies.find((enemy) => enemy.boss);
   if (!boss) return;
   const viewWidth = dungeonViewWidth();
-  const width = Math.min(430, viewWidth - 240);
+  const width = Math.min(430, Math.max(220, viewWidth - 240));
   const x = (viewWidth - width) / 2;
   const y = 18;
   ctx.save();
   ctx.fillStyle = "rgba(8, 10, 9, 0.88)";
-  ctx.fillRect(x - 10, y - 10, width + 20, 42);
+  ctx.fillRect(x - 10, y - 10, width + 20, 27);
   ctx.strokeStyle = boss.color;
   ctx.lineWidth = 2;
-  ctx.strokeRect(x - 10, y - 10, width + 20, 42);
+  ctx.strokeRect(x - 10, y - 10, width + 20, 27);
   ctx.fillStyle = "#fff4df";
   ctx.font = "800 13px sans-serif";
-  ctx.textAlign = "left";
-  ctx.fillText(`【${elementInfo(boss.elementKey).name}】${boss.title}  ${boss.name}${boss.bossPlan ? ` / ${boss.bossPlan}` : ""}`, x, y + 4);
-  ctx.fillStyle = "rgba(255,255,255,0.12)";
-  ctx.fillRect(x, y + 12, width, 10);
-  ctx.fillStyle = boss.color;
-  ctx.fillRect(x, y + 12, width * clamp(boss.hp / boss.maxHp, 0, 1), 10);
+  ctx.textAlign = "center";
+  ctx.fillText(`【${elementInfo(boss.elementKey).name}】${boss.title}  ${boss.name}${boss.bossPlan ? ` / ${boss.bossPlan}` : ""}`, viewWidth / 2, y + 6);
   ctx.restore();
 }
 
@@ -11205,14 +11223,6 @@ function drawOutlinedEntity(drawEntity, px, py, color, radius, visualKey = null)
   stampEntitySilhouette(ctx, px, py, color, radius);
   ctx.drawImage(entityBuffer, px, py);
   ctx.restore();
-}
-
-function drawEnemyHp(enemy, px, py) {
-  if (enemy.hp >= enemy.maxHp) return;
-  ctx.fillStyle = "rgba(0,0,0,0.5)";
-  ctx.fillRect(px + 8, py + 4, 32, 5);
-  ctx.fillStyle = palette.coral;
-  ctx.fillRect(px + 8, py + 4, Math.max(1, 32 * (enemy.hp / enemy.maxHp)), 5);
 }
 
 function drawEffect(effect, time) {
@@ -11506,11 +11516,51 @@ function drawFloatingText(text, time) {
   const t = clamp(age / text.life, 0, 1);
   const { x: px, y: py } = toScreen(text.x, text.y);
   ctx.save();
-  ctx.globalAlpha = 1 - t;
-  ctx.fillStyle = text.color;
-  ctx.font = "800 15px sans-serif";
+  const x = px + 24 + (text.offsetX || 0);
+  const y = py + 12 - (text.offsetY || 0) - t * (text.kind === "damage" ? 31 : 20);
   ctx.textAlign = "center";
-  ctx.fillText(text.value, px + 24, py + 12 - t * 18);
+  ctx.textBaseline = "middle";
+  ctx.lineJoin = "round";
+
+  if (text.kind === "damage") {
+    const popT = clamp(age / 185, 0, 1);
+    const settleT = clamp((age - 185) / 180, 0, 1);
+    const scale = popT < 1
+      ? 0.64 + Math.sin(popT * Math.PI * 0.5) * 0.68
+      : 1.32 - settleT * 0.32;
+    const fade = t < 0.7 ? 1 : 1 - (t - 0.7) / 0.3;
+    ctx.globalAlpha = clamp(fade, 0, 1);
+    ctx.translate(x, y);
+    ctx.scale(scale, scale);
+    ctx.font = `${text.critical ? 1000 : 900} ${text.critical ? 29 : 24}px "Segoe UI", sans-serif`;
+    ctx.strokeStyle = "rgba(2, 5, 5, 0.96)";
+    ctx.lineWidth = text.critical ? 8 : 7;
+    ctx.strokeText(text.value, 0, 0);
+    ctx.strokeStyle = text.outline || "#8a5318";
+    ctx.lineWidth = text.critical ? 4 : 3;
+    ctx.strokeText(text.value, 0, 0);
+    ctx.fillStyle = text.color;
+    ctx.shadowColor = text.color;
+    ctx.shadowBlur = text.critical ? 12 : 5;
+    ctx.fillText(text.value, 0, 0);
+    if (text.critical) {
+      ctx.shadowBlur = 0;
+      ctx.font = "900 7px \"Segoe UI\", sans-serif";
+      ctx.strokeStyle = "rgba(2, 5, 5, 0.96)";
+      ctx.lineWidth = 3;
+      ctx.strokeText("CRITICAL", 0, -20);
+      ctx.fillStyle = "#fff2a8";
+      ctx.fillText("CRITICAL", 0, -20);
+    }
+  } else {
+    ctx.globalAlpha = 1 - t;
+    ctx.fillStyle = text.color;
+    ctx.font = `${text.kind === "heal" ? 900 : 800} ${text.kind === "heal" ? 18 : 15}px "Segoe UI", sans-serif`;
+    ctx.strokeStyle = "rgba(2, 5, 5, 0.94)";
+    ctx.lineWidth = 4;
+    ctx.strokeText(text.value, x, y);
+    ctx.fillText(text.value, x, y);
+  }
   ctx.restore();
 }
 
@@ -11674,29 +11724,17 @@ function drawAimLabel(tile, move, targetEnemy) {
   const { x: px, y: py } = toScreen(tile.x, tile.y);
   const style = moveStyleInfo(move?.style);
   const leader = getLeader();
-  const attackTarget = enemyAt(leader.x + Math.sign(tile.x - leader.x), leader.y + Math.sign(tile.y - leader.y));
-  const attackPrediction = targetEnemy && gridDistance(leader, tile) <= 1
-    ? estimateBasicAttackDamage(leader, targetEnemy)
-    : attackTarget && gridDistance(leader, tile) > 1
-      ? estimateBasicAttackDamage(leader, attackTarget)
-      : null;
-  const movePrediction = targetEnemy && moveCanReachTarget(leader, move, tile)
-    ? estimateMoveDamage(leader, move, targetEnemy)
-    : null;
-  const attackText = attackPrediction
-    ? `左 ${attackPrediction.damage}${attackPrediction.mark}`
-    : "左 隣1";
-  const moveText = movePrediction
-    ? `右 ${movePrediction.damage}${movePrediction.mark}`
-    : move ? `右 ${style.short}${moveAimShape(move).label}` : "";
+  const attackText = gridDistance(leader, tile) <= 1 ? "左 通常攻撃" : "左 隣1マス";
+  const moveText = move ? `右 ${move.name}` : "";
   const text = `${attackText}  ${moveText}`;
-  const second = targetEnemy
-    ? `${targetEnemy.name} HP${targetEnemy.hp}/${targetEnemy.maxHp}`
-    : "カーソル方向へ攻撃";
+  const second = targetEnemy ? targetEnemy.name : `${style.label} / ${moveAimShape(move).label}`;
   ctx.font = "900 10px sans-serif";
   const width = Math.min(184, Math.ceil(Math.max(ctx.measureText(text).width, ctx.measureText(second).width) + 16));
   const x = clamp(px + 24 - width / 2, 4, dungeonViewWidth() - width - 4);
-  const y = clamp(py - 28, 6, dungeonViewHeight() - 36);
+  const below = py + TILE + 4;
+  const y = below + 32 <= dungeonViewHeight() - 4
+    ? below
+    : clamp(py - 36, 6, dungeonViewHeight() - 36);
   ctx.fillStyle = "rgba(5, 9, 9, 0.92)";
   ctx.fillRect(x, y, width, 32);
   ctx.strokeStyle = targetEnemy ? "#ff6f62" : style.color;
@@ -11858,6 +11896,29 @@ function drawMiniMap() {
     miniCtx.stroke();
     miniCtx.restore();
   };
+  const drawStairMarker = (x, y, open) => {
+    const center = markerCenter(x, y);
+    const color = open ? "#ffe39b" : "#89938f";
+    const glow = open ? "#fff3ca" : "#c7cfcb";
+    miniCtx.save();
+    miniCtx.lineCap = "square";
+    miniCtx.shadowColor = glow;
+    miniCtx.shadowBlur = open ? 5 : 2;
+    for (let index = 0; index < 4; index += 1) {
+      const width = 4 + index * 2.2;
+      const yPos = center.y - 3 + index * 2;
+      miniCtx.strokeStyle = "#07100d";
+      miniCtx.lineWidth = 4;
+      miniCtx.beginPath();
+      miniCtx.moveTo(center.x - width / 2, yPos);
+      miniCtx.lineTo(center.x + width / 2, yPos);
+      miniCtx.stroke();
+      miniCtx.strokeStyle = color;
+      miniCtx.lineWidth = 2;
+      miniCtx.stroke();
+    }
+    miniCtx.restore();
+  };
 
   miniCtx.fillStyle = "#020706";
   miniCtx.fillRect(0, 0, miniCanvas.width, miniCanvas.height);
@@ -11955,14 +12016,7 @@ function drawMiniMap() {
   }
 
   if (game.stairsRevealed && (game.mapped[game.stairs.y][game.stairs.x] || game.guidanceActive || hasRelic("starCompass"))) {
-    drawDiamond(
-      game.stairs.x,
-      game.stairs.y,
-      game.mission.complete ? "#fff8de" : "#9ea8a4",
-      markerRadius + 0.8,
-      "#163039",
-      1.7,
-    );
+    drawStairMarker(game.stairs.x, game.stairs.y, game.mission.complete);
   }
   for (const trap of game.traps) {
     if (!trap.revealed || !game.mapped[trap.y]?.[trap.x]) continue;
@@ -12447,7 +12501,42 @@ function addTargetedEffect(type, x, y, targetX, targetY, color, life = 620) {
 }
 
 function addFloatingText(x, y, value, color) {
-  game.floating.push({ x, y, value, color, created: performance.now(), life: 820 });
+  const stringValue = String(value);
+  game.floating.push({
+    x,
+    y,
+    value: stringValue,
+    color,
+    kind: /^\+\d/.test(stringValue) ? "heal" : "status",
+    offsetX: 0,
+    offsetY: 0,
+    created: performance.now(),
+    life: 900,
+  });
+}
+
+function addDamageNumber(x, y, amount, options = {}) {
+  const created = performance.now();
+  const lane = game.floating.filter((entry) => (
+    entry.kind === "damage"
+    && entry.x === x
+    && entry.y === y
+    && created - entry.created < 260
+  )).length;
+  game.floating.push({
+    x,
+    y,
+    value: String(Math.max(0, Math.round(amount))),
+    color: options.color || (options.received ? "#ffb0a2" : "#fff0a6"),
+    outline: options.outline || (options.received ? "#761d24" : "#8a5318"),
+    kind: "damage",
+    critical: Boolean(options.critical),
+    received: Boolean(options.received),
+    offsetX: (lane % 3 - 1) * 13,
+    offsetY: Math.floor(lane / 3) * 10,
+    created,
+    life: options.critical ? 1180 : 1020,
+  });
 }
 
 function getLeader() {

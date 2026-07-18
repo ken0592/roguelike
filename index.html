@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa18f" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa18g" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa18f" />
+    <link rel="stylesheet" href="styles.css?v=pwa18g" />
   </head>
   <body>
     <div class="app-shell">
@@ -154,7 +154,7 @@
       <main id="gameLayout" class="game-layout" hidden>
         <section class="stage-panel" aria-label="ダンジョン">
           <div class="stage-viewport">
-            <canvas id="gameCanvas" width="1152" height="768"></canvas>
+              <canvas id="gameCanvas" width="1152" height="768" tabindex="0" aria-label="ダンジョン画面"></canvas>
 
             <div class="battle-hud" aria-label="探索者の状態" aria-live="polite">
               <div class="battle-level"><span>Lv</span><strong id="battleLevel">1</strong></div>
@@ -376,7 +376,7 @@
     </dialog>
 
     <dialog id="stairsDialog" class="stairs-dialog">
-      <div class="stairs-dialog-mark" aria-hidden="true">↑</div>
+      <div class="stairs-dialog-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
       <div>
         <span id="stairsDialogKicker">階段を発見</span>
         <h2 id="stairsDialogTitle">次の階へ進みますか？</h2>
@@ -506,6 +506,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa18f"></script>
+    <script src="app.js?v=pwa18g"></script>
   </body>
 </html>
