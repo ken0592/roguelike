@@ -55,7 +55,7 @@ let mapTokenReady = false;
 const itemIconSheet = new Image();
 itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa11";
 const enemyArtSheets = Array(4).fill(null);
-const FOXBOUND_ASSET_VERSION = "pwa18e";
+const FOXBOUND_ASSET_VERSION = "pwa18f";
 const FOXBOUND_SPRITE_ROOT = "assets/foxbound-codex-v1";
 const FOXBOUND_HERO_SPRITE_IDS = Object.freeze({
   kohaku: "kohaku",
@@ -81,6 +81,18 @@ const FOXBOUND_BOSS_SPRITE_IDS = Object.freeze([
   "granmos", "nereiya", "varg", "ignibal", "lux_nox",
   "zarga", "aldeon", "selene", "astraios", "void_eater",
 ]);
+const FOXBOUND_BOSS_SAFE_FRAMES = Object.freeze({
+  granmos: Object.freeze({ down: [1, 0], left: [1, 1], right: [2, 3], up: [2, 1] }),
+  nereiya: Object.freeze({ down: [0, 0], left: [1, 1], right: [2, 0], up: [3, 0] }),
+  varg: Object.freeze({ down: [1, 1], left: [1, 1], right: [2, 1], up: [3, 1] }),
+  ignibal: Object.freeze({ down: [2, 0], left: [2, 0], right: [2, 1], up: [2, 0] }),
+  lux_nox: Object.freeze({ down: [1, 1], left: [1, 1], right: [1, 2], up: [1, 1] }),
+  zarga: Object.freeze({ down: [0, 0], left: [1, 0], right: [2, 0], up: [3, 0] }),
+  aldeon: Object.freeze({ down: [1, 0], left: [1, 0], right: [2, 0], up: [3, 0] }),
+  selene: Object.freeze({ down: [0, 1], left: [1, 1], right: [2, 2], up: [3, 1] }),
+  astraios: Object.freeze({ down: [2, 3], left: [2, 2], right: [2, 3], up: [3, 3] }),
+  void_eater: Object.freeze({ down: [0, 0], left: [1, 0], right: [2, 0], up: [3, 0] }),
+});
 const FOXBOUND_RARE_SPRITE_IDS = Object.freeze({
   "rare-stargold": "angelic_treasure_chest",
   "rare-rainbow": "night_moth",
@@ -7951,6 +7963,7 @@ function renderBossCodex(container) {
       elementKey: theme.elementKey,
       bossGimmick: theme.gimmick,
       artIndex: [4, 9, 14, 19, 24, 29, 34, 35, 38, 39][index],
+      spritePackId: FOXBOUND_BOSS_SPRITE_IDS[index],
     });
   });
 }
@@ -10512,9 +10525,26 @@ function foxboundSpriteDirectionRow(entry, actor) {
   return 0;
 }
 
+function foxboundSpriteDirectionKey(actor) {
+  const dx = Number(actor.dx) || 0;
+  const dy = Number(actor.dy) || 0;
+  if (dy < 0 && Math.abs(dy) >= Math.abs(dx)) return "up";
+  if (dx < 0 && Math.abs(dx) >= Math.abs(dy)) return "left";
+  if (dx > 0 && Math.abs(dx) >= Math.abs(dy)) return "right";
+  return "down";
+}
+
 function foxboundSpriteFrame(entry, actor, time, category) {
   const usable = (entry.frames || []).filter((frame) => frame.usable !== false && frame.w > 0 && frame.h > 0);
   if (!usable.length) return null;
+  if (category === "bosses") {
+    const safeFrames = FOXBOUND_BOSS_SAFE_FRAMES[entry.id];
+    const safeCell = safeFrames?.[foxboundSpriteDirectionKey(actor)] || safeFrames?.down;
+    const safeFrame = safeCell
+      ? usable.find((frame) => frame.row === safeCell[0] && frame.col === safeCell[1])
+      : null;
+    if (safeFrame) return safeFrame;
+  }
   const maxWidth = Math.max(...usable.map((frame) => frame.w));
   const maxHeight = Math.max(...usable.map((frame) => frame.h));
   const maxInk = Math.max(...usable.map((frame) => frame.ink || 0));
