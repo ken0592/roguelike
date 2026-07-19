@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa18g" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa18i" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa18g" />
+    <link rel="stylesheet" href="styles.css?v=pwa18i" />
   </head>
   <body>
     <div class="app-shell">
@@ -98,7 +98,7 @@
             </button>
             <button type="button" data-town-action="board">
               <b>塔の経路</b>
-              <span>門番と休憩所</span>
+              <span>門番と中継街</span>
             </button>
             <button type="button" data-town-action="controls">
               <b>操作</b>
@@ -124,7 +124,7 @@
         </button>
         <button class="town-spot town-spot-board town-shortcut" type="button" data-town-action="board" tabindex="-1" aria-hidden="true">
           <strong>塔の経路</strong>
-          <span>休憩所と門番を確認</span>
+          <span>中継街と門番を確認</span>
         </button>
         <button class="town-spot town-spot-shop town-shortcut" type="button" data-town-action="shop" tabindex="-1" aria-hidden="true">
           <strong>星の商店</strong>
@@ -391,8 +391,8 @@
     <dialog id="restDialog" class="rest-dialog">
       <div class="rest-dialog-mark" aria-hidden="true">休</div>
       <div class="rest-dialog-copy">
-        <span id="restDialogKicker">10F 休憩所</span>
-        <h2 id="restDialogTitle">星火の休憩所</h2>
+        <span id="restDialogKicker">10F 中継街</span>
+        <h2 id="restDialogTitle">星火の中継街</h2>
         <p id="restDialogText">すべての技PPが回復しました。次へ進む前に、ひとつだけ選べます。</p>
       </div>
       <div id="restDialogChoices" class="rest-dialog-choices"></div>
@@ -461,14 +461,14 @@
           </div>
         </div>
         <ul class="help-list">
-          <li>目的は「星喰いの塔」100階踏破。9・19・29…99階に、次の休憩所を守る門番がいます。</li>
+          <li>目的は「星喰いの塔」100階踏破。9・19・29…99階に、次の中継街への道を守る門番がいます。</li>
           <li>同じ階に長く留まると「塔風」が強まります。240ターンで警告、330ターンから侵食、420ターンで挑戦失敗です。</li>
-          <li>10階ごとに休憩所、20階ごとに大休憩所があります。到着すると全技PPが回復します。</li>
-          <li>門番を越えて休憩所へ着くと、進化か強力な星遺物を選べます。星遺物の効果はすべて同時に働きます。</li>
+          <li>10階ごとに中継街、20階ごとに大中継街があります。到着すると全技PPが回復します。</li>
+          <li>門番を越えて中継街へ着くと、星祠で進化か強力な星遺物を選べます。星遺物の効果はすべて同時に働きます。</li>
           <li>各10階区画の入口ではルートを選べます。敵数、道具、商店、変異種、隠し祭壇の出やすさが変わります。</li>
           <li>入るたびにマップ、敵、道具、隠し罠、隠し祭壇、階の運勢が変わります。通常階段は隠されません。</li>
           <li>挑戦開始時にレベル、星遺物、星網スキル盤、進化素材は初期化。進化形態とバッグ拡張は引き継がれます。</li>
-          <li>記録は1つ。休憩所と町で自動保存されます。</li>
+          <li>記録は1つ。中継街と拠点で自動保存されます。</li>
           <li>出発前に狐・亡国の騎士・マジシャンと、初期星遺物を選びます。</li>
           <li>三人の探索者には固有能力があります。狐は属性切替、騎士は物理と守り、マジシャンは魔法とPP運用が得意です。</li>
           <li>10階ごとに進化か強力な星遺物を選択。進化は全10段階で、毎段階3〜4候補あります。</li>
@@ -479,7 +479,7 @@
           <li>ミニマップには訪れた部屋と、実際に歩いた通路だけが記録されます。</li>
           <li>通常階段は見つけた部屋でそのまま確認できます。隠し罠と星裏の祭壇は近づくか探索能力で発見します。</li>
           <li>歩くたびにHPが1回復します。逃げて回復するか、増援前に急ぐかも判断の一つです。</li>
-          <li>技は使うだけでも経験値を得られ、通常攻撃より早く成長できます。ただしPPは休憩所まで有限です。</li>
+          <li>技は使うだけでも経験値を得られ、通常攻撃より早く成長できます。ただしPPは中継街まで有限です。</li>
           <li>特定の属性順で技を使うと属性コンボが発生します。光と闇、木と毒、火と木などは特に狙い目です。</li>
           <li>物理と魔法を交互に使う、変異種へ強くするなど、星遺物同士の組み合わせが重要です。</li>
           <li>敵の頭上には次の意図が出ます。斬は近接、遠は遠距離、爆は爆発準備、癒は回復、盗は盗み、呼は召喚、追は追跡です。</li>
@@ -506,6 +506,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa18g"></script>
+    <script src="app.js?v=pwa18i"></script>
   </body>
 </html>

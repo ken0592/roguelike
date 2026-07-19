@@ -55,7 +55,7 @@ let mapTokenReady = false;
 const itemIconSheet = new Image();
 itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa11";
 const enemyArtSheets = Array(4).fill(null);
-const FOXBOUND_ASSET_VERSION = "pwa18g";
+const FOXBOUND_ASSET_VERSION = "pwa18i";
 const FOXBOUND_SPRITE_ROOT = "assets/foxbound-codex-v1";
 const FOXBOUND_HERO_SPRITE_IDS = Object.freeze({
   kohaku: "kohaku",
@@ -178,7 +178,7 @@ function loadFoxboundSpriteManifest() {
 }
 const townFacilities = [
   { key: "characters", name: "継承の鏡", detail: "探索者と進化を選ぶ", x: 286, y: 340, radius: 70, color: "#9de6ed" },
-  { key: "board", name: "塔の経路板", detail: "門番と休憩所を確認", x: 446, y: 350, radius: 64, color: "#efc867" },
+  { key: "board", name: "塔の経路板", detail: "門番と中継街を確認", x: 446, y: 350, radius: 64, color: "#efc867" },
   { key: "guild", name: "星見観測院", detail: "遠征記録を見る", x: 910, y: 312, radius: 72, color: "#9dcc7c" },
   { key: "storage", name: "風見倉庫", detail: "道具を預ける", x: 224, y: 566, radius: 72, color: "#76cdd4" },
   { key: "shop", name: "星の商店", detail: "道具と星遺物を整える", x: 930, y: 566, radius: 72, color: "#ef8b70" },
@@ -1762,7 +1762,7 @@ const towerContract = {
   theme: "forest",
   client: "星見ギルド",
   target: "百階の星喰皇",
-  description: "10の門番と休憩所を越え、100階の星核へ到達する一本勝負。",
+  description: "10の門番と中継街を越え、100階の星核へ到達する一本勝負。",
   floors: 100,
   reward: 5000,
 };
@@ -1826,16 +1826,16 @@ const dungeonThemes = {
 };
 
 const restSanctuaryThemes = [
-  { name: "苔灯の間", subtitle: "若葉の灯が息づく中継室", base: "forest", accent: "#b8df79", glow: "#f4e589", motif: "leaf", floor: "#60745b", floorDim: "#465443", wall: "#3d5848", wallDark: "#24372e", wallLight: "#789070" },
-  { name: "水晶の間", subtitle: "青い晶柱が静かに鳴る中継室", base: "tower", accent: "#79dcf0", glow: "#e1fbff", motif: "crystal", floor: "#536f7b", floorDim: "#3d515a", wall: "#405b6b", wallDark: "#263844", wallLight: "#7e9cab" },
-  { name: "残火の間", subtitle: "消えない火種を守る中継室", base: "ruins", accent: "#ff9362", glow: "#ffe1a3", motif: "ember", floor: "#79584c", floorDim: "#574039", wall: "#66483f", wallDark: "#3b2b28", wallLight: "#a1715d" },
-  { name: "月鏡の間", subtitle: "銀の床が月影を返す中継室", base: "dream", accent: "#b9c8ff", glow: "#f1efff", motif: "moon", floor: "#64647d", floorDim: "#48495c", wall: "#4e536b", wallDark: "#2d3042", wallLight: "#858ba7" },
-  { name: "花風の間", subtitle: "星花の香りが巡る中継室", base: "forest", accent: "#ef91b3", glow: "#fff0b5", motif: "bloom", floor: "#68775d", floorDim: "#4b5745", wall: "#4d624d", wallDark: "#2d3b31", wallLight: "#83977a" },
-  { name: "機環の間", subtitle: "古い歯車が時を刻む中継室", base: "tower", accent: "#e4b969", glow: "#fff0b8", motif: "gear", floor: "#6e6963", floorDim: "#4f4b48", wall: "#5d5854", wallDark: "#353230", wallLight: "#938982" },
-  { name: "雷雲の間", subtitle: "天井の彼方で雷が眠る中継室", base: "tower", accent: "#f3df67", glow: "#d9f6ff", motif: "storm", floor: "#536473", floorDim: "#3c4a56", wall: "#414e62", wallDark: "#27303e", wallLight: "#71839c" },
-  { name: "深森の間", subtitle: "古木の根が塔を抱く中継室", base: "forest", accent: "#58d39a", glow: "#d9ffd7", motif: "root", floor: "#496656", floorDim: "#354a40", wall: "#3b5548", wallDark: "#23352d", wallLight: "#6f8978" },
-  { name: "虚月の間", subtitle: "影と星明かりが交差する中継室", base: "void", accent: "#bb80ee", glow: "#f2dcff", motif: "void", floor: "#554b68", floorDim: "#3d374c", wall: "#443954", wallDark: "#282131", wallLight: "#746487" },
-  { name: "星核の間", subtitle: "百階の鼓動が満ちる最後の中継室", base: "void", accent: "#f0c65c", glow: "#fff7cf", motif: "star", floor: "#60546a", floorDim: "#453d4d", wall: "#50435d", wallDark: "#2d2636", wallLight: "#87739a" },
+  { name: "苔灯広場", subtitle: "若葉の灯と旅商人が迎える小さな宿場", base: "forest", accent: "#b8df79", glow: "#f4e589", motif: "leaf", floor: "#60745b", floorDim: "#465443", wall: "#3d5848", wallDark: "#24372e", wallLight: "#789070" },
+  { name: "水晶宿場", subtitle: "青い晶柱の音が道しるべになる街", base: "tower", accent: "#79dcf0", glow: "#e1fbff", motif: "crystal", floor: "#536f7b", floorDim: "#3d515a", wall: "#405b6b", wallDark: "#263844", wallLight: "#7e9cab" },
+  { name: "残火横丁", subtitle: "消えない炉を囲んで店が並ぶ街", base: "ruins", accent: "#ff9362", glow: "#ffe1a3", motif: "ember", floor: "#79584c", floorDim: "#574039", wall: "#66483f", wallDark: "#3b2b28", wallLight: "#a1715d" },
+  { name: "月鏡庭園", subtitle: "銀の石畳に月影が揺れる静かな街", base: "dream", accent: "#b9c8ff", glow: "#f1efff", motif: "moon", floor: "#64647d", floorDim: "#48495c", wall: "#4e536b", wallDark: "#2d3042", wallLight: "#858ba7" },
+  { name: "花風市場", subtitle: "星花の香りと呼び声が巡る市場町", base: "forest", accent: "#ef91b3", glow: "#fff0b5", motif: "bloom", floor: "#68775d", floorDim: "#4b5745", wall: "#4d624d", wallDark: "#2d3b31", wallLight: "#83977a" },
+  { name: "機環工房街", subtitle: "古い歯車と職人の槌音が響く街", base: "tower", accent: "#e4b969", glow: "#fff0b8", motif: "gear", floor: "#6e6963", floorDim: "#4f4b48", wall: "#5d5854", wallDark: "#353230", wallLight: "#938982" },
+  { name: "雷雲桟橋", subtitle: "雲海を渡る旅人が羽を休める街", base: "tower", accent: "#f3df67", glow: "#d9f6ff", motif: "storm", floor: "#536473", floorDim: "#3c4a56", wall: "#414e62", wallDark: "#27303e", wallLight: "#71839c" },
+  { name: "深森樹上街", subtitle: "古木の根と家々が塔を抱く街", base: "forest", accent: "#58d39a", glow: "#d9ffd7", motif: "root", floor: "#496656", floorDim: "#354a40", wall: "#3b5548", wallDark: "#23352d", wallLight: "#6f8978" },
+  { name: "虚月停留地", subtitle: "影と星明かりの狭間に浮かぶ街", base: "void", accent: "#bb80ee", glow: "#f2dcff", motif: "void", floor: "#554b68", floorDim: "#3d374c", wall: "#443954", wallDark: "#282131", wallLight: "#746487" },
+  { name: "星核門前街", subtitle: "百階の鼓動を聞く最後の旅人街", base: "void", accent: "#f0c65c", glow: "#fff7cf", motif: "star", floor: "#60546a", floorDim: "#453d4d", wall: "#50435d", wallDark: "#2d2636", wallLight: "#87739a" },
 ];
 
 const ranks = [
@@ -2067,6 +2067,9 @@ function createGame() {
     monsterHouse: null,
     restFacilities: [],
     restNodes: [],
+    restDistricts: [],
+    restBuildings: [],
+    restProps: [],
     restTheme: null,
     traps: [],
     stairsRevealed: false,
@@ -2151,7 +2154,7 @@ function renderExpeditionLoadout() {
         <div>
           <span>B${checkpoint.floor}F CHECKPOINT</span>
           <strong>${selectedActor.name}の遠征記録</strong>
-          <small>探索者・進化・星遺物・所持品は、休憩所で記録した状態から再開します。</small>
+          <small>探索者・進化・星遺物・所持品は、中継街で記録した状態から再開します。</small>
           <b>${elementInfo(selectedActor.elementKey).name}属性　Lv.${checkpoint.leader?.level || selectedActor.level}　進化 ${checkpoint.leader?.evolutionStage || selectedActor.evolutionStage}/10</b>
           <button type="button" class="primary-button loadout-depart">B${checkpoint.floor}Fから塔へ戻る</button>
         </div>
@@ -2308,7 +2311,7 @@ function startExpedition() {
   if (checkpoint) restoreTowerCheckpoint(checkpoint);
   buildFloor();
   addLog(checkpoint
-    ? `休憩所の記録から、星喰い塔B${game.floor}Fの挑戦を再開した。`
+    ? `中継街の記録から、星喰い塔B${game.floor}Fの挑戦を再開した。`
     : `新しい挑戦を開始。${getLeader().name}は星喰い塔の100階を見上げた。`);
   announceEvent(checkpoint ? "TRY RESUME" : "TRY START", `星喰い塔 B${game.floor}F`, "発", "mystic");
   playSfx("depart");
@@ -2544,6 +2547,9 @@ function buildFloor() {
   game.monsterHouse = null;
   game.restFacilities = [];
   game.restNodes = [];
+  game.restDistricts = dungeon.restDistricts || [];
+  game.restBuildings = dungeon.staticBuildings || [];
+  game.restProps = dungeon.restProps || [];
   game.restTheme = dungeon.restTheme || null;
   game.traps = [];
   game.effects = [];
@@ -2608,7 +2614,7 @@ function buildFloor() {
   game.stairs = stairPoint;
   game.stairsRevealed = true;
   game.floorEvent = restFloor
-    ? { key: "rest", name: isMajorRestFloor(game.floor) ? "大休憩" : "休憩", detail: "敵も罠も現れない", luck: 0 }
+    ? { key: "rest", name: isMajorRestFloor(game.floor) ? "大中継" : "中継", detail: "敵も罠も現れない旅人の街", luck: 0 }
     : rollFloorEvent();
   const routePlan = currentRoutePlan();
   game.luck = game.floorEvent.luck
@@ -2634,6 +2640,15 @@ function buildFloor() {
     }
     spawnDungeonMerchant(false, true, major ? 2 : 1, dungeon.merchantRoom);
     game.restFacilities = createRestFacilities(major);
+    game.restBuildings = [
+      ...(dungeon.staticBuildings || []),
+      ...(dungeon.facilityBuildingSlots || []).map((slot, index) => {
+        const facility = game.restFacilities[index];
+        return facility
+          ? { ...slot, key: facility.key, name: facility.name, icon: facility.icon, active: true }
+          : { ...slot, key: "house", name: "旅人の家", icon: "灯", active: false };
+      }),
+    ];
     game.restNodes = [
       {
         key: "milestone",
@@ -2653,11 +2668,11 @@ function buildFloor() {
       })),
     ];
     revealRestSanctuary();
-    addLog(`B${game.floor}F: ${dungeon.restTheme.name}へ到着。技PPが全回復した。施設は歩いて利用できる。`);
+    addLog(`B${game.floor}F: ${dungeon.restTheme.name}へ到着。技PPが全回復した。広場を歩き、店や倉庫の入口を調べよう。`);
     announceEvent(
-      major ? "大休憩所" : "休憩所",
+      major ? "大中継街" : "中継街",
       `${dungeon.restTheme.name}　${dungeon.restTheme.subtitle}`,
-      "休",
+      "街",
       "good",
     );
     return;
@@ -2678,7 +2693,7 @@ function buildFloor() {
   revealAroundTeam();
   if (bossFloor) {
     const bossTheme = bossThemeForFloor(game.floor);
-    addLog(`B${game.floor}F: 休憩所を守る門番 ${bossProfile.name}が現れた。${bossTheme ? `作戦は${bossTheme.plan}。${bossTheme.warning}` : ""}`);
+    addLog(`B${game.floor}F: 中継街への道を守る門番 ${bossProfile.name}が現れた。${bossTheme ? `作戦は${bossTheme.plan}。${bossTheme.warning}` : ""}`);
     announceEvent("GATE BOSS", `${bossProfile.title} ${bossProfile.name}${bossTheme ? ` / ${bossTheme.plan}` : ""}`, "冠", "danger");
   } else {
     const trend = floorElementTrend().map((key) => elementInfo(key).name).join("・");
@@ -2753,59 +2768,90 @@ function restThemeForFloor(floor) {
 function generateRestSanctuary(floor) {
   const restTheme = restThemeForFloor(floor);
   const map = makeGrid("wall");
-  const variants = [
-    { x: 13, y: 9, w: 10, h: 7 },
-    { x: 12, y: 8, w: 12, h: 8 },
-    { x: 14, y: 8, w: 8, h: 9 },
-  ];
-  const centerRoom = { ...variants[restTheme.index % variants.length] };
-  const ringRooms = [
-    { x: 15, y: 2, w: 6, h: 5 },
-    { x: 25, y: 3, w: 7, h: 5 },
-    { x: 27, y: 10, w: 7, h: 5 },
-    { x: 25, y: 17, w: 7, h: 4 },
-    { x: 15, y: 18, w: 6, h: 4 },
-    { x: 4, y: 17, w: 7, h: 4 },
-    { x: 2, y: 10, w: 7, h: 5 },
-    { x: 4, y: 3, w: 7, h: 5 },
-  ];
-  const rotation = (restTheme.index * 2) % ringRooms.length;
-  const ordered = ringRooms.map((_, index) => ringRooms[(index + rotation) % ringRooms.length]);
-  const rooms = [centerRoom, ...ringRooms];
+  const arrival = { x: 14, y: 19, w: 8, h: 4 };
+  const plaza = { x: 9, y: 8, w: 18, h: 10 };
+  const shrine = { x: 13, y: 2, w: 10, h: 6 };
+  const westLot = { x: 2, y: 8, w: 7, h: 7 };
+  const eastLot = { x: 27, y: 8, w: 7, h: 7 };
+  const southWestLot = { x: 3, y: 16, w: 8, h: 6 };
+  const southEastLot = { x: 25, y: 16, w: 8, h: 6 };
+  const northWestLot = { x: 3, y: 2, w: 8, h: 5 };
+  const northEastLot = { x: 25, y: 2, w: 8, h: 5 };
+  const merchantOnEast = restTheme.index % 2 === 0;
+  const merchantRoom = merchantOnEast ? eastLot : westLot;
+  const storageRoom = merchantOnEast ? westLot : eastLot;
+  const upperServiceRoom = merchantOnEast ? northWestLot : northEastLot;
+  const parkRoom = merchantOnEast ? northEastLot : northWestLot;
+  const facilityRooms = [storageRoom, southWestLot, southEastLot, upperServiceRoom];
+  const rooms = [arrival, plaza, shrine, westLot, eastLot, southWestLot, southEastLot, northWestLot, northEastLot];
   rooms.forEach((room) => carveRoom(map, room));
-  ringRooms.forEach((room, index) => {
-    carveRestCorridor(map, centerOf(centerRoom), centerOf(room), (index + restTheme.index) % 2 === 0);
+
+  [
+    { x: 16, y: 6, w: 4, h: 4 },
+    { x: 16, y: 17, w: 4, h: 4 },
+    { x: 7, y: 11, w: 4, h: 3 },
+    { x: 25, y: 11, w: 4, h: 3 },
+    { x: 8, y: 16, w: 4, h: 4 },
+    { x: 24, y: 16, w: 4, h: 4 },
+    { x: 8, y: 5, w: 6, h: 4 },
+    { x: 22, y: 5, w: 6, h: 4 },
+  ].forEach((path) => carveRoom(map, path));
+
+  const buildingForRoom = (room, key, name, icon) => ({
+    key,
+    name,
+    icon,
+    x: room.x + 1,
+    y: room.y,
+    w: room.w - 2,
+    h: 2,
+    door: { x: room.x + Math.floor(room.w / 2), y: room.y + 2 },
+  });
+  const merchantBuilding = buildingForRoom(merchantRoom, "merchant", "星布商店", "店");
+  const facilityBuildingSlots = facilityRooms.map((room) => buildingForRoom(room, "house", "旅人の家", "灯"));
+  const gateBuilding = { key: "gate", name: "次区画への門", icon: "門", x: 16, y: 0, w: 4, h: 2 };
+  [...facilityBuildingSlots, merchantBuilding].forEach((building) => {
+    for (let y = building.y; y < building.y + building.h; y += 1) {
+      for (let x = building.x; x < building.x + building.w; x += 1) map[y][x] = "wall";
+    }
   });
 
-  const altarRoom = ordered[0];
-  const merchantRoom = ordered[2];
-  const exitRoom = ordered[4];
-  const facilityRooms = [ordered[6], ordered[1], ordered[3], ordered[5]];
+  const restDistricts = [
+    { key: "shrine", name: "星祠前", room: shrine, color: restTheme.glow },
+    { key: "arrival", name: "到着広場", room: arrival, color: restTheme.accent },
+    { key: "market", name: "星布市場", room: merchantRoom, color: "#72d9b7" },
+    { key: "storage", name: "倉庫通り", room: storageRoom, color: "#7bcbe2" },
+    { key: "service", name: "旅店通り", room: southWestLot, color: "#efb76e" },
+    { key: "service", name: "旅店通り", room: southEastLot, color: "#efb76e" },
+    { key: "service", name: "高台通り", room: upperServiceRoom, color: "#c39ae8" },
+    { key: "park", name: "星見の庭", room: parkRoom, color: "#8bcf87" },
+    { key: "plaza", name: "中央広場", room: plaza, color: restTheme.accent },
+  ];
+  const restProps = [
+    { kind: "fountain", x: 18, y: 13, blocks: true },
+    { kind: "lantern", x: 11, y: 9, blocks: true },
+    { kind: "lantern", x: 24, y: 9, blocks: true },
+    { kind: "bench", x: 13, y: 16, blocks: true },
+    { kind: "bench", x: 22, y: 16, blocks: true },
+    { kind: "tree", x: parkRoom.x + 2, y: parkRoom.y + 2, blocks: true },
+    { kind: "flowers", x: parkRoom.x + 5, y: parkRoom.y + 3, blocks: true },
+    { kind: "banner", x: 14, y: 20, blocks: true },
+    { kind: "banner", x: 21, y: 20, blocks: true },
+  ];
   return {
     map,
     rooms,
     layoutName: restTheme.name,
     restTheme,
-    altar: centerOf(altarRoom),
+    restDistricts,
+    restProps,
+    staticBuildings: [gateBuilding, merchantBuilding],
+    facilityBuildingSlots,
+    altar: { x: 18, y: 6 },
     merchantRoom,
-    facilitySpots: facilityRooms.map(centerOf),
-    stairs: centerOf(exitRoom),
+    facilitySpots: facilityBuildingSlots.map((building) => building.door),
+    stairs: { x: 18, y: 3 },
   };
-}
-
-function carveRestCorridor(map, from, to, horizontalFirst) {
-  const carveWide = (x, y) => {
-    if (inBounds(x, y)) map[y][x] = "floor";
-    if (horizontalFirst && inBounds(x, y + 1)) map[y + 1][x] = "floor";
-    if (!horizontalFirst && inBounds(x + 1, y)) map[y][x + 1] = "floor";
-  };
-  if (horizontalFirst) {
-    for (let x = Math.min(from.x, to.x); x <= Math.max(from.x, to.x); x += 1) carveWide(x, from.y);
-    for (let y = Math.min(from.y, to.y); y <= Math.max(from.y, to.y); y += 1) carveWide(to.x, y);
-  } else {
-    for (let y = Math.min(from.y, to.y); y <= Math.max(from.y, to.y); y += 1) carveWide(from.x, y);
-    for (let x = Math.min(from.x, to.x); x <= Math.max(from.x, to.x); x += 1) carveWide(x, to.y);
-  }
 }
 
 function generateDungeon() {
@@ -3124,7 +3170,9 @@ function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0, p
   if (!room) return;
   const shopTiles = [];
   for (let y = room.y; y < room.y + room.h; y += 1) {
-    for (let x = room.x; x < room.x + room.w; x += 1) shopTiles.push({ x, y });
+    for (let x = room.x; x < room.x + room.w; x += 1) {
+      if (isWalkable(x, y)) shopTiles.push({ x, y });
+    }
   }
   const roomCenter = centerOf(room);
   const preferredPoint = preferredRoom && shopTiles.find((tile) => (
@@ -4081,6 +4129,12 @@ function resolveWorldTurn() {
     updateAll();
     return;
   }
+  if (game.floorKind?.includes("rest")) {
+    game.currentActionElement = null;
+    revealRestSanctuary();
+    updateAll();
+    return;
+  }
   enemyTurn();
   game.currentActionElement = null;
   tickHunger();
@@ -4186,7 +4240,7 @@ function runAdvice(source, buildName) {
   if (source?.kind === "boss") return "門番戦は作戦が固定されている。図鑑で属性と特殊行動を見て、技属性と星遺物を合わせよう。";
   if (source?.kind === "ranged") return "遠距離攻撃は射線を切ると止まる。通路の角、斜め移動、避雷の凧が有効。";
   if (buildName === "物理型") return "物理寄りなら接近前の被弾が課題。防御系の星遺物か回復道具を厚めに持つとよい。";
-  if (buildName === "魔法型") return "魔法寄りならPP管理が重要。休憩所までの消費技数と、PP回復道具を意識しよう。";
+  if (buildName === "魔法型") return "魔法寄りならPP管理が重要。中継街までの消費技数と、PP回復道具を意識しよう。";
   return "均衡型は状況対応が強み。属性コンボとレリックの条件を意識すると火力が伸びる。";
 }
 
@@ -5828,7 +5882,7 @@ function tryUseStairs() {
   const leader = getLeader();
   if (leader.x !== game.stairs.x || leader.y !== game.stairs.y) return false;
   if (!game.mission.complete) {
-    addLog("休憩所を守る門番を倒すまで、階段は開かない。");
+    addLog("中継街への道を守る門番を倒すまで、階段は開かない。");
     return false;
   }
   if (game.rewardPending) {
@@ -5836,7 +5890,7 @@ function tryUseStairs() {
     return true;
   }
   if (isRestFloor(game.floor) && !game.restChoiceTaken) {
-    addLog("次へ進む前に、休憩所の祭壇で進化か星遺物を選ぶ必要がある。");
+    addLog("次へ進む前に、中継街の星祠で進化か星遺物を選ぶ必要がある。");
     announceEvent("祭壇が呼んでいる", "光る祭壇を調べて、この先へ持つ力を決めよう", "進", "mystic");
     showToast("祭壇を調べよう");
     return true;
@@ -5849,7 +5903,7 @@ function openStairsDialog() {
   ui.stairsDialogKicker.textContent = game.floorKind === "boss" ? "門番撃破" : `B${game.floor}F 踏破`;
   ui.stairsDialogTitle.textContent = "次の階へ進みますか？";
   ui.stairsDialogText.textContent = isRestFloor(game.floor + 1)
-    ? `次はB${game.floor + 1}Fの${isMajorRestFloor(game.floor + 1) ? "大休憩所" : "休憩所"}です。技PPが回復します。`
+    ? `次はB${game.floor + 1}Fの${isMajorRestFloor(game.floor + 1) ? "大中継街" : "中継街"}です。技PPが回復します。`
     : "次へ進むと、この階には戻れません。";
   ui.stairsProceedButton.textContent = `B${game.floor + 1}Fへ進む`;
   ui.stairsDialog.showModal();
@@ -5881,7 +5935,7 @@ function proceedThroughStairs() {
     const healed = healActor(getLeader(), 8);
     if (healed > 0) addFloatingText(getLeader().x, getLeader().y, `+${healed}`, "#f0b85d");
   }
-  announceEvent("次の階へ", `B${game.floor}F　${game.floorKind === "boss" ? "門番戦" : game.floorKind.includes("rest") ? "休憩所" : "探索開始"}`, "階", "mystic");
+  announceEvent("次の階へ", `B${game.floor}F　${game.floorKind === "boss" ? "門番戦" : game.floorKind.includes("rest") ? "中継街" : "探索開始"}`, "階", "mystic");
   playSfx("stairs");
   updateAll();
   queueRouteChoiceIfNeeded(220);
@@ -5911,9 +5965,9 @@ function openRestSite() {
   const major = isMajorRestFloor(game.floor);
   const theme = game.restTheme || restThemeForFloor(game.floor);
   ui.restDialog.style.setProperty("--rest-accent", theme.accent);
-  ui.restDialogKicker.textContent = `B${game.floor}F ${major ? "大休憩所" : "休憩所"} / ${theme.name}`;
+  ui.restDialogKicker.textContent = `B${game.floor}F ${major ? "大中継街" : "中継街"} / ${theme.name}`;
   ui.restDialogTitle.textContent = game.floor >= 100 ? "百階の星核に応える" : "次の十階へ持つ力";
-  ui.restDialogText.textContent = "祭壇の恩恵は一度だけ。進化を進めるか、この挑戦を変える強力な星遺物を選ぼう。倉庫と商店は部屋を歩いて利用できる。";
+  ui.restDialogText.textContent = "星祠の恩恵は一度だけ。進化を進めるか、この挑戦を変える強力な星遺物を選ぼう。倉庫と商店へは広場を歩いて向かえる。";
   const leader = getLeader();
   const choices = [
     {
@@ -6103,11 +6157,11 @@ function updateAll() {
     ui.townStartFloor.textContent = `B${startFloor}F`;
     ui.townNextGate.textContent = `B${nextGate}F`;
     ui.departButton.querySelector("span").textContent = checkpoint
-      ? `B${checkpoint}Fの休憩所から再開`
+      ? `B${checkpoint}Fの中継街から再開`
       : "B1Fから100階踏破へ挑む";
     if (ui.townChoiceDepartLabel) {
       ui.townChoiceDepartLabel.textContent = checkpoint
-        ? `B${checkpoint}Fの休憩所から再開`
+        ? `B${checkpoint}Fの中継街から再開`
         : "探索者と星遺物を選ぶ";
     }
     ui.townInteraction.hidden = true;
@@ -6123,7 +6177,7 @@ function updateAll() {
   ui.score.textContent = `${game.score} pt`;
   ui.best.textContent = `Best ${bestScore}`;
   ui.mission.textContent = game.floorKind.includes("rest")
-    ? (game.restChoiceTaken ? "休息済" : "休憩所")
+    ? (game.restChoiceTaken ? "星祠済" : "中継街")
     : game.mission?.boss
       ? (game.mission.complete ? "門番撃破" : "門番戦")
       : stairsMapped ? "階段確認" : "探索中";
@@ -6132,7 +6186,7 @@ function updateAll() {
   ui.materials.textContent = `素材袋 ${evolutionMaterialTotal()}`;
   ui.gear.textContent = `${game.relics.length}個`;
   if (game.floorKind.includes("rest")) {
-    ui.turn.textContent = "休憩所";
+    ui.turn.textContent = "中継街";
     ui.turn.dataset.pressure = "rest";
   } else {
     ui.turn.textContent = `${game.turn} / ${FLOOR_WIND_LIMIT}`;
@@ -6144,7 +6198,7 @@ function updateAll() {
   }
   ui.stairs.textContent = !game.mission?.complete ? "封印中" : stairsMapped ? "確認済" : "未踏";
   ui.goal.textContent = game.floorKind.includes("rest")
-    ? game.restChoiceTaken ? "階段から次の区画へ" : "休憩の恩恵を1つ選ぶ"
+    ? game.restChoiceTaken ? "北門の階段から次の区画へ" : "北の星祠で恩恵を1つ選ぶ"
     : !game.mission?.complete
       ? `${game.mission.target}を倒す`
       : stairsMapped
@@ -6445,7 +6499,7 @@ function renderGameMenu(view = "moves") {
   const nextBossTheme = bossThemeCatalog[nextGateIndex];
   const routePlan = currentRoutePlan();
   ui.gameMenuBody.innerHTML = `
-    <p class="town-note">10の門番と休憩所を越え、B100Fの星核を目指します。通常階段は床に見えており、隠されているのは罠と星裏の祭壇だけです。</p>
+    <p class="town-note">10の門番と中継街を越え、B100Fの星核を目指します。通常階段は床に見えており、隠されているのは罠と星裏の祭壇だけです。</p>
     <div class="menu-stat-grid">
       <div class="menu-stat"><span>現在地</span><strong>B${game.floor}F / B${game.targetFloor}F</strong></div>
       <div class="menu-stat"><span>階の目的</span><strong>${game.mission?.boss && !game.mission.complete ? "門番を倒す" : "通常階段へ進む"}</strong></div>
@@ -6518,7 +6572,7 @@ function renderGroundMenu() {
   ui.gameMenuBody.innerHTML = `
     <div class="menu-stat-grid">
       <div class="menu-stat"><span>現在座標</span><strong>${leader.x + 1}, ${leader.y + 1}</strong></div>
-      <div class="menu-stat"><span>地面</span><strong>${game.floorKind.includes("rest") ? "休憩所の床" : "塔の石床"}</strong></div>
+      <div class="menu-stat"><span>地面</span><strong>${game.floorKind.includes("rest") ? "中継街の石畳" : "塔の石床"}</strong></div>
     </div>
   `;
 
@@ -6643,7 +6697,7 @@ function renderRelicMenu() {
   `;
   const grid = ui.gameMenuBody.querySelector(".relic-grid");
   if (!game.relics.length) {
-    grid.innerHTML = '<p class="town-note">まだ星遺物はありません。休憩所前の門番を倒すと、3つから1つ選べます。</p>';
+    grid.innerHTML = '<p class="town-note">まだ星遺物はありません。中継街前の門番を倒すと、3つから1つ選べます。</p>';
     return;
   }
   for (const key of game.relics) {
@@ -6676,7 +6730,7 @@ function renderRelicReward() {
   const sourceLabel = game.milestoneSource === "secret"
     ? "隠し祭壇"
     : game.milestoneSource
-      ? "休憩所の選択"
+      ? "星祠の選択"
       : "門番撃破報酬";
   ui.gameMenuBody.innerHTML = `
     <div class="relic-reward-head">
@@ -6764,7 +6818,7 @@ function openMilestoneChoice(source = "rest") {
 
 function renderMilestoneChoice() {
   const leader = getLeader();
-  const sourceLabel = game.milestoneSource === "secret" ? "隠し祭壇" : `B${game.floor}F 休憩所`;
+  const sourceLabel = game.milestoneSource === "secret" ? "隠し祭壇" : `B${game.floor}F 中継街`;
   const canEvolve = (leader.evolutionStage || 0) < 10;
   ui.gameMenuBody.innerHTML = `
     <div class="milestone-head">
@@ -7492,7 +7546,7 @@ function renderRestStorage() {
   ui.gameMenuBody.innerHTML = `
     <div class="relic-head">
       <div class="relic-head-mark">倉</div>
-      <div><span>休憩所の保管庫</span><strong>風見倉庫</strong><small>倉庫の中身は挑戦に失敗しても残ります。</small></div>
+      <div><span>中継街の保管庫</span><strong>風見倉庫</strong><small>倉庫の中身は挑戦に失敗しても残ります。</small></div>
     </div>
     <div class="storage-tabs">
       <button type="button" data-storage-view="deposit" class="active">預ける</button>
@@ -7552,7 +7606,7 @@ function renderRestService() {
   const leader = getLeader();
   if (key === "healer") {
     ui.gameMenuBody.innerHTML = `
-      <div class="merchant-head"><div class="merchant-portrait">湯</div><div><span>大休憩所の店</span><strong>月湯屋</strong><small>湯気に混じる星砂が傷と空腹を癒やす。</small></div><b>${game.coins}星貨</b></div>
+      <div class="merchant-head"><div class="merchant-portrait">湯</div><div><span>大中継街の店</span><strong>月湯屋</strong><small>湯気に混じる星砂が傷と空腹を癒やす。</small></div><b>${game.coins}星貨</b></div>
       <div class="merchant-stock"></div>
     `;
     const stock = ui.gameMenuBody.querySelector(".merchant-stock");
@@ -7573,7 +7627,7 @@ function renderRestService() {
     return;
   }
   ui.gameMenuBody.innerHTML = `
-    <div class="merchant-head"><div class="merchant-portrait">術</div><div><span>大休憩所の店</span><strong>術式露店</strong><small>忘れた技も、まだ知らない技も星図に映る。</small></div><b>${game.coins}星貨</b></div>
+    <div class="merchant-head"><div class="merchant-portrait">術</div><div><span>大中継街の店</span><strong>術式露店</strong><small>忘れた技も、まだ知らない技も星図に映る。</small></div><b>${game.coins}星貨</b></div>
     <div class="merchant-stock"></div>
   `;
   const stock = ui.gameMenuBody.querySelector(".merchant-stock");
@@ -8198,7 +8252,7 @@ function renderTownShop() {
   if (game.shopView === "starter") {
     const starterKeys = ["ironFang", "moonLens", "shellSeed", "heartMeteor"];
     content.innerHTML = `
-      <p class="town-note">次にB1Fから始める挑戦へ、1つだけ持ち込めます。休憩所からの再開データには影響しません。</p>
+      <p class="town-note">次にB1Fから始める挑戦へ、1つだけ持ち込めます。中継街からの再開データには影響しません。</p>
       <div class="relic-choice-grid starter-relic-grid"></div>
     `;
     const grid = content.querySelector(".starter-relic-grid");
@@ -8385,7 +8439,7 @@ function renderTownFacility() {
   if (view === "board") {
     ui.townDialogTitle.textContent = "星喰いの塔・百階踏破路";
     ui.townDialogBody.innerHTML = `
-      <p class="town-note">マップ・道具・変異種は挑戦ごとに変化します。各区画の9階目に門番、10階目に休憩所。20階ごとの大休憩所ではHPと満腹度も全回復します。</p>
+      <p class="town-note">マップ・道具・変異種は挑戦ごとに変化します。各区画の9階目に門番、10階目に中継街。20階ごとの大中継街ではHPと満腹度も全回復します。</p>
       <div class="tower-route-summary">
         <strong>最高到達 B${game.highestFloor}F</strong>
         <span>${game.towerCheckpoint ? `B${game.towerCheckpoint.floor}Fから再開可能` : "次の挑戦はB1Fから"}</span>
@@ -8399,7 +8453,7 @@ function renderTownFacility() {
       appendTownEntry(ui.townDialogBody, {
         title: `区画 ${index + 1}/10　B${index * 10 + 1}F - B${restFloor}F`,
         detail: `B${gateFloor}F 門番「${boss.name}」`,
-        meta: `${restFloor % 20 === 0 ? "大休憩所" : "休憩所"}　${cleared ? "踏破済み" : reached ? "門番へ到達" : "未踏区画"}`,
+        meta: `${restFloor % 20 === 0 ? "大中継街" : "中継街"}　${cleared ? "踏破済み" : reached ? "門番へ到達" : "未踏区画"}`,
         buttonLabel: cleared ? "踏破" : reached ? "現在地" : "未到達",
         selected: reached && !cleared,
         disabled: true,
@@ -9100,6 +9154,8 @@ function drawDungeon(time) {
     }
   }
 
+  if (game.floorKind?.includes("rest")) drawRestTownScenery(time);
+
   if (game.stairsRevealed && game.seen[game.stairs.y][game.stairs.x] && inCamera(game.stairs.x, game.stairs.y)) drawStairs(time);
   if (
     game.secretStairs?.revealed
@@ -9290,6 +9346,10 @@ function renderDungeonTile(x, y, type, visible) {
   }
 
   drawDungeonFloorTile(px, py, x, y, type, theme, themeKey, visible);
+  if (game.floorKind?.includes("rest")) {
+    drawRestDistrictTile(px, py, x, y, visible);
+    drawRestTileMotif(px, py, x, y, visible);
+  }
   if (isMerchantShopTile(x, y)) {
     ctx.fillStyle = game.merchant?.robbed ? "rgba(139, 47, 56, 0.5)" : "rgba(43, 139, 116, 0.48)";
     ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
@@ -9301,7 +9361,41 @@ function renderDungeonTile(x, y, type, visible) {
     ctx.fillRect(px + TILE - 14, py + TILE - 14, 6, 6);
   }
 
-  if (game.floorKind?.includes("rest")) drawRestTileMotif(px, py, x, y, visible);
+}
+
+function restDistrictAt(x, y) {
+  return game.restDistricts?.find(({ room }) => pointInRoom(x, y, room)) || null;
+}
+
+function drawRestDistrictTile(px, py, x, y, visible) {
+  const district = restDistrictAt(x, y);
+  if (!district) return;
+  const colors = {
+    plaza: ["rgba(245, 226, 161, 0.12)", "rgba(255, 247, 210, 0.24)"],
+    shrine: ["rgba(242, 214, 116, 0.18)", "rgba(255, 245, 188, 0.34)"],
+    market: ["rgba(57, 177, 143, 0.2)", "rgba(174, 255, 228, 0.3)"],
+    storage: ["rgba(73, 147, 180, 0.2)", "rgba(185, 235, 255, 0.28)"],
+    service: ["rgba(197, 126, 79, 0.16)", "rgba(255, 218, 164, 0.28)"],
+    park: ["rgba(76, 145, 84, 0.2)", "rgba(185, 238, 170, 0.28)"],
+    arrival: ["rgba(177, 148, 98, 0.18)", "rgba(255, 232, 176, 0.3)"],
+  };
+  const [fill, line] = colors[district.key] || colors.plaza;
+  ctx.save();
+  ctx.globalAlpha = visible ? 1 : 0.62;
+  ctx.fillStyle = fill;
+  ctx.fillRect(px + 2, py + 2, TILE - 4, TILE - 4);
+  ctx.strokeStyle = line;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  if ((x + y) % 2 === 0) {
+    ctx.moveTo(px + 7, py + 24);
+    ctx.lineTo(px + 41, py + 24);
+  } else {
+    ctx.moveTo(px + 24, py + 7);
+    ctx.lineTo(px + 24, py + 41);
+  }
+  ctx.stroke();
+  ctx.restore();
 }
 
 function currentDungeonThemeKey() {
@@ -9727,6 +9821,195 @@ function drawRestTileMotif(px, py, x, y, visible) {
   ctx.restore();
 }
 
+function restBuildingPalette(key) {
+  const palettes = {
+    merchant: { roof: "#2b7566", roofLight: "#77d8b9", wall: "#e1c788", trim: "#7b5130", sign: "#17483f" },
+    storage: { roof: "#315d78", roofLight: "#7fc7e5", wall: "#c9d8d8", trim: "#4c6570", sign: "#203f54" },
+    healer: { roof: "#397d88", roofLight: "#a7edf0", wall: "#d9e9df", trim: "#577a75", sign: "#245a62" },
+    mystic: { roof: "#654783", roofLight: "#c9a3ed", wall: "#d9cadf", trim: "#6d5276", sign: "#3d2854" },
+    gambler: { roof: "#853f52", roofLight: "#efb864", wall: "#d8be8f", trim: "#764231", sign: "#4e2432" },
+    house: { roof: "#596b54", roofLight: "#a7c388", wall: "#c9b994", trim: "#6d573c", sign: "#3b4c38" },
+  };
+  return palettes[key] || palettes.house;
+}
+
+function restSceneryInCamera(entry) {
+  const width = entry.w || 1;
+  const height = entry.h || 1;
+  return (
+    entry.x + width >= renderCamera.x - 1
+    && entry.y + height >= renderCamera.y - 1
+    && entry.x <= renderCamera.x + renderCamera.width + 1
+    && entry.y <= renderCamera.y + renderCamera.height + 1
+  );
+}
+
+function drawRestTownScenery(time) {
+  for (const building of game.restBuildings || []) {
+    if (restSceneryInCamera(building)) drawRestBuilding(building, time);
+  }
+  for (const prop of [...(game.restProps || [])].sort((a, b) => a.y - b.y)) {
+    if (inCamera(prop.x, prop.y)) drawRestProp(prop, time);
+  }
+}
+
+function drawRestBuilding(building, time) {
+  const { x: px, y: py } = toScreen(building.x, building.y);
+  const width = building.w * TILE;
+  const height = building.h * TILE;
+  const pulse = 0.5 + Math.sin(time / 520 + building.x) * 0.5;
+  ctx.save();
+  if (building.key === "gate") {
+    ctx.fillStyle = "rgba(4, 9, 8, 0.38)";
+    ctx.fillRect(px - 7, py + height - 10, width + 14, 13);
+    ctx.fillStyle = game.restTheme?.wallLight || "#7f796c";
+    ctx.fillRect(px + 8, py + 18, 24, height - 18);
+    ctx.fillRect(px + width - 32, py + 18, 24, height - 18);
+    ctx.fillStyle = game.restTheme?.accent || "#e8ca72";
+    ctx.fillRect(px + 2, py + 12, width - 4, 18);
+    ctx.fillStyle = game.restTheme?.wallDark || "#28252a";
+    ctx.fillRect(px + 10, py + 17, width - 20, 8);
+    ctx.fillStyle = `rgba(255, 244, 189, ${0.18 + pulse * 0.2})`;
+    ctx.fillRect(px + 34, py + 30, width - 68, height - 30);
+    ctx.fillStyle = "#fff2bd";
+    ctx.font = "900 12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText("次区画", px + width / 2, py + 26);
+    ctx.restore();
+    return;
+  }
+
+  const palette = restBuildingPalette(building.key);
+  ctx.fillStyle = "rgba(4, 8, 8, 0.35)";
+  ctx.fillRect(px - 5, py + height - 9, width + 10, 12);
+  ctx.fillStyle = palette.wall;
+  ctx.fillRect(px + 4, py + 33, width - 8, height - 33);
+  ctx.fillStyle = palette.trim;
+  ctx.fillRect(px + 4, py + height - 12, width - 8, 12);
+
+  const roof = ctx.createLinearGradient(px, py + 5, px, py + 48);
+  roof.addColorStop(0, palette.roofLight);
+  roof.addColorStop(0.32, palette.roof);
+  roof.addColorStop(1, palette.sign);
+  ctx.fillStyle = roof;
+  ctx.beginPath();
+  ctx.moveTo(px + width / 2, py + 3);
+  ctx.lineTo(px + width + 8, py + 38);
+  ctx.lineTo(px + width - 2, py + 49);
+  ctx.lineTo(px + 2, py + 49);
+  ctx.lineTo(px - 8, py + 38);
+  ctx.closePath();
+  ctx.fill();
+  ctx.strokeStyle = palette.roofLight;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+
+  const stripeWidth = Math.max(15, Math.floor((width - 16) / 7));
+  for (let x = px + 8, index = 0; x < px + width - 8; x += stripeWidth, index += 1) {
+    ctx.fillStyle = index % 2 ? palette.roofLight : palette.roof;
+    ctx.fillRect(x, py + 43, Math.min(stripeWidth, px + width - 8 - x), 12);
+  }
+
+  const doorX = px + width / 2 - 16;
+  ctx.fillStyle = palette.sign;
+  ctx.fillRect(doorX, py + height - 43, 32, 35);
+  ctx.fillStyle = `rgba(255, 225, 135, ${building.active === false ? 0.18 : 0.52 + pulse * 0.2})`;
+  ctx.fillRect(doorX + 6, py + height - 37, 20, 19);
+  ctx.fillStyle = palette.roofLight;
+  ctx.fillRect(doorX + 25, py + height - 25, 3, 3);
+
+  const windowY = py + height - 39;
+  ctx.fillStyle = palette.sign;
+  ctx.fillRect(px + 17, windowY, 28, 22);
+  ctx.fillRect(px + width - 45, windowY, 28, 22);
+  ctx.fillStyle = `rgba(255, 226, 143, ${building.active === false ? 0.26 : 0.58})`;
+  ctx.fillRect(px + 22, windowY + 5, 18, 12);
+  ctx.fillRect(px + width - 40, windowY + 5, 18, 12);
+
+  const signWidth = Math.min(width - 36, 104);
+  ctx.fillStyle = palette.sign;
+  ctx.fillRect(px + width / 2 - signWidth / 2, py + 54, signWidth, 24);
+  ctx.strokeStyle = palette.roofLight;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(px + width / 2 - signWidth / 2 + 1, py + 55, signWidth - 2, 22);
+  ctx.fillStyle = "#fff4cf";
+  ctx.font = "900 12px sans-serif";
+  ctx.textAlign = "center";
+  ctx.fillText(building.name || "旅人の家", px + width / 2, py + 70);
+  ctx.restore();
+}
+
+function drawRestProp(prop, time) {
+  const { x: px, y: py } = toScreen(prop.x, prop.y);
+  const bob = Math.sin(time / 330 + prop.x * 0.6) * 1.4;
+  const accent = game.restTheme?.accent || "#e7ca73";
+  const glow = game.restTheme?.glow || "#fff0ae";
+  drawOutlinedEntity((targetCtx) => {
+    if (prop.kind === "fountain") {
+      targetCtx.fillStyle = "#415c64";
+      targetCtx.beginPath();
+      targetCtx.ellipse(24, 36, 20, 8, 0, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.fillStyle = "#79cbd5";
+      targetCtx.beginPath();
+      targetCtx.ellipse(24, 33, 15, 5, 0, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.fillStyle = accent;
+      targetCtx.fillRect(20, 16, 8, 18);
+      drawPixelStar(targetCtx, 24, 14, 11, glow);
+    } else if (prop.kind === "lantern") {
+      targetCtx.fillStyle = "#3f3b35";
+      targetCtx.fillRect(21, 15, 6, 28);
+      targetCtx.fillRect(13, 40, 22, 4);
+      targetCtx.fillStyle = `rgba(255, 229, 128, ${0.72 + Math.sin(time / 210) * 0.18})`;
+      targetCtx.fillRect(14, 7, 20, 18);
+      targetCtx.fillStyle = "#f7d369";
+      targetCtx.fillRect(11, 9, 3, 14);
+      targetCtx.fillRect(34, 9, 3, 14);
+    } else if (prop.kind === "bench") {
+      targetCtx.fillStyle = "#79553a";
+      targetCtx.fillRect(7, 20, 34, 8);
+      targetCtx.fillRect(9, 31, 30, 6);
+      targetCtx.fillStyle = "#bc8652";
+      targetCtx.fillRect(9, 17, 30, 5);
+      targetCtx.fillRect(11, 28, 26, 4);
+      targetCtx.fillStyle = "#3a322b";
+      targetCtx.fillRect(11, 36, 5, 8);
+      targetCtx.fillRect(32, 36, 5, 8);
+    } else if (prop.kind === "tree") {
+      targetCtx.fillStyle = "#69513a";
+      targetCtx.fillRect(20, 25, 9, 19);
+      targetCtx.fillStyle = "#3e7b51";
+      [[16, 21, 12], [29, 21, 11], [23, 12, 14]].forEach(([x, y, radius]) => {
+        targetCtx.beginPath();
+        targetCtx.arc(x, y, radius, 0, Math.PI * 2);
+        targetCtx.fill();
+      });
+      targetCtx.fillStyle = accent;
+      targetCtx.fillRect(12, 15, 4, 4);
+      targetCtx.fillRect(31, 18, 4, 4);
+    } else if (prop.kind === "flowers") {
+      targetCtx.fillStyle = "#4a6b43";
+      targetCtx.fillRect(5, 30, 38, 12);
+      [10, 18, 26, 35].forEach((x, index) => {
+        targetCtx.fillStyle = index % 2 ? accent : glow;
+        drawPixelStar(targetCtx, x, 28 - (index % 2) * 5, 6, targetCtx.fillStyle);
+      });
+    } else {
+      targetCtx.fillStyle = "#4b4038";
+      targetCtx.fillRect(21, 11, 6, 33);
+      targetCtx.fillStyle = accent;
+      targetCtx.beginPath();
+      targetCtx.moveTo(27, 10);
+      targetCtx.lineTo(43, 16);
+      targetCtx.lineTo(27, 25);
+      targetCtx.closePath();
+      targetCtx.fill();
+      drawPixelStar(targetCtx, 34, 17, 6, glow);
+    }
+  }, px, py + bob, accent, 2);
+}
+
 function drawStairs(time) {
   const { x: px, y: py } = toScreen(game.stairs.x, game.stairs.y);
   const open = game.mission?.complete;
@@ -9912,7 +10195,15 @@ function drawRestNode(node, time) {
     }
     targetCtx.restore();
   }, px, py + bob, color, 2);
-  const label = node.action === "milestone" ? (inactive ? "祭壇済" : "進化/遺") : node.key === "storage" ? "倉庫" : node.name.slice(0, 6);
+  const label = node.action === "milestone"
+    ? (inactive ? "星祠 済" : "星祠")
+    : node.key === "storage"
+      ? "倉庫番"
+      : node.key === "healer"
+        ? "湯守"
+        : node.key === "mystic"
+          ? "術師"
+          : "賭場番";
   ctx.fillStyle = "rgba(7, 11, 11, 0.9)";
   ctx.fillRect(px + 2, py + 38, 44, 10);
   ctx.fillStyle = inactive ? "#aaa499" : color;
@@ -11929,9 +12220,21 @@ function drawMiniMap() {
       const top = Math.floor(y * sy);
       const width = Math.ceil((x + 1) * sx) - left;
       const height = Math.ceil((y + 1) * sy) - top;
+      const district = game.floorKind?.includes("rest") ? restDistrictAt(x, y) : null;
+      const restColors = {
+        plaza: ["#c6b576", "#746a49"],
+        shrine: ["#e2ce78", "#796f49"],
+        market: ["#61c9a6", "#357965"],
+        storage: ["#70bbd0", "#3e7080"],
+        service: ["#d69a65", "#795941"],
+        park: ["#72b879", "#426d4a"],
+        arrival: ["#c8a66c", "#735f43"],
+      };
       miniCtx.fillStyle = isMerchantShopTile(x, y)
         ? (game.merchant?.robbed ? "#b9545b" : "#54c9a4")
-        : game.visible[y][x] ? "#acd9bd" : "#477763";
+        : district
+          ? (restColors[district.key] || restColors.plaza)[game.visible[y][x] ? 0 : 1]
+          : game.visible[y][x] ? "#acd9bd" : "#477763";
       miniCtx.fillRect(left, top, width, height);
     }
   }
@@ -12673,7 +12976,8 @@ function nearestOpen(x, y, blockers = []) {
 }
 
 function isWalkable(x, y) {
-  return inBounds(x, y) && game.map[y][x] !== "wall";
+  if (!inBounds(x, y) || game.map[y][x] === "wall") return false;
+  return !(game.restProps || []).some((prop) => prop.blocks && prop.x === x && prop.y === y);
 }
 
 function canTakeStep(fromX, fromY, dx, dy) {
@@ -13039,7 +13343,7 @@ function openSaveDialog(initial = false) {
   ui.saveDialogClose.hidden = initial;
   ui.saveDialogNote.textContent = initial
     ? "冒険の記録は1つに保存されます。"
-    : "現在の町と休憩所の記録を保存します。";
+    : "現在の町と中継街の記録を保存します。";
   renderSaveSlots(initial);
   if (!ui.saveDialog.open) ui.saveDialog.showModal();
 }
