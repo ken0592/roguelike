@@ -1,7 +1,12 @@
 const TILE = 48;
 const DUNGEON_ZOOM = 1.18;
-const MAP_W = 36;
-const MAP_H = 24;
+let MAP_W = 36;
+let MAP_H = 24;
+const FLOOR_MAP_SIZES = Object.freeze([
+  Object.freeze({ width: 36, height: 24, weight: 34, label: "標準区画" }),
+  Object.freeze({ width: 42, height: 28, weight: 42, label: "拡張区画" }),
+  Object.freeze({ width: 48, height: 32, weight: 24, label: "大規模区画" }),
+]);
 const TARGET_FLOOR = 100;
 const FLOOR_WIND_WARNING = 240;
 const FLOOR_WIND_DANGER = 330;
@@ -55,7 +60,7 @@ let mapTokenReady = false;
 const itemIconSheet = new Image();
 itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa11";
 const enemyArtSheets = Array(4).fill(null);
-const FOXBOUND_ASSET_VERSION = "pwa18k";
+const FOXBOUND_ASSET_VERSION = "pwa19a";
 const FOXBOUND_SPRITE_ROOT = "assets/foxbound-codex-v1";
 const FOXBOUND_HERO_SPRITE_IDS = Object.freeze({
   kohaku: "kohaku",
@@ -1796,32 +1801,38 @@ const bossThemeCatalog = [
 const routeCatalog = [
   {
     key: "safeTrail", name: "静かな星路", icon: "葉", color: "#8fd7c1", terrain: "grove",
-    landmark: "苔灯の緩斜路", danger: 1, reward: 1, feature: "敵影が少ない",
+    landmark: "苔灯の緩斜路", danger: 1, reward: 1, feature: "敵影が少ない", strategy: "生存重視",
+    promise: "戦闘回数を減らして、次の街へ体力を残す", gain: "敵が少ない", cost: "道具が少ない",
     detail: "敵が少なく消耗を抑えやすい。道具の数は少し控えめ。", enemyBonus: -2, itemBonus: -1, luck: 1,
   },
   {
     key: "treasureTrail", name: "宝鳴りの星路", icon: "宝", color: "#f0c862", terrain: "market",
-    landmark: "宝鐘の廃市", danger: 3, reward: 4, feature: "道具・商店",
+    landmark: "宝鐘の廃市", danger: 3, reward: 4, feature: "道具・商店", strategy: "収集重視",
+    promise: "道具と商店を増やし、星遺物を買うか盗む", gain: "道具・商店", cost: "敵が少し多い",
     detail: "道具と商店が増える。戦利品を狙う敵も少し増える。", enemyBonus: 1, itemBonus: 2, shopBonus: 0.28, luck: 1,
   },
   {
     key: "eliteTrail", name: "門番の近道", icon: "剣", color: "#ef8b70", terrain: "fortress",
-    landmark: "赤鉄の関門", danger: 5, reward: 5, feature: "経験・門番報酬",
+    landmark: "赤鉄の関門", danger: 5, reward: 5, feature: "経験・門番報酬", strategy: "成長重視",
+    promise: "強敵を倒し、レベルと門番報酬を一気に伸ばす", gain: "経験・ボス報酬", cost: "最も危険",
     detail: "強敵が多い最短路。経験値と門番の報酬が良くなる。", enemyBonus: 2, expBonus: 0.18, bossReward: 1,
   },
   {
     key: "hiddenTrail", name: "星裏の抜け道", icon: "月", color: "#b783e6", terrain: "moon",
-    landmark: "月影の細道", danger: 2, reward: 4, feature: "隠し祭壇・事件",
+    landmark: "月影の細道", danger: 2, reward: 4, feature: "隠し祭壇・事件", strategy: "運試し",
+    promise: "隠し祭壇と選択事件から、予定外の力を狙う", gain: "祭壇・イベント", cost: "結果が不安定",
     detail: "隠し祭壇と選択イベントが出やすい。結果の振れ幅が大きい。", secretBonus: 0.18, choiceBonus: 0.18, luck: 2,
   },
   {
     key: "mutantTrail", name: "変異の深道", icon: "核", color: "#9bd05d", terrain: "wild",
-    landmark: "脈動する深道", danger: 4, reward: 4, feature: "変異素材・経験",
+    landmark: "脈動する深道", danger: 4, reward: 4, feature: "変異素材・経験", strategy: "素材重視",
+    promise: "変異種を追い、進化素材と高い経験値を集める", gain: "変異素材・経験", cost: "変異種が増える",
     detail: "変異種との遭遇が増える。素材と経験値を狙える危険路。", mutationBonus: 0.025, expBonus: 0.1, enemyBonus: 1,
   },
   {
     key: "karmaTrail", name: "咎星の裏路", icon: "咎", color: "#a575e2", terrain: "rift",
-    landmark: "咎星の裂け目", danger: 4, reward: 3, feature: "カルマ選択・闇進化",
+    landmark: "咎星の裂け目", danger: 4, reward: 3, feature: "カルマ選択・闇進化", strategy: "闇分岐",
+    promise: "代償を受け入れ、カルマ進化と闇ビルドへ寄せる", gain: "カルマ選択", cost: "運勢が悪化",
     detail: "代償つきの選択が増える。闇進化や咎星ビルドへ近づく。", karmaBonus: 1, choiceBonus: 0.12, luck: -1,
   },
 ];
@@ -2553,8 +2564,20 @@ function applyEvolutionBonus(actor, evolution) {
   }
 }
 
+function configureFloorDimensions(restFloor) {
+  if (restFloor) {
+    MAP_W = 36;
+    MAP_H = 24;
+    return;
+  }
+  const selected = weighted(FLOOR_MAP_SIZES.map((entry) => ({ value: entry, weight: entry.weight })));
+  MAP_W = selected.width;
+  MAP_H = selected.height;
+}
+
 function buildFloor() {
   const restFloor = isRestFloor(game.floor);
+  configureFloorDimensions(restFloor);
   const dungeon = restFloor ? generateRestSanctuary(game.floor) : generateDungeon();
   dungeonTileCache.clear();
   miniMapRenderKey = "";
@@ -2891,15 +2914,17 @@ function generateDungeon() {
     { name: "十字に裂けた鉱道", minRooms: 6, maxRooms: 9, minW: 4, maxW: 8, minH: 4, maxH: 6, loops: 3, branches: 5, branchMin: 5, branchMax: 12, longCorridors: 2 },
   ];
   const layout = layouts[randInt(0, layouts.length - 1)];
+  const sizeStep = Math.max(0, Math.round((MAP_W - 36) / 6));
+  const mapSize = FLOOR_MAP_SIZES.find((entry) => entry.width === MAP_W) || FLOOR_MAP_SIZES[0];
   for (let attempt = 0; attempt < 30; attempt += 1) {
     const map = makeGrid("wall");
     const rooms = [];
-    const roomCount = randInt(layout.minRooms, layout.maxRooms);
+    const roomCount = randInt(layout.minRooms + sizeStep * 2, layout.maxRooms + sizeStep * 2);
 
-    for (let i = 0; i < roomCount * 12 && rooms.length < roomCount; i += 1) {
+    for (let i = 0; i < roomCount * 15 && rooms.length < roomCount; i += 1) {
       const greatRoom = layout.greatRoom && rooms.length === 0;
-      const w = greatRoom ? randInt(14, 20) : randInt(layout.minW, layout.maxW);
-      const h = greatRoom ? randInt(9, 13) : randInt(layout.minH, layout.maxH);
+      const w = greatRoom ? randInt(14 + sizeStep * 2, 20 + sizeStep * 3) : randInt(layout.minW, layout.maxW + sizeStep);
+      const h = greatRoom ? randInt(9 + sizeStep, 13 + sizeStep * 2) : randInt(layout.minH, layout.maxH + sizeStep);
       const x = randInt(1, MAP_W - w - 2);
       const y = randInt(1, MAP_H - h - 2);
       const room = { x, y, w, h };
@@ -2908,12 +2933,18 @@ function generateDungeon() {
       rooms.push(room);
     }
 
-    if (rooms.length >= layout.minRooms - 1) {
+    if (rooms.length >= layout.minRooms + sizeStep - 1) {
       connectRoomNetwork(map, rooms, layout.loops);
-      carveSideBranches(map, rooms, layout.branches, layout.branchMin || 3, layout.branchMax || 7);
-      if (layout.longCorridors) carveLongCorridors(map, rooms, layout.longCorridors);
+      carveSideBranches(
+        map,
+        rooms,
+        layout.branches + sizeStep,
+        layout.branchMin || 3,
+        (layout.branchMax || 7) + sizeStep * 3,
+      );
+      if (layout.longCorridors) carveLongCorridors(map, rooms, layout.longCorridors + sizeStep);
       scatterTerrain(map);
-      return { map, rooms, layoutName: layout.name };
+      return { map, rooms, layoutName: `${layout.name}・${mapSize.label}` };
     }
   }
 
@@ -2921,7 +2952,7 @@ function generateDungeon() {
   return {
     map: fallback,
     rooms: [{ x: 1, y: 1, w: MAP_W - 2, h: MAP_H - 2 }],
-    layoutName: "一枚岩の大広間",
+    layoutName: `一枚岩の大広間・${mapSize.label}`,
   };
 }
 
@@ -3009,7 +3040,8 @@ function carveLongCorridors(map, rooms, count) {
     const direction = directions[randInt(0, directions.length - 1)];
     let x = clamp(randInt(room.x, room.x + room.w - 1), 2, MAP_W - 3);
     let y = clamp(randInt(room.y, room.y + room.h - 1), 2, MAP_H - 3);
-    const length = randInt(10, 22);
+    const sizeStep = Math.max(0, Math.round((MAP_W - 36) / 6));
+    const length = randInt(10 + sizeStep * 2, Math.min(MAP_W - 4, 22 + sizeStep * 6));
     for (let step = 0; step < length; step += 1) {
       x += direction.x;
       y += direction.y;
@@ -3179,6 +3211,31 @@ function spawnEnemies() {
   }
 }
 
+function rollMerchantRelic(shopTier = 0) {
+  const owned = new Set(game.relics || []);
+  const pool = relicCatalog.filter((relic) => (
+    !owned.has(relic.key)
+    && relic.rarity !== "BOSS"
+    && ["UNCOMMON", "RARE"].includes(relic.rarity)
+  ));
+  if (!pool.length) return null;
+  return weighted(pool.map((relic) => ({
+    value: relic,
+    weight: relic.rarity === "RARE"
+      ? 2 + shopTier + Math.floor(game.floor / 30)
+      : 7,
+  })));
+}
+
+function merchantOfferCatalog(offer) {
+  if (!offer) return null;
+  if (offer.relicKey) {
+    const relic = relicCatalog.find((entry) => entry.key === offer.relicKey);
+    return relic ? { ...relic, category: "星遺物", relic: true } : null;
+  }
+  return itemCatalog[offer.kind] || null;
+}
+
 function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0, preferredRoom = null) {
   const shopChance = clamp(0.42 + routeEffectNumber("shopBonus"), 0.08, 0.82);
   if (bossFloor || (!forced && game.floor !== 2 && Math.random() > shopChance)) return;
@@ -3217,11 +3274,20 @@ function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0, p
   game.traps = game.traps.filter((trap) => !shopKeys.has(`${trap.x},${trap.y}`));
   game.enemies = game.enemies.filter((enemy) => !shopKeys.has(`${enemy.x},${enemy.y}`));
   const materialKind = evolutionMaterialKeys[randInt(0, evolutionMaterialKeys.length - 2)];
+  const relic = rollMerchantRelic(shopTier);
   const stock = [
     { id: cryptoId(), kind: "apple", price: 55, sold: false, picked: false },
     { id: cryptoId(), kind: weighted([{ value: "oran", weight: 4 }, { value: "elixir", weight: 3 }, { value: "focusMint", weight: 3 }, { value: "pierceSeed", weight: 2 }]), price: 85, sold: false, picked: false },
     { id: cryptoId(), kind: materialKind, price: 145, sold: false, picked: false, material: true },
     { id: cryptoId(), kind: weighted([{ value: "reviver", weight: 3 }, { value: "fortuneOrb", weight: 3 }, { value: "stormOrb", weight: 2 }, { value: "mapScroll", weight: 2 }]), price: 180 + game.floor * 2, sold: false, picked: false },
+    ...(relic ? [{
+      id: cryptoId(),
+      kind: "relic",
+      relicKey: relic.key,
+      price: 310 + game.floor * 5 + (relic.rarity === "RARE" ? 150 : 0) + shopTier * 70,
+      sold: false,
+      picked: false,
+    }] : []),
   ];
   game.merchant = {
     id: cryptoId(),
@@ -3249,6 +3315,7 @@ function spawnDungeonMerchant(bossFloor = false, forced = false, shopTier = 0, p
     game.items.push({
       id: cryptoId(),
       kind: offer.kind,
+      relicKey: offer.relicKey || null,
       x: tile.x,
       y: tile.y,
       shopItem: true,
@@ -5410,9 +5477,13 @@ function trapName(kind) {
 function pickUpMerchantItem(item) {
   const merchant = game.merchant;
   const offer = merchant?.stock.find((entry) => entry.id === item.shopOfferId);
-  const catalog = itemCatalog[item.kind];
+  const catalog = merchantOfferCatalog(offer);
   if (!merchant || merchant.robbed || !offer || offer.sold || offer.picked || !catalog) return;
-  if (!offer.material && bagTotal() >= game.bagCapacity) {
+  if (offer.relicKey && hasRelic(offer.relicKey)) {
+    showToast(`${catalog.name}とはすでに共鳴している`);
+    return;
+  }
+  if (!offer.material && !offer.relicKey && bagTotal() >= game.bagCapacity) {
     showToast(`バッグがいっぱい。${catalog.name}を持てない`);
     return;
   }
@@ -5421,12 +5492,19 @@ function pickUpMerchantItem(item) {
   if (!merchant.unpaid.includes(offer.id)) merchant.unpaid.push(offer.id);
   if (offer.material) {
     game.evolutionBag[offer.kind] = (game.evolutionBag[offer.kind] || 0) + 1;
+  } else if (offer.relicKey) {
+    addRelic(offer.relicKey, false);
   } else {
     game.bag[offer.kind] = (game.bag[offer.kind] || 0) + 1;
   }
   game.merchantView = "buy";
-  addLog(`${catalog.name}を売り場から手に取った。未精算 ${merchantDebt()}星貨。`);
-  announceEvent("未精算の商品", `${catalog.name}　${offer.price}星貨`, "店", "mystic");
+  addLog(`${catalog.name}を売り場から手に取った。${offer.relicKey ? "星遺物が共鳴した。" : ""}未精算 ${merchantDebt()}星貨。`);
+  announceEvent(
+    offer.relicKey ? "未精算の星遺物" : "未精算の商品",
+    `${catalog.name}　${offer.price}星貨`,
+    offer.relicKey ? catalog.icon : "店",
+    "mystic",
+  );
   showToast(`未精算 ${merchantDebt()}星貨。店を出る前に商人へ`);
   playSfx("pickup");
 }
@@ -6306,11 +6384,16 @@ function renderTargetHud(tile = game.aimTile) {
 
   const item = itemAt(tile.x, tile.y);
   if (item && isVisible(item.x, item.y)) {
-    const catalog = itemCatalog[item.kind];
+    const shopOffer = item.shopItem
+      ? game.merchant?.stock.find((offer) => offer.id === item.shopOfferId)
+      : null;
+    const catalog = merchantOfferCatalog(shopOffer) || itemCatalog[item.kind];
     ui.targetHud.dataset.tone = item.shopItem ? "shop" : "item";
     ui.targetHudKicker.textContent = item.shopItem ? `SHOP ${item.price} G` : "ITEM";
     ui.targetHudTitle.textContent = item.gear?.name || catalog?.name || "道具";
-    ui.targetHudDetail.textContent = item.shopItem ? "商店の敷物を出る前に精算" : (catalog?.detail || catalog?.category || "足元で拾える");
+    ui.targetHudDetail.textContent = item.shopItem
+      ? `${catalog?.category || "商品"} / 敷物を出る前に精算`
+      : (catalog?.detail || catalog?.category || "足元で拾える");
     return;
   }
 
@@ -6988,8 +7071,8 @@ function renderRouteChoice() {
   ui.gameMenuBody.innerHTML = `
     <div class="route-choice-head">
       <span>ROUTE ${segment + 1}/10　B${segmentStart}F → B${segmentEnd}F</span>
-      <strong>${current ? "この区画で選んだ道" : "三つの道標から進路を決める"}</strong>
-      <small>${current ? current.detail : "道は次の中継地点まで続きます。危険度だけでなく、欲しい報酬や起きてほしい出来事で選んでください。"}</small>
+      <strong>${current ? "この区画のルール" : "次の10階で、何を増やすか選ぶ"}</strong>
+      <small>${current ? current.detail : "選んだ効果は次の中継街まで続きます。各ルートの『増えるもの』と『代償』を比べてください。"}</small>
     </div>
     <section class="route-map-shell ${current ? "route-map-locked" : ""}" aria-label="塔の分岐地図">
       <div class="route-map-origin">
@@ -7001,9 +7084,9 @@ function renderRouteChoice() {
     </section>
     <section class="route-decision ${current ? "route-decision-locked" : ""}" aria-live="polite">
       <div>
-        <span id="routeDecisionKicker">${current ? "選択済み" : selectedRoute ? "選択中の道標" : "道標未選択"}</span>
+        <span id="routeDecisionKicker">${current ? "選択済み" : selectedRoute ? "この10階の方針" : "ルート未選択"}</span>
         <strong id="routeDecisionTitle">${selectedRoute?.name || "地図上の道を選ぶ"}</strong>
-        <small id="routeDecisionDetail">${selectedRoute ? `${selectedRoute.landmark}　${selectedRoute.feature}` : "道を選ぶと、ここに特徴と進行確認が表示されます。"}</small>
+        <small id="routeDecisionDetail">${selectedRoute ? `${selectedRoute.strategy} / 増える: ${selectedRoute.gain} / 代償: ${selectedRoute.cost}` : "3本の道から1つを選ぶと、増えるものと代償をここで確認できます。"}</small>
       </div>
       <button type="button" class="primary-button route-confirm-button" ${current || !selectedRoute ? "disabled" : ""}>
         ${current ? "この区画を進行中" : "この道へ進む"}
@@ -7025,11 +7108,11 @@ function renderRouteChoice() {
       button.classList.toggle("selected", active);
       button.setAttribute("aria-checked", active ? "true" : "false");
       const label = button.querySelector(".route-pick-label");
-      if (label) label.textContent = active ? "この道を選択中" : "道標を見る";
+      if (label) label.textContent = active ? "この道を選択中" : "この条件で進む";
     });
-    decisionKicker.textContent = "選択中の道標";
+    decisionKicker.textContent = `方針: ${route.strategy}`;
     decisionTitle.textContent = route.name;
-    decisionDetail.textContent = `${route.landmark}　${route.feature}。${route.detail}`;
+    decisionDetail.textContent = `増える: ${route.gain} / 代償: ${route.cost}。${route.detail}`;
     confirmButton.disabled = false;
   };
 
@@ -7043,23 +7126,27 @@ function renderRouteChoice() {
     button.style.setProperty("--route-color", route.color);
     button.setAttribute("role", "radio");
     button.setAttribute("aria-checked", active ? "true" : "false");
-    button.setAttribute("aria-label", `${route.name}。危険度${route.danger}/5、報酬期待${route.reward}/5。${route.detail}`);
+    button.setAttribute("aria-label", `${route.name}。${route.strategy}。増えるものは${route.gain}、代償は${route.cost}。危険度${route.danger}/5、報酬期待${route.reward}/5。`);
     button.innerHTML = `
       <span class="route-map-scenery" aria-hidden="true">
         <i>${route.icon}</i>
         <em>${route.landmark}</em>
       </span>
       <span class="route-map-copy">
-        <span>PATH ${String(index + 1).padStart(2, "0")}　${route.feature}</span>
+        <span>PATH ${String(index + 1).padStart(2, "0")}　${route.strategy}</span>
         <strong>${route.name}</strong>
-        <small>${route.detail}</small>
+        <small>${route.promise}</small>
+      </span>
+      <span class="route-tradeoff">
+        <span><b>増える</b><strong>${route.gain}</strong></span>
+        <span><b>代償</b><strong>${route.cost}</strong></span>
       </span>
       <span class="route-readouts">
         ${routeMeterMarkup("危険", route.danger, "danger")}
         ${routeMeterMarkup("報酬", route.reward, "reward")}
       </span>
       <span class="route-impact-row">${routeImpactMarkup(route)}</span>
-      <span class="route-pick-label">${active ? (current ? "選択済み" : "この道を選択中") : "道標を見る"}</span>
+      <span class="route-pick-label">${active ? (current ? "選択済み" : "この道を選択中") : "この条件で進む"}</span>
     `;
     if (current) {
       button.setAttribute("aria-disabled", "true");
@@ -7582,7 +7669,7 @@ function renderDungeonMerchant() {
     const unpaidNames = merchant.unpaid
       .map((offerId) => merchant.stock.find((offer) => offer.id === offerId))
       .filter(Boolean)
-      .map((offer) => itemCatalog[offer.kind]?.name)
+      .map((offer) => merchantOfferCatalog(offer)?.name)
       .filter(Boolean)
       .join("・");
     appendTownEntry(stock, {
@@ -7598,13 +7685,14 @@ function renderDungeonMerchant() {
   }
 
   for (const offer of merchant.stock) {
-    const item = itemCatalog[offer.kind];
+    const item = merchantOfferCatalog(offer);
+    if (!item) continue;
     const status = offer.sold ? "精算済み" : offer.picked ? "未精算" : "売り場に陳列";
     appendTownEntry(stock, {
-      title: item.name,
+      title: `${item.name}${offer.relicKey ? "　★星遺物" : ""}`,
       detail: item.detail,
-      meta: `${offer.price}星貨　${status}`,
-      iconKind: offer.kind,
+      meta: `${offer.price}星貨　${status}${offer.relicKey ? "　手に取ると即座に共鳴" : ""}`,
+      iconKind: offer.relicKey ? "relic" : offer.kind,
       selected: offer.picked && !offer.sold,
     });
   }
@@ -12353,8 +12441,9 @@ function drawMiniMap() {
     miniCtx.restore();
   };
 
-  miniCtx.fillStyle = "#020706";
-  miniCtx.fillRect(0, 0, miniCanvas.width, miniCanvas.height);
+  miniCtx.clearRect(0, 0, miniCanvas.width, miniCanvas.height);
+  miniCtx.save();
+  miniCtx.globalAlpha = 0.54;
   for (let y = 0; y < MAP_H; y += 1) {
     for (let x = 0; x < MAP_W; x += 1) {
       if (!mappedFloorAt(x, y)) continue;
@@ -12380,6 +12469,7 @@ function drawMiniMap() {
       miniCtx.fillRect(left, top, width, height);
     }
   }
+  miniCtx.restore();
 
   // Trace only the outside of explored floor so rooms and corridors read as shapes.
   for (let y = 0; y < MAP_H; y += 1) {
@@ -12407,24 +12497,12 @@ function drawMiniMap() {
         miniCtx.lineTo(left, top);
       }
       miniCtx.strokeStyle = game.visible[y]?.[x]
-        ? "rgba(230, 255, 237, 0.96)"
-        : "rgba(126, 184, 158, 0.84)";
-      miniCtx.lineWidth = 1.25;
+        ? "rgba(233, 255, 240, 0.9)"
+        : "rgba(119, 214, 166, 0.68)";
+      miniCtx.lineWidth = game.visible[y]?.[x] ? 1.45 : 1.05;
       miniCtx.stroke();
     }
   }
-
-  miniCtx.save();
-  miniCtx.strokeStyle = "rgba(255, 250, 222, 0.72)";
-  miniCtx.lineWidth = 1.5;
-  miniCtx.setLineDash([4, 2]);
-  miniCtx.strokeRect(
-    renderCamera.x * sx,
-    renderCamera.y * sy,
-    renderCamera.width * sx,
-    renderCamera.height * sy,
-  );
-  miniCtx.restore();
 
   for (const item of game.items) {
     const mappedItem = game.mapped[item.y]?.[item.x];
