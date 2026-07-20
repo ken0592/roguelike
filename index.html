@@ -8,10 +8,10 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="FOXBOUND" />
     <title>FOXBOUND: 星喰いの塔</title>
-    <link rel="manifest" href="manifest.webmanifest?v=pwa19a" />
+    <link rel="manifest" href="manifest.webmanifest?v=pwa20" />
     <link rel="apple-touch-icon" sizes="180x180" href="assets/pwa/icon-180.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="assets/pwa/icon-192.png" />
-    <link rel="stylesheet" href="styles.css?v=pwa19a" />
+    <link rel="stylesheet" href="styles.css?v=pwa20" />
   </head>
   <body>
     <div class="app-shell">
@@ -73,39 +73,23 @@
           <span><b>ランク</b><strong id="townRankLabel">見習い</strong></span>
           <span><b>星貨</b><strong id="townCoinLabel">160</strong></span>
         </div>
-        <div class="town-choice-panel" aria-label="遠征準備">
-          <div class="town-choice-copy">
-            <span>RUN SETUP</span>
-            <strong>挑戦を選ぶ</strong>
-            <small>探索者と初期星遺物を選んで、B1Fから百階踏破へ向かいます。</small>
-          </div>
-          <div class="town-choice-grid">
-            <button type="button" class="town-choice-primary" data-town-action="depart">
-              <b>出発</b>
-              <span id="townChoiceDepartLabel">探索者と星遺物を選ぶ</span>
-            </button>
-            <button type="button" data-town-action="shop">
-              <b>商店</b>
-              <span>道具を買う・売る</span>
-            </button>
-            <button type="button" data-town-action="storage">
-              <b>倉庫</b>
-              <span>持ち物を預ける</span>
-            </button>
-            <button type="button" data-town-action="guild">
-              <b>記録</b>
-              <span>到達階と進化を見る</span>
-            </button>
-            <button type="button" data-town-action="board">
-              <b>塔の経路</b>
-              <span>門番と中継街</span>
-            </button>
-            <button type="button" data-town-action="controls">
-              <b>操作</b>
-              <span>キー設定を変える</span>
-            </button>
-          </div>
-        </div>
+        <nav class="town-facilities" aria-label="星見広場の施設">
+          <button class="town-facility town-facility-guild" type="button" data-town-action="guild" aria-label="星見観測院、遠征記録を見る">
+            <span class="town-facility-label"><small>RECORDS</small><strong>星見観測院</strong></span>
+          </button>
+          <button class="town-facility town-facility-storage" type="button" data-town-action="storage" aria-label="風見倉庫、道具を預ける">
+            <span class="town-facility-label"><small>STORAGE</small><strong>風見倉庫</strong></span>
+          </button>
+          <button class="town-facility town-facility-shop" type="button" data-town-action="shop" aria-label="星の商店、道具と星遺物を整える">
+            <span class="town-facility-label"><small>SHOP</small><strong>星の商店</strong></span>
+          </button>
+          <button class="town-facility town-facility-board" type="button" data-town-action="board" aria-label="塔の経路、門番と中継街を確認する">
+            <span class="town-facility-label"><small>ROUTE</small><strong>塔の経路</strong></span>
+          </button>
+          <button class="town-facility town-facility-controls" type="button" data-town-action="controls" aria-label="操作盤、操作方法とキー設定を開く">
+            <span class="town-facility-label"><small>GUIDE</small><strong>操作盤</strong></span>
+          </button>
+        </nav>
         <div id="townInteraction" class="town-interaction" hidden aria-live="polite">
           <kbd id="townInteractionKey">F</kbd>
           <span>
@@ -113,41 +97,32 @@
             <small id="townInteractionDetail"></small>
           </span>
         </div>
-        <button class="town-leader-select town-shortcut" type="button" data-town-action="characters" tabindex="-1" aria-hidden="true">
-          <i id="townLeaderSwatch" aria-hidden="true"></i>
-          <span>
-            <small>運命を継ぐ探索者</small>
+        <button class="town-leader-select" type="button" data-town-action="characters" aria-label="選択中の探索者を変更する">
+          <canvas id="townLeaderPortrait" width="144" height="144" aria-hidden="true"></canvas>
+          <span class="town-leader-copy">
+            <small>SELECTED EXPLORER</small>
             <strong id="townLeaderName">コハク</strong>
             <em id="townLeaderType">光属性 / 星巡タイプ</em>
+            <span><b id="townLeaderMove">初期技　星灯り</b><b id="townLeaderRelic">星遺物　未選択</b></span>
           </span>
-          <b>進化</b>
+          <i id="townLeaderSwatch" aria-hidden="true"></i>
+          <span class="town-leader-change">探索者を変更</span>
         </button>
-        <button class="town-spot town-spot-board town-shortcut" type="button" data-town-action="board" tabindex="-1" aria-hidden="true">
-          <strong>塔の経路</strong>
-          <span>中継街と門番を確認</span>
-        </button>
-        <button class="town-spot town-spot-shop town-shortcut" type="button" data-town-action="shop" tabindex="-1" aria-hidden="true">
-          <strong>星の商店</strong>
-          <span>道具・開始星遺物</span>
-        </button>
-        <button class="town-spot town-spot-storage town-shortcut" type="button" data-town-action="storage" tabindex="-1" aria-hidden="true">
-          <strong>風見倉庫</strong>
-          <span>食料を預ける</span>
-        </button>
-        <button class="town-spot town-spot-guild town-shortcut" type="button" data-town-action="guild" tabindex="-1" aria-hidden="true">
-          <strong>遠征記録</strong>
-          <span>進化と到達階を確認</span>
-        </button>
-        <div class="town-run-brief town-shortcut" aria-label="今回の遠征経路" aria-hidden="true">
+        <div class="town-run-brief" aria-label="今回の遠征経路">
           <span><b>START</b><strong id="townStartFloor">B1F</strong></span>
           <i aria-hidden="true"></i>
           <span><b>GATE</b><strong id="townNextGate">B9F</strong></span>
           <i aria-hidden="true"></i>
           <span><b>GOAL</b><strong>B100F</strong></span>
         </div>
-        <button id="departButton" class="town-depart town-shortcut" type="button" tabindex="-1" aria-hidden="true">
-          <span>星喰い塔 1Fへ</span>
-          <strong>100階踏破に挑む</strong>
+        <button id="departButton" class="town-depart" type="button" data-town-action="depart" aria-label="星喰いの塔へ向かう">
+          <span class="town-gate-hotspot" aria-hidden="true">
+            <span class="town-facility-label"><small>DESTINATION</small><strong>星喰いの塔入口</strong></span>
+          </span>
+          <span class="town-depart-cta">
+            <small id="townChoiceDepartLabel">探索者と初期星遺物を選択</small>
+            <strong>塔へ向かう</strong>
+          </span>
         </button>
       </section>
 
@@ -506,6 +481,6 @@
       </div>
     </div>
 
-    <script src="app.js?v=pwa19a"></script>
+    <script src="app.js?v=pwa20"></script>
   </body>
 </html>

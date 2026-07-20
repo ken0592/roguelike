@@ -16,6 +16,702 @@
   --teal-glow: rgba(94, 201, 207, 0.24);
 }
 
+/* Starwatch Plaza: the town itself is the menu. */
+.town-screen {
+  container-type: size;
+  border-color: rgba(218, 169, 82, 0.34);
+  background: #030911;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 226, 164, 0.09),
+    0 24px 70px rgba(0, 0, 0, 0.54);
+}
+
+.town-screen::before {
+  z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(2, 7, 13, 0.62), transparent 22%, transparent 78%, rgba(2, 7, 13, 0.62)),
+    linear-gradient(180deg, rgba(2, 6, 12, 0.18), transparent 42%, rgba(2, 7, 10, 0.46)),
+    radial-gradient(circle at 50% 46%, transparent 0 42%, rgba(0, 3, 8, 0.42) 100%);
+}
+
+.town-screen::after {
+  z-index: 9;
+  inset: 6px;
+  border-color: rgba(242, 197, 110, 0.18);
+  clip-path: polygon(0 0, 22% 0, 23% 3px, 77% 3px, 78% 0, 100% 0, 100% 100%, 78% 100%, 77% calc(100% - 3px), 23% calc(100% - 3px), 22% 100%, 0 100%);
+}
+
+#townCanvas {
+  position: relative;
+  z-index: 0;
+}
+
+.town-title {
+  z-index: 6;
+  top: 10px;
+  width: min(370px, calc(100% - 390px));
+  min-width: 280px;
+  gap: 1px;
+  padding: 7px 34px 8px;
+  background:
+    linear-gradient(90deg, transparent, rgba(4, 14, 22, 0.72) 13%, rgba(6, 20, 27, 0.78) 50%, rgba(4, 14, 22, 0.72) 87%, transparent),
+    linear-gradient(90deg, transparent 8%, rgba(229, 177, 80, 0.54) 25%, rgba(229, 177, 80, 0.54) 75%, transparent 92%) bottom / 100% 1px no-repeat;
+  text-shadow: 0 3px 14px #000;
+}
+
+.town-title span {
+  color: #8de4dd;
+  font-size: 0.58rem;
+  letter-spacing: 0;
+}
+
+.town-title strong {
+  color: #fff2ca;
+  font-size: 1.28rem;
+}
+
+.town-title small {
+  margin-top: 2px;
+  color: rgba(225, 235, 224, 0.82);
+  font-size: 0.63rem;
+}
+
+.town-status {
+  z-index: 7;
+  right: 16px;
+  top: 13px;
+  gap: 5px;
+}
+
+.town-status span {
+  min-width: 70px;
+  border: 0;
+  border-bottom: 1px solid rgba(236, 185, 91, 0.52);
+  background: linear-gradient(110deg, rgba(5, 15, 21, 0.76), rgba(5, 13, 18, 0.36));
+  padding: 5px 9px;
+  box-shadow: none;
+  backdrop-filter: blur(3px);
+}
+
+.town-status b {
+  color: #83d5cf;
+  font-size: 0.52rem;
+}
+
+.town-status strong {
+  font-size: 0.75rem;
+}
+
+.town-choice-panel,
+.town-choice-copy,
+.town-choice-grid {
+  display: none !important;
+}
+
+.town-facilities {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  pointer-events: none;
+}
+
+.town-facility {
+  --facility-color: #e4b95f;
+  position: absolute;
+  min-width: 44px;
+  min-height: 44px;
+  overflow: visible;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff4d1;
+  cursor: pointer;
+  padding: 0;
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+.town-facility::before {
+  content: "";
+  position: absolute;
+  inset: 7%;
+  background: radial-gradient(ellipse at 50% 72%, color-mix(in srgb, var(--facility-color) 25%, transparent), transparent 66%);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.town-facility:hover::before,
+.town-facility:focus-visible::before {
+  opacity: 1;
+}
+
+.town-facility-guild {
+  --facility-color: #65d8c8;
+  left: 3.2%;
+  top: 9%;
+  width: 28.5%;
+  height: 35%;
+}
+
+.town-facility-storage {
+  --facility-color: #67c8d0;
+  left: 2.4%;
+  top: 50%;
+  width: 33.5%;
+  height: 36%;
+}
+
+.town-facility-shop {
+  --facility-color: #f18a65;
+  right: 2.4%;
+  top: 50%;
+  width: 30.5%;
+  height: 36%;
+}
+
+.town-facility-board {
+  --facility-color: #e9bd5c;
+  right: 13.5%;
+  top: 31%;
+  width: 17.5%;
+  height: 23%;
+}
+
+.town-facility-controls {
+  --facility-color: #9c8be1;
+  left: 31.5%;
+  top: 35%;
+  width: 11.5%;
+  height: 20%;
+}
+
+.town-facility-label {
+  position: absolute;
+  left: 50%;
+  bottom: 2%;
+  min-width: max-content;
+  display: grid;
+  gap: 1px;
+  transform: translateX(-50%);
+  border-left: 3px solid var(--facility-color, #e4b95f);
+  border-bottom: 1px solid color-mix(in srgb, var(--facility-color, #e4b95f) 58%, transparent);
+  background: linear-gradient(105deg, rgba(4, 13, 18, 0.88), rgba(5, 16, 21, 0.62) 78%, transparent);
+  color: #fff6db;
+  padding: 5px 24px 5px 9px;
+  text-align: left;
+  text-shadow: 0 2px 6px #000;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 50%, calc(100% - 12px) 100%, 0 100%);
+  transition: filter 160ms ease, transform 160ms ease, background-color 160ms ease;
+}
+
+.town-facility-label small {
+  color: color-mix(in srgb, var(--facility-color, #e4b95f) 82%, white);
+  font-size: 0.47rem;
+  font-weight: 900;
+}
+
+.town-facility-label strong {
+  font-size: 0.76rem;
+  white-space: nowrap;
+}
+
+.town-facility:hover .town-facility-label,
+.town-facility:focus-visible .town-facility-label {
+  transform: translateX(-50%) translateY(-3px);
+  filter: brightness(1.24) drop-shadow(0 0 9px color-mix(in srgb, var(--facility-color) 45%, transparent));
+}
+
+.town-leader-select {
+  --leader-color: #6acdc9;
+  position: absolute;
+  z-index: 7;
+  left: 16px;
+  top: auto;
+  bottom: 15px;
+  width: min(258px, 24vw);
+  min-width: 220px;
+  min-height: 106px;
+  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  gap: 5px 10px;
+  overflow: hidden;
+  border: 0;
+  border-left: 3px solid var(--leader-color);
+  border-bottom: 1px solid rgba(229, 183, 95, 0.5);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--leader-color) 13%, transparent), transparent 48%),
+    linear-gradient(105deg, rgba(4, 13, 19, 0.93), rgba(5, 15, 20, 0.72) 78%, transparent);
+  color: #fff6dc;
+  padding: 8px 18px 7px 8px;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
+  clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);
+  backdrop-filter: blur(4px);
+}
+
+.town-leader-select:hover,
+.town-leader-select:focus-visible {
+  filter: brightness(1.12);
+  transform: translateY(-2px);
+}
+
+#townLeaderPortrait {
+  grid-row: 1 / 3;
+  align-self: center;
+  width: 78px;
+  height: 78px;
+  border: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, color-mix(in srgb, var(--leader-color) 23%, transparent), transparent 68%);
+  filter: drop-shadow(0 7px 7px rgba(0, 0, 0, 0.55));
+}
+
+.town-leader-copy {
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+  align-content: center;
+}
+
+.town-leader-select .town-leader-copy > small {
+  color: #e2b85e;
+  font-size: 0.48rem;
+  font-weight: 900;
+}
+
+.town-leader-select .town-leader-copy > strong {
+  overflow: hidden;
+  color: #fff2cf;
+  font-size: 1rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.town-leader-select .town-leader-copy > em {
+  overflow: hidden;
+  color: #a7d8d2;
+  font-size: 0.55rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.town-leader-copy > span {
+  min-width: 0;
+  display: grid;
+  gap: 0;
+  margin-top: 3px;
+}
+
+.town-leader-copy > span b {
+  overflow: hidden;
+  color: #c8c8bc;
+  font-size: 0.49rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.town-leader-select > #townLeaderSwatch {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 3px;
+  height: 100%;
+  background: var(--leader-color);
+  box-shadow: 0 0 16px currentColor;
+}
+
+.town-leader-change {
+  justify-self: start;
+  color: #e8bf67;
+  font-size: 0.49rem;
+  font-weight: 800;
+}
+
+.town-run-brief {
+  z-index: 7;
+  bottom: 86px;
+  width: min(370px, calc(100% - 570px));
+  min-width: 320px;
+  min-height: 42px;
+  gap: 8px;
+  border: 0;
+  border-top: 1px solid rgba(224, 179, 86, 0.45);
+  border-bottom: 1px solid rgba(224, 179, 86, 0.28);
+  background: linear-gradient(90deg, transparent, rgba(4, 13, 18, 0.82) 12%, rgba(4, 13, 18, 0.82) 88%, transparent);
+  padding: 5px 18px;
+  box-shadow: none;
+}
+
+.town-run-brief b {
+  color: #77d6ce;
+  font-size: 0.47rem;
+}
+
+.town-run-brief strong {
+  font-size: 0.72rem;
+}
+
+.town-run-brief i {
+  background: linear-gradient(90deg, rgba(229, 181, 82, 0.12), rgba(229, 181, 82, 0.72));
+}
+
+.town-depart {
+  --facility-color: #f0bb55;
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  display: block;
+  transform: none;
+  overflow: visible;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff4d4;
+  padding: 0;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.town-gate-hotspot {
+  position: absolute;
+  left: 39.5%;
+  top: 7.5%;
+  width: 21%;
+  height: 30%;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.town-gate-hotspot::before {
+  content: "";
+  position: absolute;
+  inset: 5%;
+  background: radial-gradient(ellipse at center, rgba(242, 186, 78, 0.22), transparent 67%);
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.town-gate-hotspot .town-facility-label {
+  bottom: 0;
+}
+
+.town-depart-cta {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  width: min(340px, calc(100% - 560px));
+  min-width: 310px;
+  min-height: 62px;
+  display: grid;
+  gap: 2px;
+  place-content: center;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 226, 160, 0.72);
+  border-bottom: 3px solid #7f3a2a;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.17), transparent 44%),
+    linear-gradient(105deg, #c96a43, #a74d38 62%, #7c352c);
+  color: #fff6df;
+  cursor: pointer;
+  padding: 8px 28px;
+  pointer-events: auto;
+  text-shadow: 0 2px 5px rgba(62, 16, 9, 0.82);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42), 0 0 24px rgba(235, 119, 73, 0.2);
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
+  transition: filter 160ms ease, transform 160ms ease;
+}
+
+.town-depart-cta::after {
+  content: "›";
+  position: absolute;
+  right: 18px;
+  top: 50%;
+  transform: translateY(-53%);
+  color: #ffe7a7;
+  font-size: 1.6rem;
+}
+
+.town-depart-cta small {
+  color: #ffdba0;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.town-depart-cta strong {
+  font-size: 1rem;
+}
+
+.town-depart:hover,
+.town-depart:focus-visible {
+  filter: none;
+}
+
+.town-depart:hover .town-gate-hotspot::before,
+.town-depart:focus-visible .town-gate-hotspot::before {
+  opacity: 1;
+}
+
+.town-depart:hover .town-depart-cta,
+.town-depart:focus-visible .town-depart-cta {
+  filter: brightness(1.12);
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.town-depart:hover .town-facility-label,
+.town-depart:focus-visible .town-facility-label {
+  filter: brightness(1.22) drop-shadow(0 0 10px rgba(240, 187, 85, 0.5));
+}
+
+.town-interaction {
+  z-index: 8;
+  left: auto;
+  right: 16px;
+  bottom: 16px;
+  width: min(285px, 24vw);
+  min-width: 235px;
+  transform: none;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 8px;
+  border: 0;
+  border-left: 3px solid var(--facility-color, #f0c862);
+  border-bottom: 1px solid color-mix(in srgb, var(--facility-color, #f0c862) 46%, transparent);
+  background: linear-gradient(105deg, rgba(4, 13, 18, 0.92), rgba(4, 13, 18, 0.68), transparent);
+  padding: 7px 14px 7px 8px;
+  box-shadow: none;
+  clip-path: polygon(0 0, calc(100% - 13px) 0, 100% 50%, calc(100% - 13px) 100%, 0 100%);
+}
+
+.town-interaction kbd {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 0.66rem;
+}
+
+.town-interaction strong {
+  font-size: 0.72rem;
+}
+
+.town-interaction small {
+  font-size: 0.53rem;
+}
+
+@media (max-width: 1050px) {
+  .town-title {
+    width: 330px;
+  }
+
+  .town-leader-select {
+    width: 225px;
+    min-width: 0;
+  }
+
+  .town-run-brief {
+    width: 320px;
+    min-width: 0;
+  }
+
+  .town-depart-cta {
+    width: 310px;
+    min-width: 0;
+  }
+
+  .town-interaction {
+    width: 235px;
+    min-width: 0;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .app-shell:has(.town-screen:not([hidden])) .town-status {
+    display: flex;
+    right: max(8px, env(safe-area-inset-right));
+    top: max(6px, env(safe-area-inset-top));
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-status span {
+    min-width: 58px;
+    padding: 3px 7px;
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-status span:first-child {
+    display: none;
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-title {
+    top: max(4px, env(safe-area-inset-top));
+    width: 238px;
+    min-width: 0;
+    padding: 4px 20px 5px;
+  }
+
+  .town-title span {
+    font-size: 0.43rem;
+  }
+
+  .town-title strong {
+    font-size: 0.83rem;
+  }
+
+  .town-title small {
+    font-size: 0.46rem;
+  }
+
+  .town-facility-label {
+    border-left-width: 2px;
+    padding: 3px 14px 3px 6px;
+  }
+
+  .town-facility-label small {
+    display: none;
+  }
+
+  .town-facility-label strong {
+    font-size: 0.54rem;
+  }
+
+  .town-leader-select {
+    left: max(6px, env(safe-area-inset-left));
+    bottom: max(6px, env(safe-area-inset-bottom));
+    width: 176px;
+    min-width: 0;
+    min-height: 64px;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 2px 6px;
+    padding: 4px 11px 4px 4px;
+  }
+
+  #townLeaderPortrait {
+    width: 52px;
+    height: 52px;
+  }
+
+  .town-leader-select .town-leader-copy > small,
+  .town-leader-change,
+  .town-leader-copy > span {
+    display: none;
+  }
+
+  .town-leader-select .town-leader-copy > strong {
+    font-size: 0.75rem;
+  }
+
+  .town-leader-select .town-leader-copy > em {
+    font-size: 0.46rem;
+  }
+
+  .town-run-brief {
+    bottom: max(52px, calc(env(safe-area-inset-bottom) + 49px));
+    width: 238px;
+    min-width: 0;
+    min-height: 30px;
+    gap: 5px;
+    padding: 3px 10px;
+  }
+
+  .town-run-brief b {
+    font-size: 0.4rem;
+  }
+
+  .town-run-brief strong {
+    font-size: 0.56rem;
+  }
+
+  .town-depart-cta {
+    bottom: max(5px, env(safe-area-inset-bottom));
+    width: 238px;
+    min-width: 0;
+    min-height: 43px;
+    padding: 4px 22px;
+  }
+
+  .town-depart-cta small {
+    font-size: 0.43rem;
+  }
+
+  .town-depart-cta strong {
+    font-size: 0.72rem;
+  }
+
+  .town-depart-cta::after {
+    right: 12px;
+    font-size: 1.05rem;
+  }
+
+  .town-gate-hotspot {
+    top: 8%;
+    height: 29%;
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-interaction {
+    left: auto;
+    right: max(6px, env(safe-area-inset-right));
+    top: max(43px, calc(env(safe-area-inset-top) + 40px));
+    bottom: auto;
+    width: 196px;
+    min-width: 0;
+    grid-template-columns: 25px minmax(0, 1fr);
+    gap: 5px;
+    padding: 4px 10px 4px 5px;
+  }
+
+  .town-interaction kbd {
+    width: 23px;
+    height: 23px;
+    font-size: 0.5rem;
+  }
+
+  .town-interaction strong {
+    font-size: 0.58rem;
+  }
+
+  .town-interaction small {
+    font-size: 0.44rem;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+  .town-facility-guild {
+    top: 7%;
+    height: 37%;
+  }
+
+  .town-facility-storage,
+  .town-facility-shop {
+    top: 47%;
+    height: 38%;
+  }
+
+  .town-leader-select {
+    width: 164px;
+  }
+
+  .town-run-brief {
+    width: 216px;
+  }
+
+  .town-depart-cta {
+    width: 216px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .town-facility::before,
+  .town-facility-label,
+  .town-leader-select,
+  .town-depart-cta,
+  .town-gate-hotspot::before {
+    transition: none !important;
+  }
+}
+
 * {
   box-sizing: border-box;
 }
@@ -8779,5 +9475,320 @@ canvas,
   .app-shell:has(.touch-controls:not([hidden])) .stage-viewport #miniMap {
     border: 0;
     background: transparent;
+  }
+}
+
+/* Final plaza layout overrides legacy town-menu positioning. */
+body:has(.town-screen:not([hidden])) {
+  overflow: hidden;
+}
+
+.app-shell:has(.town-screen:not([hidden])) {
+  height: 100dvh;
+  min-height: 0;
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.town-screen {
+  container-type: size;
+  height: 100%;
+  min-height: 0;
+  border-color: rgba(218, 169, 82, 0.34);
+  background: #030911;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 226, 164, 0.09),
+    0 24px 70px rgba(0, 0, 0, 0.54);
+}
+
+.town-screen::before {
+  z-index: 2;
+  background:
+    linear-gradient(90deg, rgba(2, 7, 13, 0.62), transparent 22%, transparent 78%, rgba(2, 7, 13, 0.62)),
+    linear-gradient(180deg, rgba(2, 6, 12, 0.18), transparent 42%, rgba(2, 7, 10, 0.46)),
+    radial-gradient(circle at 50% 46%, transparent 0 42%, rgba(0, 3, 8, 0.42) 100%);
+}
+
+.town-screen::after {
+  z-index: 9;
+  inset: 6px;
+  border-color: rgba(242, 197, 110, 0.18);
+}
+
+#townCanvas {
+  position: relative;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.town-title {
+  z-index: 6;
+  left: 50%;
+  top: 10px;
+  width: min(370px, calc(100% - 390px));
+  min-width: 280px;
+  display: grid;
+  gap: 1px;
+  transform: translateX(-50%);
+  padding: 7px 34px 8px;
+  background:
+    linear-gradient(90deg, transparent, rgba(4, 14, 22, 0.72) 13%, rgba(6, 20, 27, 0.78) 50%, rgba(4, 14, 22, 0.72) 87%, transparent),
+    linear-gradient(90deg, transparent 8%, rgba(229, 177, 80, 0.54) 25%, rgba(229, 177, 80, 0.54) 75%, transparent 92%) bottom / 100% 1px no-repeat;
+  text-align: center;
+}
+
+.town-title span {
+  color: #8de4dd;
+  font-size: 0.58rem;
+}
+
+.town-title strong {
+  color: #fff2ca;
+  font-size: 1.28rem;
+  line-height: 1;
+}
+
+.town-title small {
+  margin-top: 2px;
+  color: rgba(225, 235, 224, 0.82);
+  font-size: 0.63rem;
+}
+
+.town-status {
+  z-index: 7;
+  right: 16px;
+  top: 13px;
+  display: flex;
+  gap: 5px;
+}
+
+.town-status span {
+  min-width: 70px;
+  border: 0;
+  border-bottom: 1px solid rgba(236, 185, 91, 0.52);
+  background: linear-gradient(110deg, rgba(5, 15, 21, 0.76), rgba(5, 13, 18, 0.36));
+  padding: 5px 9px;
+  box-shadow: none;
+}
+
+.town-facility-storage .town-facility-label {
+  left: 58%;
+  bottom: 53%;
+}
+
+.town-leader-select {
+  position: absolute;
+  z-index: 7;
+  left: 16px;
+  right: auto;
+  top: auto;
+  bottom: 15px;
+  width: min(258px, 24vw);
+  min-width: 220px;
+  min-height: 106px;
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  grid-template-rows: 1fr auto;
+  gap: 5px 10px;
+  overflow: hidden;
+  border: 0;
+  border-left: 3px solid var(--leader-color);
+  border-bottom: 1px solid rgba(229, 183, 95, 0.5);
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--leader-color) 13%, transparent), transparent 48%),
+    linear-gradient(105deg, rgba(4, 13, 19, 0.93), rgba(5, 15, 20, 0.72) 78%, transparent);
+  color: #fff6dc;
+  padding: 8px 18px 7px 8px;
+  text-align: left;
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.38);
+  clip-path: polygon(0 0, calc(100% - 15px) 0, 100% 15px, 100% 100%, 0 100%);
+}
+
+.town-leader-select:hover,
+.town-leader-select:focus-visible {
+  transform: translateY(-2px);
+}
+
+.town-run-brief {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  bottom: 86px;
+  width: min(370px, calc(100% - 570px));
+  min-width: 320px;
+  min-height: 42px;
+  display: grid;
+  grid-template-columns: auto 1fr auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  transform: translateX(-50%);
+  border: 0;
+  border-top: 1px solid rgba(224, 179, 86, 0.45);
+  border-bottom: 1px solid rgba(224, 179, 86, 0.28);
+  background: linear-gradient(90deg, transparent, rgba(4, 13, 18, 0.82) 12%, rgba(4, 13, 18, 0.82) 88%, transparent);
+  padding: 5px 18px;
+  box-shadow: none;
+}
+
+.town-depart {
+  position: absolute;
+  z-index: 6;
+  inset: 0;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: auto;
+  min-width: 0;
+  min-height: 0;
+  display: block;
+  transform: none;
+  overflow: visible;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #fff4d4;
+  padding: 0;
+  pointer-events: none;
+  box-shadow: none;
+}
+
+.town-depart:hover,
+.town-depart:focus-visible {
+  transform: none;
+  filter: none;
+}
+
+.town-gate-hotspot {
+  position: absolute;
+  left: 39.5%;
+  top: 7.5%;
+  width: 21%;
+  height: 30%;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.town-depart-cta {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  width: min(340px, calc(100% - 560px));
+  min-width: 310px;
+  min-height: 62px;
+  display: grid;
+  gap: 2px;
+  place-content: center;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 226, 160, 0.72);
+  border-bottom: 3px solid #7f3a2a;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.17), transparent 44%),
+    linear-gradient(105deg, #c96a43, #a74d38 62%, #7c352c);
+  color: #fff6df;
+  cursor: pointer;
+  padding: 8px 28px;
+  pointer-events: auto;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.42), 0 0 24px rgba(235, 119, 73, 0.2);
+  clip-path: polygon(14px 0, calc(100% - 14px) 0, 100% 50%, calc(100% - 14px) 100%, 14px 100%, 0 50%);
+}
+
+.town-depart:hover .town-depart-cta,
+.town-depart:focus-visible .town-depart-cta {
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.town-interaction {
+  position: absolute;
+  z-index: 8;
+  left: auto;
+  right: 16px;
+  top: auto;
+  bottom: 16px;
+  width: min(285px, 24vw);
+  min-width: 235px;
+  transform: none;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 8px;
+  border: 0;
+  border-left: 3px solid var(--facility-color, #f0c862);
+  border-bottom: 1px solid color-mix(in srgb, var(--facility-color, #f0c862) 46%, transparent);
+  background: linear-gradient(105deg, rgba(4, 13, 18, 0.92), rgba(4, 13, 18, 0.68), transparent);
+  padding: 7px 14px 7px 8px;
+  box-shadow: none;
+}
+
+@media (orientation: landscape) and (max-height: 600px) {
+  .app-shell:has(.town-screen:not([hidden])) .town-status {
+    display: flex;
+    right: max(8px, env(safe-area-inset-right));
+    top: max(6px, env(safe-area-inset-top));
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-status span {
+    min-width: 58px;
+    padding: 3px 7px;
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-status span:first-child {
+    display: none;
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-title {
+    top: max(4px, env(safe-area-inset-top));
+    width: 238px;
+    min-width: 0;
+    padding: 4px 20px 5px;
+  }
+
+  .town-leader-select {
+    left: max(6px, env(safe-area-inset-left));
+    top: auto;
+    bottom: max(6px, env(safe-area-inset-bottom));
+    width: 176px;
+    min-width: 0;
+    min-height: 64px;
+    grid-template-columns: 52px minmax(0, 1fr);
+    gap: 2px 6px;
+    padding: 4px 11px 4px 4px;
+  }
+
+  .town-run-brief {
+    bottom: max(52px, calc(env(safe-area-inset-bottom) + 49px));
+    width: 238px;
+    min-width: 0;
+    min-height: 30px;
+    gap: 5px;
+    padding: 3px 10px;
+  }
+
+  .town-depart {
+    inset: 0;
+    width: auto;
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+  }
+
+  .town-depart-cta {
+    bottom: max(5px, env(safe-area-inset-bottom));
+    width: 238px;
+    min-width: 0;
+    min-height: 43px;
+    padding: 4px 22px;
+  }
+
+  .app-shell:has(.town-screen:not([hidden])) .town-interaction {
+    left: auto;
+    right: max(6px, env(safe-area-inset-right));
+    top: max(43px, calc(env(safe-area-inset-top) + 40px));
+    bottom: auto;
+    width: 196px;
+    min-width: 0;
+    grid-template-columns: 25px minmax(0, 1fr);
+    gap: 5px;
+    padding: 4px 10px 4px 5px;
   }
 }

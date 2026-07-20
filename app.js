@@ -47,9 +47,9 @@ const miniCanvas = document.querySelector("#miniMap");
 const miniCtx = miniCanvas.getContext("2d");
 const townCanvas = document.querySelector("#townCanvas");
 const townCtx = townCanvas.getContext("2d");
-const USE_TOWN_BACKDROP = false;
+const USE_TOWN_BACKDROP = true;
 const townBackdrop = new Image();
-if (USE_TOWN_BACKDROP) townBackdrop.src = "assets/town/foxbound-spire-hub-v1.jpg?v=pwa11";
+if (USE_TOWN_BACKDROP) townBackdrop.src = "assets/town/foxbound-spire-hub-v1.jpg?v=pwa20";
 const spriteSheet = new Image();
 spriteSheet.src = "assets/kenney-roguelike-rpg-pack/Spritesheet/roguelikeSheet_transparent.png";
 const mapTokenSheet = new Image();
@@ -60,7 +60,7 @@ let mapTokenReady = false;
 const itemIconSheet = new Image();
 itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa11";
 const enemyArtSheets = Array(4).fill(null);
-const FOXBOUND_ASSET_VERSION = "pwa19a";
+const FOXBOUND_ASSET_VERSION = "pwa20";
 const FOXBOUND_SPRITE_ROOT = "assets/foxbound-codex-v1";
 const FOXBOUND_HERO_SPRITE_IDS = Object.freeze({
   kohaku: "kohaku",
@@ -181,20 +181,23 @@ function loadFoxboundSpriteManifest() {
       // The legacy atlas remains available if the optional art pack cannot load.
     });
 }
+let townUiFocusKey = null;
 const townFacilities = [
-  { key: "characters", name: "継承の鏡", detail: "探索者と進化を選ぶ", x: 286, y: 340, radius: 70, color: "#9de6ed" },
-  { key: "board", name: "塔の経路板", detail: "門番と中継街を確認", x: 446, y: 350, radius: 64, color: "#efc867" },
-  { key: "guild", name: "星見観測院", detail: "遠征記録を見る", x: 910, y: 312, radius: 72, color: "#9dcc7c" },
-  { key: "storage", name: "風見倉庫", detail: "道具を預ける", x: 224, y: 566, radius: 72, color: "#76cdd4" },
-  { key: "shop", name: "星の商店", detail: "道具と星遺物を整える", x: 930, y: 566, radius: 72, color: "#ef8b70" },
-  { key: "depart", name: "星喰い塔 出発門", detail: "探索者と初期星遺物を選んで出発", x: 576, y: 616, radius: 72, color: "#f0c862" },
+  { key: "characters", name: "選択中の探索者", detail: "探索者と進化先を選ぶ", x: 0, y: 0, radius: 0, color: "#9de6ed", uiOnly: true },
+  { key: "guild", name: "星見観測院", detail: "進化系譜と最高到達記録を見る", x: 250, y: 316, radius: 78, color: "#65d8c8" },
+  { key: "storage", name: "風見倉庫", detail: "持ち帰った道具を預ける", x: 250, y: 574, radius: 82, color: "#67c8d0" },
+  { key: "shop", name: "星の商店", detail: "道具と初期星遺物を整える", x: 920, y: 574, radius: 82, color: "#f18a65" },
+  { key: "board", name: "塔の経路", detail: "門番と中継街までの道を確認する", x: 866, y: 374, radius: 68, color: "#e9bd5c" },
+  { key: "controls", name: "星刻の操作盤", detail: "操作方法とキー設定を確認する", x: 430, y: 382, radius: 58, color: "#9c8be1" },
+  { key: "depart", name: "星喰いの塔入口", detail: "探索者と初期星遺物を選んで出発する", x: 576, y: 244, radius: 88, color: "#f0bb55" },
 ];
 const townObstacles = [
-  { left: 210, top: 164, right: 362, bottom: 316 },
-  { left: 365, top: 188, right: 527, bottom: 326 },
-  { left: 78, top: 370, right: 340, bottom: 538 },
-  { left: 812, top: 370, right: 1088, bottom: 538 },
-  { left: 796, top: 88, right: 1088, bottom: 282 },
+  { left: 48, top: 94, right: 376, bottom: 302 },
+  { left: 42, top: 382, right: 414, bottom: 584 },
+  { left: 802, top: 382, right: 1110, bottom: 584 },
+  { left: 770, top: 250, right: 990, bottom: 354 },
+  { left: 392, top: 292, right: 470, bottom: 360 },
+  { left: 462, top: 68, right: 690, bottom: 226 },
 ];
 
 const ui = {
@@ -258,6 +261,9 @@ const ui = {
   townLeaderName: document.querySelector("#townLeaderName"),
   townLeaderType: document.querySelector("#townLeaderType"),
   townLeaderSwatch: document.querySelector("#townLeaderSwatch"),
+  townLeaderPortrait: document.querySelector("#townLeaderPortrait"),
+  townLeaderMove: document.querySelector("#townLeaderMove"),
+  townLeaderRelic: document.querySelector("#townLeaderRelic"),
   townStartFloor: document.querySelector("#townStartFloor"),
   townNextGate: document.querySelector("#townNextGate"),
   townChoiceDepartLabel: document.querySelector("#townChoiceDepartLabel"),
@@ -2164,14 +2170,6 @@ function openExpeditionLoadout() {
   if (!ui.townDialog.open) ui.townDialog.showModal();
 }
 
-function queueLoadoutPrompt(delay = 120) {
-  window.setTimeout(() => {
-    if (!game || game.mode !== "town") return;
-    if (ui.townDialog.open || ui.helpDialog.open || ui.saveDialog.open || ui.gameMenuDialog.open) return;
-    openExpeditionLoadout();
-  }, delay);
-}
-
 function renderExpeditionLoadout() {
   const starterKeys = ["ironFang", "moonLens", "shellSeed", "heartMeteor"];
   const profile = characterCatalog.find((entry) => entry.key === game.selectedCharacter) || characterCatalog[0];
@@ -3499,6 +3497,7 @@ function townFocusedFacility() {
   let focused = null;
   let closest = Number.POSITIVE_INFINITY;
   for (const facility of townFacilities) {
+    if (facility.uiOnly) continue;
     const distance = Math.hypot(player.x - facility.x, player.y - facility.y);
     if (distance <= facility.radius && distance < closest) {
       focused = facility;
@@ -3506,6 +3505,38 @@ function townFocusedFacility() {
     }
   }
   return focused;
+}
+
+function townFacilityByKey(key) {
+  return townFacilities.find((facility) => facility.key === key) || null;
+}
+
+function activeTownFacility() {
+  return townFacilityByKey(townUiFocusKey) || townFocusedFacility();
+}
+
+function updateTownInteraction() {
+  if (!game || game.mode !== "town") {
+    ui.townInteraction.hidden = true;
+    return;
+  }
+  const facility = activeTownFacility();
+  if (!facility) {
+    ui.townInteraction.hidden = true;
+    return;
+  }
+  ui.townInteraction.hidden = false;
+  ui.townInteraction.style.setProperty("--facility-color", facility.color);
+  ui.townInteractionKey.textContent = townUiFocusKey
+    ? (window.matchMedia("(pointer: coarse)").matches ? "TAP" : "↵")
+    : "F";
+  ui.townInteractionName.textContent = facility.name;
+  ui.townInteractionDetail.textContent = facility.detail;
+}
+
+function setTownUiFocus(key) {
+  townUiFocusKey = key || null;
+  updateTownInteraction();
 }
 
 function canStandInTown(x, y) {
@@ -6247,28 +6278,34 @@ function updateAll() {
     const leader = getLeader();
     const checkpoint = game.towerCheckpoint?.floor;
     const evolution = evolutionCatalog.find((entry) => entry.key === game.persistentEvolutionKey);
+    const startFloor = checkpoint || 1;
+    const nextGate = Math.min(99, Math.floor(startFloor / 10) * 10 + 9);
+    const leaderElement = elementInfo(leader.elementKey);
+    const startingRelic = relicCatalog.find((entry) => entry.key === game.startingRelicKey);
     ui.floor.textContent = "町";
     ui.score.textContent = `${game.coins} 星貨`;
     ui.best.textContent = rank.name;
-    ui.townMission.textContent = `星喰いの塔 / 最高 B${game.highestFloor}F / 全100階`;
+    ui.townMission.textContent = `B${startFloor}Fから探索開始 / 最高到達 B${game.highestFloor}F`;
     ui.townRank.textContent = rank.name;
     ui.townCoin.textContent = `${game.coins}`;
     ui.townLeaderName.textContent = leader.evolutionName || leader.name;
-    ui.townLeaderType.textContent = `${elementInfo(leader.elementKey).name}属性 / ${leader.type}タイプ${leader.evolutionStage ? ` / 進化 ${leader.evolutionStage}/10` : evolution ? ` / ${evolution.path === "magic" ? "魔法型" : evolution.path === "physical" ? "物理型" : "複合型"}` : ""}`;
-    ui.townLeaderSwatch.style.background = elementInfo(leader.elementKey).color;
-    const startFloor = checkpoint || 1;
-    const nextGate = Math.min(99, Math.floor(startFloor / 10) * 10 + 9);
+    ui.townLeaderType.textContent = `${leaderElement.name}属性 / ${leader.type}タイプ${leader.evolutionStage ? ` / 進化 ${leader.evolutionStage}/10` : evolution ? ` / ${evolution.path === "magic" ? "魔法型" : evolution.path === "physical" ? "物理型" : "複合型"}` : ""}`;
+    ui.townLeaderSwatch.style.background = leaderElement.color;
+    ui.townLeaderSwatch.style.color = leaderElement.color;
+    ui.townLeaderSwatch.closest(".town-leader-select")?.style.setProperty("--leader-color", leaderElement.color);
+    if (ui.townLeaderMove) ui.townLeaderMove.textContent = `初期技　${leader.moves[0]?.name || "未習得"}`;
+    if (ui.townLeaderRelic) ui.townLeaderRelic.textContent = `星遺物　${startingRelic?.name || "未選択"}`;
+    if (ui.townLeaderPortrait) drawPortrait(ui.townLeaderPortrait, leader);
     ui.townStartFloor.textContent = `B${startFloor}F`;
     ui.townNextGate.textContent = `B${nextGate}F`;
-    ui.departButton.querySelector("span").textContent = checkpoint
-      ? `B${checkpoint}Fの中継街から再開`
-      : "B1Fから100階踏破へ挑む";
     if (ui.townChoiceDepartLabel) {
       ui.townChoiceDepartLabel.textContent = checkpoint
         ? `B${checkpoint}Fの中継街から再開`
-        : "探索者と星遺物を選ぶ";
+        : "探索者と初期星遺物を選択";
     }
-    ui.townInteraction.hidden = true;
+    const departAction = ui.departButton.querySelector(".town-depart-cta strong");
+    if (departAction) departAction.textContent = checkpoint ? "遠征へ戻る" : "塔へ向かう";
+    updateTownInteraction();
     return;
   }
   ui.townInteraction.hidden = true;
@@ -8993,73 +9030,30 @@ function draw(time = 0) {
 function drawTown(time) {
   const width = townCanvas.width;
   const height = townCanvas.height;
-  townCtx.fillStyle = "#080d0d";
-  townCtx.fillRect(0, 0, width, height);
-  if (USE_TOWN_BACKDROP && townBackdrop.complete && townBackdrop.naturalWidth) {
-    const scale = Math.max(width / townBackdrop.naturalWidth, height / townBackdrop.naturalHeight);
-    const sourceWidth = width / scale;
-    const sourceHeight = height / scale;
-    const sourceX = (townBackdrop.naturalWidth - sourceWidth) / 2;
-    const sourceY = Math.max(0, (townBackdrop.naturalHeight - sourceHeight) * 0.42);
-    townCtx.drawImage(
-      townBackdrop,
-      sourceX,
-      sourceY,
-      sourceWidth,
-      sourceHeight,
-      0,
-      0,
-      width,
-      height,
-    );
-  }
-
-  const lowerShade = townCtx.createLinearGradient(0, height * 0.5, 0, height);
-  lowerShade.addColorStop(0, "rgba(4, 8, 8, 0)");
-  lowerShade.addColorStop(1, "rgba(4, 7, 7, 0.58)");
-  townCtx.fillStyle = lowerShade;
-  townCtx.fillRect(0, 0, width, height);
-
-  for (let index = 0; index < 22; index += 1) {
-    const phase = time / 920 + index * 1.71;
-    const x = 250 + ((index * 97) % 650) + Math.sin(phase) * 16;
-    const y = 155 + ((index * 43) % 390) + Math.cos(phase * 1.4) * 12;
-    const alpha = 0.12 + (Math.sin(phase * 2) + 1) * 0.13;
-    townCtx.fillStyle = index % 3 ? `rgba(115, 214, 211, ${alpha})` : `rgba(255, 198, 92, ${alpha})`;
-    townCtx.beginPath();
-    townCtx.arc(x, y, index % 4 === 0 ? 2 : 1.2, 0, Math.PI * 2);
-    townCtx.fill();
-  }
+  const motionTime = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : time;
+  drawTownBackdrop(motionTime, width, height);
 
   townCtx.save();
-  townCtx.globalAlpha = 0.94;
-  drawTownPath([[576, 626], [576, 452], [576, 365]], 36);
-  drawTownPath([[576, 405], [420, 430], [224, 566]], 30);
-  drawTownPath([[576, 405], [730, 430], [930, 566]], 30);
-  drawTownPath([[576, 365], [710, 322], [910, 312]], 26);
-  drawTownPath([[576, 365], [446, 350], [286, 340]], 24);
-  drawTownPlaza(time);
-  drawTownBuilding({
-    x: 78, y: 370, width: 262, height: 168,
-    roof: "#315e67", wall: "#80918a", trim: "#75d0d1", sign: "風見倉庫",
-  });
-  drawTownBuilding({
-    x: 812, y: 370, width: 276, height: 168,
-    roof: "#7b3d37", wall: "#958273", trim: "#ef9170", sign: "星の商店",
-  });
-  drawTownBuilding({
-    x: 796, y: 105, width: 292, height: 178,
-    roof: "#3e5b43", wall: "#7f8f77", trim: "#a6cd7d", sign: "星見観測院", tower: true,
-  });
-  drawTownBoard(446, 228);
-  drawTownLineageMirror(286, 252, time);
-  drawTownGate(time);
-  drawTownFacilityMarkers(time);
+  townCtx.globalAlpha = 0.98;
+  drawTownPath([[576, 430], [576, 340], [576, 238]], 34, "depart");
+  drawTownPath([[576, 430], [440, 360], [250, 316]], 29, "guild");
+  drawTownPath([[576, 430], [430, 494], [250, 574]], 31, "storage");
+  drawTownPath([[576, 430], [730, 496], [920, 574]], 31, "shop");
+  drawTownPath([[576, 430], [710, 390], [866, 374]], 25, "board");
+  drawTownPath([[576, 430], [500, 390], [430, 382]], 20, "controls");
+  drawTownPlaza(motionTime);
+  drawTownObservatory(motionTime);
+  drawTownWarehouse(motionTime);
+  drawTownShopBuilding(motionTime);
+  drawTownRouteBoard(motionTime);
+  drawTownControlPedestal(motionTime);
+  drawTownTowerEntrance(motionTime);
+  drawTownFacilityMarkers(motionTime);
   townCtx.restore();
 
   const leader = getLeader();
   const player = game.townPlayer || (game.townPlayer = { x: 576, y: 470, dx: 0, dy: 1, movingUntil: 0 });
-  const walking = player.movingUntil > time;
+  const walking = player.movingUntil > motionTime;
   const townActor = {
     ...leader,
     dx: player.dx,
@@ -9076,12 +9070,487 @@ function drawTown(time) {
         }
       : null,
   };
-  const bob = walking ? 0 : Math.sin(time / 330) * 1.5;
+  const bob = walking ? 0 : Math.sin(motionTime / 420) * 2;
   townCtx.save();
+  const leaderColor = elementInfo(leader.elementKey).color;
+  const aura = townCtx.createRadialGradient(player.x, player.y + 8, 2, player.x, player.y + 8, 48);
+  aura.addColorStop(0, `${leaderColor}5c`);
+  aura.addColorStop(0.52, `${leaderColor}26`);
+  aura.addColorStop(1, `${leaderColor}00`);
+  townCtx.fillStyle = aura;
+  townCtx.beginPath();
+  townCtx.ellipse(player.x, player.y + 8, 52, 17, 0, 0, Math.PI * 2);
+  townCtx.fill();
   townCtx.shadowColor = "rgba(0, 0, 0, 0.75)";
-  townCtx.shadowBlur = 10;
-  drawActorBody(townCtx, townActor, player.x - 31, player.y - 51 + bob, 1.3, time);
+  townCtx.shadowBlur = 12;
+  drawActorBody(townCtx, townActor, player.x - 42, player.y - 71 + bob, 1.72, motionTime);
   townCtx.restore();
+}
+
+function drawTownBackdrop(time, width, height) {
+  const sky = townCtx.createLinearGradient(0, 0, 0, height);
+  sky.addColorStop(0, "#020711");
+  sky.addColorStop(0.45, "#082126");
+  sky.addColorStop(1, "#102821");
+  townCtx.fillStyle = sky;
+  townCtx.fillRect(0, 0, width, height);
+
+  if (USE_TOWN_BACKDROP && townBackdrop.complete && townBackdrop.naturalWidth) {
+    const scale = Math.max(width / townBackdrop.naturalWidth, height / townBackdrop.naturalHeight);
+    const sourceWidth = width / scale;
+    const sourceHeight = height / scale;
+    const sourceX = (townBackdrop.naturalWidth - sourceWidth) / 2;
+    const sourceY = Math.max(0, (townBackdrop.naturalHeight - sourceHeight) * 0.3);
+    townCtx.save();
+    townCtx.globalAlpha = 0.58;
+    townCtx.drawImage(townBackdrop, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+    townCtx.restore();
+  }
+
+  const atmosphere = townCtx.createLinearGradient(0, 0, 0, height);
+  atmosphere.addColorStop(0, "rgba(2, 7, 17, 0.05)");
+  atmosphere.addColorStop(0.44, "rgba(5, 23, 28, 0.18)");
+  atmosphere.addColorStop(0.53, "rgba(4, 17, 18, 0.56)");
+  atmosphere.addColorStop(1, "rgba(5, 14, 13, 0.78)");
+  townCtx.fillStyle = atmosphere;
+  townCtx.fillRect(0, 0, width, height);
+
+  for (let index = 0; index < 52; index += 1) {
+    const x = 18 + ((index * 137 + 47) % (width - 36));
+    const y = 18 + ((index * 61 + 19) % 245);
+    const twinkle = 0.38 + (Math.sin(time / 730 + index * 2.37) + 1) * 0.23;
+    townCtx.fillStyle = index % 7 === 0
+      ? `rgba(255, 215, 128, ${twinkle})`
+      : `rgba(181, 239, 239, ${twinkle * 0.82})`;
+    townCtx.beginPath();
+    townCtx.arc(x, y, index % 9 === 0 ? 1.8 : 0.85, 0, Math.PI * 2);
+    townCtx.fill();
+  }
+
+  const ground = townCtx.createLinearGradient(0, 258, 0, height);
+  ground.addColorStop(0, "rgba(18, 40, 35, 0.16)");
+  ground.addColorStop(0.18, "rgba(17, 39, 32, 0.72)");
+  ground.addColorStop(1, "rgba(7, 21, 19, 0.96)");
+  townCtx.fillStyle = ground;
+  townCtx.fillRect(0, 250, width, height - 250);
+
+  for (let index = 0; index < 16; index += 1) {
+    const phase = time / 1100 + index * 1.41;
+    const x = ((index * 173 + 80) % width) + Math.sin(phase) * 20;
+    const y = 325 + ((index * 47) % 290) + Math.cos(phase * 0.9) * 7;
+    const radius = index % 4 === 0 ? 2 : 1.1;
+    townCtx.fillStyle = index % 3
+      ? "rgba(103, 214, 205, 0.2)"
+      : "rgba(244, 190, 91, 0.2)";
+    townCtx.beginPath();
+    townCtx.arc(x, y, radius, 0, Math.PI * 2);
+    townCtx.fill();
+  }
+
+  townCtx.save();
+  townCtx.globalAlpha = 0.13;
+  townCtx.fillStyle = "#b6e9dc";
+  for (let index = 0; index < 4; index += 1) {
+    const drift = Math.sin(time / 1800 + index) * 34;
+    townCtx.beginPath();
+    townCtx.ellipse(120 + index * 310 + drift, 550 + (index % 2) * 55, 175, 22, -0.08, 0, Math.PI * 2);
+    townCtx.fill();
+  }
+  townCtx.restore();
+}
+
+function townFacilityIsActive(key) {
+  return townUiFocusKey === key || (!townUiFocusKey && townFocusedFacility()?.key === key);
+}
+
+function drawTownFacilityLayer(key, color, draw) {
+  const active = townFacilityIsActive(key);
+  townCtx.save();
+  townCtx.globalAlpha = active ? 1 : 0.93;
+  if (active) {
+    townCtx.shadowColor = color;
+    townCtx.shadowBlur = 20;
+  }
+  draw(active);
+  townCtx.restore();
+}
+
+function drawTownWindow(x, y, width, height, color, glow = 12) {
+  townCtx.save();
+  townCtx.fillStyle = "#192425";
+  townCtx.fillRect(x - 3, y - 3, width + 6, height + 6);
+  townCtx.shadowColor = color;
+  townCtx.shadowBlur = glow;
+  townCtx.fillStyle = color;
+  townCtx.fillRect(x, y, width, height);
+  townCtx.fillStyle = "rgba(255,255,220,0.45)";
+  townCtx.fillRect(x + width * 0.45, y, 2, height);
+  townCtx.restore();
+}
+
+function drawTownStar(x, y, outer, inner, color, rotation = -Math.PI / 2) {
+  townCtx.fillStyle = color;
+  townCtx.beginPath();
+  for (let index = 0; index < 10; index += 1) {
+    const angle = rotation + (index * Math.PI) / 5;
+    const radius = index % 2 ? inner : outer;
+    const pointX = x + Math.cos(angle) * radius;
+    const pointY = y + Math.sin(angle) * radius;
+    if (index === 0) townCtx.moveTo(pointX, pointY);
+    else townCtx.lineTo(pointX, pointY);
+  }
+  townCtx.closePath();
+  townCtx.fill();
+}
+
+function drawTownObservatory(time) {
+  drawTownFacilityLayer("guild", "#65d8c8", (active) => {
+    const pulse = 0.78 + (Math.sin(time / 520) + 1) * 0.08;
+    townCtx.fillStyle = "rgba(0, 0, 0, 0.45)";
+    townCtx.beginPath();
+    townCtx.ellipse(211, 304, 165, 24, 0, 0, Math.PI * 2);
+    townCtx.fill();
+
+    townCtx.fillStyle = "#314a49";
+    townCtx.beginPath();
+    townCtx.moveTo(67, 190);
+    townCtx.lineTo(102, 132);
+    townCtx.lineTo(285, 132);
+    townCtx.lineTo(355, 198);
+    townCtx.lineTo(340, 297);
+    townCtx.lineTo(77, 297);
+    townCtx.closePath();
+    townCtx.fill();
+    townCtx.strokeStyle = "#6a9289";
+    townCtx.lineWidth = 6;
+    townCtx.stroke();
+
+    townCtx.fillStyle = "#182f34";
+    townCtx.fillRect(141, 104, 112, 190);
+    townCtx.strokeStyle = "#638c88";
+    townCtx.lineWidth = 5;
+    townCtx.strokeRect(141, 104, 112, 190);
+    for (let y = 126; y < 284; y += 25) {
+      townCtx.fillStyle = y % 50 ? "#29484a" : "#203a3d";
+      townCtx.fillRect(147, y, 100, 3);
+    }
+
+    townCtx.save();
+    townCtx.translate(197, 104);
+    townCtx.scale(1, 0.68);
+    townCtx.fillStyle = "#244f54";
+    townCtx.beginPath();
+    townCtx.arc(0, 0, 62, Math.PI, Math.PI * 2);
+    townCtx.fill();
+    townCtx.strokeStyle = active ? "#8df1e4" : "#5baaa3";
+    townCtx.lineWidth = 7;
+    townCtx.stroke();
+    townCtx.restore();
+    townCtx.strokeStyle = "rgba(142, 238, 224, 0.62)";
+    townCtx.lineWidth = 2;
+    townCtx.beginPath();
+    townCtx.arc(197, 104, 44, Math.PI, Math.PI * 2);
+    townCtx.stroke();
+
+    townCtx.save();
+    townCtx.translate(215, 70);
+    townCtx.rotate(-0.36);
+    townCtx.fillStyle = "#9eb6ad";
+    townCtx.fillRect(-8, -9, 78, 18);
+    townCtx.fillStyle = "#42696b";
+    townCtx.fillRect(2, -13, 33, 26);
+    townCtx.fillStyle = `rgba(116, 231, 218, ${pulse})`;
+    townCtx.beginPath();
+    townCtx.arc(72, 0, 12, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.restore();
+
+    drawTownWindow(105, 211, 25, 39, "rgba(109, 225, 208, 0.78)");
+    drawTownWindow(270, 211, 25, 39, "rgba(109, 225, 208, 0.78)");
+    townCtx.fillStyle = "#172426";
+    townCtx.beginPath();
+    townCtx.arc(197, 256, 28, Math.PI, Math.PI * 2);
+    townCtx.fillRect(169, 256, 56, 40);
+    townCtx.fill();
+    townCtx.strokeStyle = "#76cfc4";
+    townCtx.lineWidth = 4;
+    townCtx.stroke();
+    drawTownStar(197, 157, 12, 5, "#d9c36c");
+  });
+}
+
+function drawTownWarehouse() {
+  drawTownFacilityLayer("storage", "#67c8d0", () => {
+    townCtx.fillStyle = "rgba(0, 0, 0, 0.46)";
+    townCtx.beginPath();
+    townCtx.ellipse(225, 580, 180, 23, 0, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.fillStyle = "#5a665f";
+    townCtx.fillRect(62, 438, 326, 137);
+    townCtx.strokeStyle = "#9b8870";
+    townCtx.lineWidth = 6;
+    townCtx.strokeRect(62, 438, 326, 137);
+
+    townCtx.fillStyle = "#203d42";
+    townCtx.beginPath();
+    townCtx.moveTo(44, 449);
+    townCtx.lineTo(102, 395);
+    townCtx.lineTo(344, 395);
+    townCtx.lineTo(408, 449);
+    townCtx.closePath();
+    townCtx.fill();
+    townCtx.strokeStyle = "#5ba8aa";
+    townCtx.lineWidth = 7;
+    townCtx.stroke();
+    for (let x = 88; x < 370; x += 44) {
+      townCtx.strokeStyle = "rgba(122, 195, 193, 0.32)";
+      townCtx.lineWidth = 2;
+      townCtx.beginPath();
+      townCtx.moveTo(x, 413);
+      townCtx.lineTo(x + 36, 444);
+      townCtx.stroke();
+    }
+
+    townCtx.fillStyle = "#314846";
+    townCtx.fillRect(183, 463, 79, 111);
+    townCtx.strokeStyle = "#8b7d65";
+    townCtx.lineWidth = 5;
+    townCtx.strokeRect(183, 463, 79, 111);
+    drawTownWindow(91, 474, 42, 34, "rgba(100, 205, 205, 0.62)", 8);
+    drawTownWindow(308, 474, 42, 34, "rgba(100, 205, 205, 0.62)", 8);
+
+    const crates = [[82, 526, 52, 45], [126, 538, 42, 34], [287, 531, 54, 40]];
+    for (const [x, y, width, height] of crates) {
+      townCtx.fillStyle = "#765338";
+      townCtx.fillRect(x, y, width, height);
+      townCtx.strokeStyle = "#ba8950";
+      townCtx.lineWidth = 3;
+      townCtx.strokeRect(x, y, width, height);
+      townCtx.beginPath();
+      townCtx.moveTo(x, y);
+      townCtx.lineTo(x + width, y + height);
+      townCtx.moveTo(x + width, y);
+      townCtx.lineTo(x, y + height);
+      townCtx.stroke();
+    }
+    townCtx.fillStyle = "#31666c";
+    townCtx.fillRect(117, 386, 7, 45);
+    townCtx.beginPath();
+    townCtx.moveTo(124, 387);
+    townCtx.lineTo(174, 398);
+    townCtx.lineTo(124, 416);
+    townCtx.closePath();
+    townCtx.fill();
+  });
+}
+
+function drawTownShopBuilding(time) {
+  drawTownFacilityLayer("shop", "#f18a65", () => {
+    const flicker = 0.78 + (Math.sin(time / 240) + 1) * 0.08;
+    townCtx.fillStyle = "rgba(0, 0, 0, 0.48)";
+    townCtx.beginPath();
+    townCtx.ellipse(955, 583, 157, 23, 0, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.fillStyle = "#6f5548";
+    townCtx.fillRect(820, 440, 277, 138);
+    townCtx.strokeStyle = "#bd8267";
+    townCtx.lineWidth = 6;
+    townCtx.strokeRect(820, 440, 277, 138);
+
+    townCtx.fillStyle = "#612f35";
+    townCtx.beginPath();
+    townCtx.moveTo(801, 450);
+    townCtx.lineTo(866, 386);
+    townCtx.lineTo(966, 436);
+    townCtx.lineTo(1037, 390);
+    townCtx.lineTo(1114, 450);
+    townCtx.closePath();
+    townCtx.fill();
+    townCtx.strokeStyle = "#d96d58";
+    townCtx.lineWidth = 7;
+    townCtx.stroke();
+
+    townCtx.fillStyle = "#253130";
+    townCtx.fillRect(913, 494, 61, 84);
+    townCtx.strokeStyle = "#d2875e";
+    townCtx.lineWidth = 4;
+    townCtx.strokeRect(913, 494, 61, 84);
+    drawTownWindow(839, 475, 54, 45, `rgba(255, 183, 91, ${flicker})`, 18);
+    drawTownWindow(998, 475, 69, 45, `rgba(255, 183, 91, ${flicker})`, 18);
+    townCtx.fillStyle = "#d6b05c";
+    for (const [x, y] of [[1008, 505], [1027, 496], [1052, 508], [850, 504], [875, 496]]) {
+      townCtx.beginPath();
+      townCtx.arc(x, y, 5, 0, Math.PI * 2);
+      townCtx.fill();
+    }
+
+    townCtx.fillStyle = "#d6b78a";
+    townCtx.fillRect(821, 447, 274, 10);
+    townCtx.fillStyle = "#b84f43";
+    for (let x = 827; x < 1090; x += 34) townCtx.fillRect(x, 447, 17, 24);
+
+    townCtx.strokeStyle = "#b88e61";
+    townCtx.lineWidth = 4;
+    townCtx.beginPath();
+    townCtx.moveTo(1080, 418);
+    townCtx.lineTo(1110, 452);
+    townCtx.stroke();
+    townCtx.fillStyle = "#332b29";
+    townCtx.fillRect(1067, 411, 76, 36);
+    townCtx.strokeStyle = "#ef8a65";
+    townCtx.lineWidth = 3;
+    townCtx.strokeRect(1067, 411, 76, 36);
+    drawTownStar(1105, 429, 10, 4, "#ffd176");
+
+    townCtx.save();
+    townCtx.shadowColor = "#ff9d56";
+    townCtx.shadowBlur = 16;
+    townCtx.fillStyle = `rgba(255, 166, 77, ${flicker})`;
+    townCtx.beginPath();
+    townCtx.arc(802, 478, 7, 0, Math.PI * 2);
+    townCtx.arc(1110, 486, 7, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.restore();
+  });
+}
+
+function drawTownRouteBoard() {
+  drawTownFacilityLayer("board", "#e9bd5c", (active) => {
+    townCtx.fillStyle = "rgba(0, 0, 0, 0.42)";
+    townCtx.beginPath();
+    townCtx.ellipse(872, 371, 112, 17, 0, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.fillStyle = "#594331";
+    townCtx.fillRect(790, 280, 14, 94);
+    townCtx.fillRect(944, 280, 14, 94);
+    townCtx.fillStyle = "#342d2b";
+    townCtx.beginPath();
+    townCtx.moveTo(772, 286);
+    townCtx.lineTo(806, 251);
+    townCtx.lineTo(947, 251);
+    townCtx.lineTo(977, 286);
+    townCtx.closePath();
+    townCtx.fill();
+    townCtx.strokeStyle = "#b69151";
+    townCtx.lineWidth = 5;
+    townCtx.stroke();
+    townCtx.fillStyle = "#b89661";
+    townCtx.fillRect(785, 279, 177, 74);
+    townCtx.strokeStyle = active ? "#ffe19a" : "#6d543a";
+    townCtx.lineWidth = 4;
+    townCtx.strokeRect(785, 279, 177, 74);
+    townCtx.fillStyle = "#d7c89e";
+    townCtx.fillRect(798, 290, 151, 51);
+    townCtx.strokeStyle = "#59766d";
+    townCtx.lineWidth = 3;
+    townCtx.beginPath();
+    townCtx.moveTo(811, 330);
+    townCtx.lineTo(837, 311);
+    townCtx.lineTo(864, 325);
+    townCtx.lineTo(894, 300);
+    townCtx.lineTo(931, 314);
+    townCtx.stroke();
+    for (const [x, y, color] of [[811, 330, "#4f9f9b"], [864, 325, "#cf604f"], [931, 314, "#dfb84f"]]) {
+      townCtx.fillStyle = color;
+      townCtx.beginPath();
+      townCtx.arc(x, y, 5, 0, Math.PI * 2);
+      townCtx.fill();
+    }
+  });
+}
+
+function drawTownControlPedestal(time) {
+  drawTownFacilityLayer("controls", "#9c8be1", (active) => {
+    const angle = time / 1700;
+    townCtx.fillStyle = "rgba(0, 0, 0, 0.4)";
+    townCtx.beginPath();
+    townCtx.ellipse(430, 387, 52, 12, 0, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.fillStyle = "#353b43";
+    townCtx.beginPath();
+    townCtx.moveTo(397, 347);
+    townCtx.lineTo(463, 347);
+    townCtx.lineTo(475, 381);
+    townCtx.lineTo(385, 381);
+    townCtx.closePath();
+    townCtx.fill();
+    townCtx.strokeStyle = "#796eb2";
+    townCtx.lineWidth = 4;
+    townCtx.stroke();
+    townCtx.save();
+    townCtx.translate(430, 346);
+    townCtx.rotate(angle);
+    townCtx.strokeStyle = active ? "#d1c8ff" : "#9c8be1";
+    townCtx.lineWidth = 4;
+    townCtx.beginPath();
+    townCtx.arc(0, 0, 25, 0, Math.PI * 2);
+    townCtx.stroke();
+    drawTownStar(0, 0, 16, 6, active ? "#e0d9ff" : "#a89adf", Math.PI / 4);
+    townCtx.restore();
+  });
+}
+
+function drawTownTowerEntrance(time) {
+  drawTownFacilityLayer("depart", "#f0bb55", (active) => {
+    const pulse = 0.64 + (Math.sin(time / 430) + 1) * 0.13;
+    townCtx.fillStyle = "rgba(0, 0, 0, 0.5)";
+    townCtx.beginPath();
+    townCtx.ellipse(576, 238, 132, 24, 0, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.fillStyle = "#303638";
+    townCtx.fillRect(468, 106, 44, 130);
+    townCtx.fillRect(640, 106, 44, 130);
+    townCtx.fillStyle = "#454b4a";
+    townCtx.fillRect(457, 94, 66, 25);
+    townCtx.fillRect(629, 94, 66, 25);
+    townCtx.fillStyle = "#273032";
+    townCtx.beginPath();
+    townCtx.moveTo(456, 95);
+    townCtx.lineTo(490, 58);
+    townCtx.lineTo(524, 95);
+    townCtx.closePath();
+    townCtx.fill();
+    townCtx.beginPath();
+    townCtx.moveTo(628, 95);
+    townCtx.lineTo(662, 58);
+    townCtx.lineTo(696, 95);
+    townCtx.closePath();
+    townCtx.fill();
+
+    townCtx.fillStyle = "#4f5552";
+    townCtx.beginPath();
+    townCtx.arc(576, 154, 82, Math.PI, Math.PI * 2);
+    townCtx.lineTo(658, 236);
+    townCtx.lineTo(494, 236);
+    townCtx.closePath();
+    townCtx.fill();
+    townCtx.strokeStyle = active ? "#f4d17e" : "#81755f";
+    townCtx.lineWidth = 8;
+    townCtx.stroke();
+
+    townCtx.fillStyle = "#05080c";
+    townCtx.beginPath();
+    townCtx.arc(576, 160, 50, Math.PI, Math.PI * 2);
+    townCtx.lineTo(626, 236);
+    townCtx.lineTo(526, 236);
+    townCtx.closePath();
+    townCtx.fill();
+    const entryGlow = townCtx.createLinearGradient(0, 150, 0, 236);
+    entryGlow.addColorStop(0, `rgba(239, 183, 77, ${pulse * 0.16})`);
+    entryGlow.addColorStop(1, `rgba(239, 183, 77, ${pulse * 0.52})`);
+    townCtx.fillStyle = entryGlow;
+    townCtx.fillRect(530, 163, 92, 72);
+
+    for (const x of [480, 672]) {
+      townCtx.fillStyle = "#575d59";
+      for (let y = 124; y < 225; y += 26) townCtx.fillRect(x - 13, y, 27, 5);
+    }
+    townCtx.save();
+    townCtx.shadowColor = "#ffc95f";
+    townCtx.shadowBlur = active ? 26 : 14;
+    drawTownStar(576, 116, 20 + Math.sin(time / 430) * 1.5, 8, `rgba(255, 211, 112, ${pulse})`);
+    townCtx.restore();
+  });
 }
 
 function drawTownLineageMirror(x, y, time) {
@@ -9107,51 +9576,52 @@ function drawTownLineageMirror(x, y, time) {
 }
 
 function drawTownFacilityMarkers(time) {
-  const focused = townFocusedFacility();
+  const focused = activeTownFacility();
   for (const facility of townFacilities) {
+    if (facility.uiOnly) continue;
     const active = focused?.key === facility.key;
-    const pulse = 1 + Math.sin(time / 330 + facility.x * 0.01) * 0.13;
+    const pulse = 1 + Math.sin(time / 430 + facility.x * 0.01) * 0.08;
     townCtx.save();
-    townCtx.globalAlpha = active ? 1 : 0.68;
+    townCtx.globalAlpha = active ? 0.95 : 0.48;
     townCtx.strokeStyle = facility.color;
-    townCtx.fillStyle = active ? `${facility.color}38` : "rgba(5, 12, 12, 0.42)";
-    townCtx.lineWidth = active ? 4 : 2;
+    townCtx.fillStyle = active ? `${facility.color}48` : "rgba(5, 12, 12, 0.38)";
+    townCtx.lineWidth = active ? 3 : 1.5;
     townCtx.shadowColor = facility.color;
-    townCtx.shadowBlur = active ? 22 : 10;
+    townCtx.shadowBlur = active ? 18 : 6;
+    townCtx.translate(facility.x, facility.y);
+    townCtx.rotate(Math.PI / 4);
     townCtx.beginPath();
-    townCtx.ellipse(facility.x, facility.y, 25 * pulse, 11 * pulse, 0, 0, Math.PI * 2);
+    townCtx.rect(-8 * pulse, -8 * pulse, 16 * pulse, 16 * pulse);
     townCtx.fill();
     townCtx.stroke();
-    if (active) {
-      townCtx.shadowBlur = 0;
-      townCtx.fillStyle = facility.color;
-      townCtx.beginPath();
-      townCtx.arc(facility.x, facility.y - 27, 9, 0, Math.PI * 2);
-      townCtx.fill();
-      townCtx.fillStyle = "#08100f";
-      townCtx.font = "900 10px sans-serif";
-      townCtx.textAlign = "center";
-      townCtx.fillText("F", facility.x, facility.y - 23);
-    }
     townCtx.restore();
   }
 }
 
-function drawTownPath(points, width) {
+function drawTownPath(points, width, facilityKey = null) {
+  const facility = townFacilityByKey(facilityKey);
+  const active = facilityKey && townFacilityIsActive(facilityKey);
   townCtx.save();
   townCtx.lineCap = "round";
   townCtx.lineJoin = "round";
-  townCtx.strokeStyle = "#b99b6d";
+  townCtx.strokeStyle = active ? "#b6a174" : "#6f6b5d";
   townCtx.lineWidth = width;
+  if (active && facility) {
+    townCtx.shadowColor = facility.color;
+    townCtx.shadowBlur = 18;
+  }
   townCtx.beginPath();
   points.forEach(([x, y], index) => {
     if (index === 0) townCtx.moveTo(x, y);
     else townCtx.lineTo(x, y);
   });
   townCtx.stroke();
-  townCtx.strokeStyle = "rgba(255, 231, 174, 0.26)";
-  townCtx.lineWidth = Math.max(3, width - 12);
+  townCtx.shadowBlur = 0;
+  townCtx.strokeStyle = active && facility ? `${facility.color}72` : "rgba(204, 196, 162, 0.2)";
+  townCtx.lineWidth = Math.max(3, width - 10);
+  townCtx.setLineDash([5, 8]);
   townCtx.stroke();
+  townCtx.setLineDash([]);
   townCtx.restore();
 }
 
@@ -9270,34 +9740,57 @@ function drawTownBoard(x, y) {
 }
 
 function drawTownPlaza(time) {
-  townCtx.fillStyle = "#a8875e";
+  townCtx.fillStyle = "rgba(0, 0, 0, 0.4)";
   townCtx.beginPath();
-  townCtx.ellipse(576, 365, 125, 82, 0, 0, Math.PI * 2);
+  townCtx.ellipse(576, 448, 152, 93, 0, 0, Math.PI * 2);
   townCtx.fill();
-  townCtx.strokeStyle = "rgba(255, 232, 180, 0.34)";
-  townCtx.lineWidth = 5;
+  townCtx.fillStyle = "#53605a";
+  townCtx.beginPath();
+  townCtx.ellipse(576, 430, 143, 84, 0, 0, Math.PI * 2);
+  townCtx.fill();
+  townCtx.strokeStyle = "rgba(218, 190, 126, 0.44)";
+  townCtx.lineWidth = 6;
   townCtx.stroke();
-  townCtx.fillStyle = "#6f7771";
-  townCtx.beginPath();
-  townCtx.ellipse(576, 346, 58, 31, 0, 0, Math.PI * 2);
-  townCtx.fill();
-  townCtx.fillStyle = "#68a9ac";
-  townCtx.beginPath();
-  townCtx.ellipse(576, 341, 46, 21, 0, 0, Math.PI * 2);
-  townCtx.fill();
-  townCtx.fillStyle = "#d6c778";
-  townCtx.beginPath();
-  const pulse = 17 + Math.sin(time / 300) * 2;
-  for (let i = 0; i < 10; i += 1) {
-    const angle = -Math.PI / 2 + (i * Math.PI) / 5;
-    const radius = i % 2 ? pulse * 0.45 : pulse;
-    const x = 576 + Math.cos(angle) * radius;
-    const y = 315 + Math.sin(angle) * radius;
-    if (i === 0) townCtx.moveTo(x, y);
-    else townCtx.lineTo(x, y);
+
+  townCtx.strokeStyle = "rgba(21, 37, 35, 0.66)";
+  townCtx.lineWidth = 2;
+  for (let ring = 1; ring <= 3; ring += 1) {
+    townCtx.beginPath();
+    townCtx.ellipse(576, 430, 38 * ring, 22 * ring, 0, 0, Math.PI * 2);
+    townCtx.stroke();
   }
-  townCtx.closePath();
+  for (let index = 0; index < 12; index += 1) {
+    const angle = (index * Math.PI) / 6;
+    townCtx.beginPath();
+    townCtx.moveTo(576 + Math.cos(angle) * 32, 430 + Math.sin(angle) * 18);
+    townCtx.lineTo(576 + Math.cos(angle) * 136, 430 + Math.sin(angle) * 78);
+    townCtx.stroke();
+  }
+
+  townCtx.fillStyle = "#263f40";
+  townCtx.beginPath();
+  townCtx.ellipse(576, 430, 58, 34, 0, 0, Math.PI * 2);
   townCtx.fill();
+  const pulse = 18 + Math.sin(time / 430) * 1.4;
+  townCtx.save();
+  townCtx.shadowColor = "#e8c36c";
+  townCtx.shadowBlur = 12;
+  drawTownStar(576, 430, pulse, 7, "#d9bd65");
+  townCtx.restore();
+
+  for (let index = 0; index < 8; index += 1) {
+    const angle = (index * Math.PI) / 4;
+    const x = 576 + Math.cos(angle) * 122;
+    const y = 430 + Math.sin(angle) * 69;
+    townCtx.save();
+    townCtx.shadowColor = index % 2 ? "#7ed7cf" : "#e5bb5e";
+    townCtx.shadowBlur = 9;
+    townCtx.fillStyle = index % 2 ? "#79cfc8" : "#d7b45d";
+    townCtx.beginPath();
+    townCtx.arc(x, y, 2.8, 0, Math.PI * 2);
+    townCtx.fill();
+    townCtx.restore();
+  }
 }
 
 function drawTownBridge(x, y) {
@@ -13667,7 +14160,20 @@ function handleKey(event) {
   const boundAction = boundActionKey ? actionFromControlActionKey(boundActionKey) : null;
 
   if (game.mode === "town") {
-    if (["enter", "f", " ", "e"].includes(key)) {
+    const focusedTownButton = document.activeElement?.closest?.("[data-town-action]");
+    if (focusedTownButton && ["enter", " "].includes(key)) {
+      if (event.repeat) return;
+      event.preventDefault();
+      focusedTownButton.click();
+      return;
+    }
+    if (["f", "e"].includes(key)) {
+      if (event.repeat) return;
+      event.preventDefault();
+      interactTownFacility();
+      return;
+    }
+    if (["enter", " "].includes(key)) {
       if (event.repeat) return;
       event.preventDefault();
       openExpeditionLoadout();
@@ -13837,7 +14343,6 @@ function bindEvents() {
   ui.endRestartButton.addEventListener("click", () => {
     ui.endOverlay.hidden = true;
     returnToTown();
-    queueLoadoutPrompt(160);
   });
   ui.helpButton.addEventListener("click", () => ui.helpDialog.showModal());
   ui.saveButton.addEventListener("click", () => saveCurrentGame(false));
@@ -13860,7 +14365,6 @@ function bindEvents() {
     closeLevelUpDialog(false);
   });
   ui.gameMenuButton.addEventListener("click", () => toggleGameMenu("moves"));
-  ui.departButton.addEventListener("click", openExpeditionLoadout);
   canvas.addEventListener("mousemove", (event) => {
     if (game.mode !== "dungeon") return;
     const aim = aimFromPointer(event);
@@ -13899,6 +14403,23 @@ function bindEvents() {
     button.addEventListener("click", () => renderGameMenu(button.dataset.menuView));
   });
 
+  const townActionButtons = [...ui.townScreen.querySelectorAll("[data-town-action]")];
+  const hoverTargets = ui.townScreen.querySelectorAll(
+    ".town-facility, .town-leader-select, .town-gate-hotspot, .town-depart-cta",
+  );
+  hoverTargets.forEach((target) => {
+    const button = target.closest("[data-town-action]");
+    if (!button) return;
+    target.addEventListener("pointerenter", () => setTownUiFocus(button.dataset.townAction));
+    target.addEventListener("pointerleave", () => {
+      if (document.activeElement !== button) setTownUiFocus(null);
+    });
+  });
+  townActionButtons.forEach((button) => {
+    button.addEventListener("focus", () => setTownUiFocus(button.dataset.townAction));
+    button.addEventListener("blur", () => setTownUiFocus(null));
+  });
+
   document.querySelectorAll("[data-town-action]").forEach((button) => {
     button.addEventListener("click", () => {
       if (button.dataset.townAction === "depart") {
@@ -13932,7 +14453,6 @@ loadFoxboundSpriteManifest();
 loadFoxboundMoveDesigns();
 if (!loadSaveSlot(1)) saveCurrentGame(true);
 updateSoundButton();
-queueLoadoutPrompt(180);
 spriteSheet.addEventListener("load", () => {
   if (game) updateAll();
 });
