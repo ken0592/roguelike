@@ -55,7 +55,7 @@ let mapTokenReady = false;
 const itemIconSheet = new Image();
 itemIconSheet.src = "assets/tokens/foxbound-items-v2.png?v=pwa11";
 const enemyArtSheets = Array(4).fill(null);
-const FOXBOUND_ASSET_VERSION = "pwa18i";
+const FOXBOUND_ASSET_VERSION = "pwa18k";
 const FOXBOUND_SPRITE_ROOT = "assets/foxbound-codex-v1";
 const FOXBOUND_HERO_SPRITE_IDS = Object.freeze({
   kohaku: "kohaku",
@@ -1794,12 +1794,36 @@ const bossThemeCatalog = [
 ];
 
 const routeCatalog = [
-  { key: "safeTrail", name: "静かな星路", icon: "安", color: "#8fd7c1", detail: "敵が少ない。報酬も少し控えめ。", enemyBonus: -2, itemBonus: -1, luck: 1 },
-  { key: "treasureTrail", name: "宝鳴りの星路", icon: "宝", color: "#f0c862", detail: "道具と商店が増える。敵も少し増える。", enemyBonus: 1, itemBonus: 2, shopBonus: 0.28, luck: 1 },
-  { key: "eliteTrail", name: "門番の近道", icon: "強", color: "#ef8b70", detail: "敵が強く多いが、経験値とボス報酬が良くなる。", enemyBonus: 2, expBonus: 0.18, bossReward: 1 },
-  { key: "hiddenTrail", name: "星裏の抜け道", icon: "隠", color: "#b783e6", detail: "隠し祭壇と選択イベントが出やすい。運要素が強い。", secretBonus: 0.18, choiceBonus: 0.18, luck: 2 },
-  { key: "mutantTrail", name: "変異の深道", icon: "変", color: "#9bd05d", detail: "変異種が出やすい。素材と経験値を狙える危険ルート。", mutationBonus: 0.025, expBonus: 0.1, enemyBonus: 1 },
-  { key: "karmaTrail", name: "咎星の裏路", icon: "咎", color: "#a575e2", detail: "カルマ系の選択が増える。闇進化や咎星ビルド向け。", karmaBonus: 1, choiceBonus: 0.12, luck: -1 },
+  {
+    key: "safeTrail", name: "静かな星路", icon: "葉", color: "#8fd7c1", terrain: "grove",
+    landmark: "苔灯の緩斜路", danger: 1, reward: 1, feature: "敵影が少ない",
+    detail: "敵が少なく消耗を抑えやすい。道具の数は少し控えめ。", enemyBonus: -2, itemBonus: -1, luck: 1,
+  },
+  {
+    key: "treasureTrail", name: "宝鳴りの星路", icon: "宝", color: "#f0c862", terrain: "market",
+    landmark: "宝鐘の廃市", danger: 3, reward: 4, feature: "道具・商店",
+    detail: "道具と商店が増える。戦利品を狙う敵も少し増える。", enemyBonus: 1, itemBonus: 2, shopBonus: 0.28, luck: 1,
+  },
+  {
+    key: "eliteTrail", name: "門番の近道", icon: "剣", color: "#ef8b70", terrain: "fortress",
+    landmark: "赤鉄の関門", danger: 5, reward: 5, feature: "経験・門番報酬",
+    detail: "強敵が多い最短路。経験値と門番の報酬が良くなる。", enemyBonus: 2, expBonus: 0.18, bossReward: 1,
+  },
+  {
+    key: "hiddenTrail", name: "星裏の抜け道", icon: "月", color: "#b783e6", terrain: "moon",
+    landmark: "月影の細道", danger: 2, reward: 4, feature: "隠し祭壇・事件",
+    detail: "隠し祭壇と選択イベントが出やすい。結果の振れ幅が大きい。", secretBonus: 0.18, choiceBonus: 0.18, luck: 2,
+  },
+  {
+    key: "mutantTrail", name: "変異の深道", icon: "核", color: "#9bd05d", terrain: "wild",
+    landmark: "脈動する深道", danger: 4, reward: 4, feature: "変異素材・経験",
+    detail: "変異種との遭遇が増える。素材と経験値を狙える危険路。", mutationBonus: 0.025, expBonus: 0.1, enemyBonus: 1,
+  },
+  {
+    key: "karmaTrail", name: "咎星の裏路", icon: "咎", color: "#a575e2", terrain: "rift",
+    landmark: "咎星の裂け目", danger: 4, reward: 3, feature: "カルマ選択・闇進化",
+    detail: "代償つきの選択が増える。闇進化や咎星ビルドへ近づく。", karmaBonus: 1, choiceBonus: 0.12, luck: -1,
+  },
 ];
 
 const dungeonThemes = {
@@ -2035,6 +2059,7 @@ function createGame() {
     pendingMovePicks: 0,
     pendingAscensionChoices: [],
     pendingRouteChoices: [],
+    pendingRouteSelection: null,
     pendingFloorChoice: null,
     milestoneSource: null,
     rewardPending: false,
@@ -2335,6 +2360,7 @@ function prepareNewTry() {
   game.pendingMovePicks = 0;
   game.pendingAscensionChoices = [];
   game.pendingRouteChoices = [];
+  game.pendingRouteSelection = null;
   game.pendingFloorChoice = null;
   game.routePlan = {};
   game.milestoneSource = null;
@@ -6344,6 +6370,11 @@ function toggleGameMenu(view = "moves") {
 
 function renderGameMenu(view = "moves") {
   game.menuView = view;
+  ui.gameMenuDialog.dataset.view = view;
+  const menuKicker = ui.gameMenuDialog.querySelector("header span");
+  const menuTitle = ui.gameMenuDialog.querySelector("header h2");
+  if (menuKicker) menuKicker.textContent = view === "routeChoice" ? "TOWER ROUTE" : "FOXBOUND MENU";
+  if (menuTitle) menuTitle.textContent = view === "routeChoice" ? "道を選ぶ" : "冒険メニュー";
   document.querySelectorAll("[data-menu-view]").forEach((button) => {
     button.classList.toggle("active", button.dataset.menuView === view);
   });
@@ -6910,48 +6941,152 @@ function rollRouteChoices(count = 3) {
   return choices;
 }
 
+function routeMeterMarkup(label, value, tone) {
+  const amount = clamp(Number(value) || 0, 0, 5);
+  return `
+    <span class="route-meter route-meter-${tone}" aria-label="${label} ${amount}/5">
+      <small>${label}</small>
+      <span class="route-meter-pips" aria-hidden="true">
+        ${Array.from({ length: 5 }, (_, index) => `<i class="${index < amount ? "filled" : ""}"></i>`).join("")}
+      </span>
+      <b>${amount}</b>
+    </span>
+  `;
+}
+
+function routeImpactMarkup(route) {
+  const impacts = [];
+  if (route.enemyBonus < 0) impacts.push(["good", "敵影 少"]);
+  if (route.enemyBonus > 0) impacts.push(["danger", "敵影 多"]);
+  if (route.itemBonus < 0) impacts.push(["caution", "道具 少"]);
+  if (route.itemBonus > 0) impacts.push(["good", "道具 多"]);
+  if (route.expBonus) impacts.push(["good", `経験 +${Math.round(route.expBonus * 100)}%`]);
+  if (route.shopBonus) impacts.push(["good", "商店 増"]);
+  if (route.secretBonus) impacts.push(["mystic", "隠し祭壇 増"]);
+  if (route.choiceBonus) impacts.push(["mystic", "選択事件 増"]);
+  if (route.mutationBonus) impacts.push(["danger", "変異種 増"]);
+  if (route.bossReward) impacts.push(["good", "門番報酬 強化"]);
+  if (route.karmaBonus) impacts.push(["danger", "カルマ選択"]);
+  return impacts
+    .map(([tone, label]) => `<span class="route-impact route-impact-${tone}">${label}</span>`)
+    .join("");
+}
+
 function renderRouteChoice() {
   const segment = routeSegmentForFloor();
   if (!game.pendingRouteChoices.length || !routeChoiceNeeded()) {
     game.pendingRouteChoices = currentRoutePlan() ? [currentRoutePlan().key] : rollRouteChoices(3);
   }
   const current = currentRoutePlan();
+  const keys = current ? [current.key] : game.pendingRouteChoices;
+  if (!keys.includes(game.pendingRouteSelection)) game.pendingRouteSelection = null;
+  const selectedRoute = current
+    || routeCatalog.find((entry) => entry.key === game.pendingRouteSelection)
+    || null;
+  const segmentStart = segment * 10 + 1;
+  const segmentEnd = Math.min(100, (segment + 1) * 10);
   ui.gameMenuBody.innerHTML = `
     <div class="route-choice-head">
-      <span>ROUTE ${segment + 1}/10</span>
-      <strong>${current ? "この区画の道筋" : "次の10階の道筋を選ぶ"}</strong>
-      <small>${current ? current.detail : "敵の量、道具、商店、変異種、隠し祭壇の出やすさが変わります。選んだ道はこの区画の門番まで続きます。"}</small>
+      <span>ROUTE ${segment + 1}/10　B${segmentStart}F → B${segmentEnd}F</span>
+      <strong>${current ? "この区画で選んだ道" : "三つの道標から進路を決める"}</strong>
+      <small>${current ? current.detail : "道は次の中継地点まで続きます。危険度だけでなく、欲しい報酬や起きてほしい出来事で選んでください。"}</small>
     </div>
-    <div class="route-choice-grid"></div>
+    <section class="route-map-shell ${current ? "route-map-locked" : ""}" aria-label="塔の分岐地図">
+      <div class="route-map-origin">
+        <span>現在地</span>
+        <strong>B${game.floor}F</strong>
+        <small>次の中継地点 B${segmentEnd}F</small>
+      </div>
+      <div class="route-map-branches route-count-${keys.length}" role="radiogroup" aria-label="進む道を選択"></div>
+    </section>
+    <section class="route-decision ${current ? "route-decision-locked" : ""}" aria-live="polite">
+      <div>
+        <span id="routeDecisionKicker">${current ? "選択済み" : selectedRoute ? "選択中の道標" : "道標未選択"}</span>
+        <strong id="routeDecisionTitle">${selectedRoute?.name || "地図上の道を選ぶ"}</strong>
+        <small id="routeDecisionDetail">${selectedRoute ? `${selectedRoute.landmark}　${selectedRoute.feature}` : "道を選ぶと、ここに特徴と進行確認が表示されます。"}</small>
+      </div>
+      <button type="button" class="primary-button route-confirm-button" ${current || !selectedRoute ? "disabled" : ""}>
+        ${current ? "この区画を進行中" : "この道へ進む"}
+      </button>
+    </section>
   `;
-  const grid = ui.gameMenuBody.querySelector(".route-choice-grid");
-  const keys = current ? [current.key] : game.pendingRouteChoices;
-  for (const key of keys) {
+  const grid = ui.gameMenuBody.querySelector(".route-map-branches");
+  const decisionKicker = ui.gameMenuBody.querySelector("#routeDecisionKicker");
+  const decisionTitle = ui.gameMenuBody.querySelector("#routeDecisionTitle");
+  const decisionDetail = ui.gameMenuBody.querySelector("#routeDecisionDetail");
+  const confirmButton = ui.gameMenuBody.querySelector(".route-confirm-button");
+  const routeButtons = new Map();
+
+  const selectRoute = (route) => {
+    if (current) return;
+    game.pendingRouteSelection = route.key;
+    routeButtons.forEach((button, key) => {
+      const active = key === route.key;
+      button.classList.toggle("selected", active);
+      button.setAttribute("aria-checked", active ? "true" : "false");
+      const label = button.querySelector(".route-pick-label");
+      if (label) label.textContent = active ? "この道を選択中" : "道標を見る";
+    });
+    decisionKicker.textContent = "選択中の道標";
+    decisionTitle.textContent = route.name;
+    decisionDetail.textContent = `${route.landmark}　${route.feature}。${route.detail}`;
+    confirmButton.disabled = false;
+  };
+
+  keys.forEach((key, index) => {
     const route = routeCatalog.find((entry) => entry.key === key);
-    if (!route) continue;
+    if (!route) return;
+    const active = current?.key === route.key || game.pendingRouteSelection === route.key;
     const button = document.createElement("button");
     button.type = "button";
-    button.className = `route-card ${current?.key === route.key ? "selected" : ""}`;
+    button.className = `route-map-choice route-terrain-${route.terrain} ${active ? "selected" : ""}`;
     button.style.setProperty("--route-color", route.color);
+    button.setAttribute("role", "radio");
+    button.setAttribute("aria-checked", active ? "true" : "false");
+    button.setAttribute("aria-label", `${route.name}。危険度${route.danger}/5、報酬期待${route.reward}/5。${route.detail}`);
     button.innerHTML = `
-      <b>${route.icon}</b>
-      <span><strong>${route.name}</strong><small>${route.detail}</small><em>${routeMetaText(route)}</em></span>
+      <span class="route-map-scenery" aria-hidden="true">
+        <i>${route.icon}</i>
+        <em>${route.landmark}</em>
+      </span>
+      <span class="route-map-copy">
+        <span>PATH ${String(index + 1).padStart(2, "0")}　${route.feature}</span>
+        <strong>${route.name}</strong>
+        <small>${route.detail}</small>
+      </span>
+      <span class="route-readouts">
+        ${routeMeterMarkup("危険", route.danger, "danger")}
+        ${routeMeterMarkup("報酬", route.reward, "reward")}
+      </span>
+      <span class="route-impact-row">${routeImpactMarkup(route)}</span>
+      <span class="route-pick-label">${active ? (current ? "選択済み" : "この道を選択中") : "道標を見る"}</span>
     `;
-    button.disabled = Boolean(current);
-    button.addEventListener("click", () => chooseRoutePlan(route.key));
+    if (current) {
+      button.setAttribute("aria-disabled", "true");
+      button.tabIndex = -1;
+    } else {
+      button.addEventListener("click", () => selectRoute(route));
+    }
+    routeButtons.set(route.key, button);
     grid.appendChild(button);
-  }
+  });
+
+  confirmButton?.addEventListener("click", () => {
+    if (game.pendingRouteSelection) chooseRoutePlan(game.pendingRouteSelection);
+  });
 }
 
 function routeMetaText(route) {
   return [
-    route.enemyBonus ? `敵 ${route.enemyBonus > 0 ? "+" : ""}${route.enemyBonus}` : "",
-    route.itemBonus ? `道具 ${route.itemBonus > 0 ? "+" : ""}${route.itemBonus}` : "",
+    route.enemyBonus < 0 ? "敵 少なめ" : route.enemyBonus > 0 ? "敵 多め" : "",
+    route.itemBonus < 0 ? "道具 少なめ" : route.itemBonus > 0 ? "道具 多め" : "",
     route.expBonus ? `経験 +${Math.round(route.expBonus * 100)}%` : "",
     route.shopBonus ? "商店増" : "",
     route.secretBonus ? "祭壇増" : "",
+    route.choiceBonus ? "選択事件増" : "",
     route.mutationBonus ? "変異増" : "",
     route.bossReward ? "ボス報酬強化" : "",
+    route.karmaBonus ? "カルマ選択" : "",
   ].filter(Boolean).join(" / ") || "標準";
 }
 
@@ -6961,6 +7096,7 @@ function chooseRoutePlan(key) {
   const segment = routeSegmentForFloor();
   game.routePlan[segment] = route.key;
   game.pendingRouteChoices = [];
+  game.pendingRouteSelection = null;
   game.runStats.routeChoices += 1;
   if (route.karmaBonus) game.karma += route.karmaBonus;
   applyRouteImmediateEffects(route);
@@ -10901,6 +11037,14 @@ function foxboundSpriteFrame(entry, actor, time, category) {
   })[0] || null;
 }
 
+function shouldFlipFoxboundSideSprite(entry, actor, category) {
+  const dx = Number(actor.dx) || 0;
+  const dy = Number(actor.dy) || 0;
+  if (!dx || Math.abs(dx) < Math.abs(dy)) return false;
+  if (category === "heroes") return dx < 0;
+  return entry.rows === 3 && dx < 0;
+}
+
 function drawFoxboundSprite(targetCtx, category, id, actor, time = performance.now()) {
   const loaded = requestFoxboundSprite(category, id);
   if (!loaded) return false;
@@ -10916,7 +11060,7 @@ function drawFoxboundSprite(targetCtx, category, id, actor, time = performance.n
   const drawHeight = Math.max(1, frame.h * scale);
   const drawX = (TILE - drawWidth) / 2;
   const drawY = TILE - drawHeight - 1;
-  const flipSide = entry.rows === 3 && Math.abs(actor.dx || 0) >= Math.abs(actor.dy || 0) && (actor.dx || 0) < 0;
+  const flipSide = shouldFlipFoxboundSideSprite(entry, actor, category);
   const actionPulse = time < (actor.actionUntil || 0) ? 1.035 : 1;
 
   targetCtx.save();
@@ -10944,9 +11088,7 @@ function foxboundSpriteVisualKey(category, id, actor, time) {
   if (!loaded) return null;
   const frame = foxboundSpriteFrame(loaded.entry, actor, time, category);
   if (!frame) return null;
-  const flipSide = loaded.entry.rows === 3
-    && Math.abs(actor.dx || 0) >= Math.abs(actor.dy || 0)
-    && (actor.dx || 0) < 0;
+  const flipSide = shouldFlipFoxboundSideSprite(loaded.entry, actor, category);
   const actionActive = time < (actor.actionUntil || 0)
     || (actor.motion?.kind === "bump" && time < actor.motion.started + actor.motion.duration);
   return [
